@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Man United Career Manager 2025/26</title>
+<title>Man Utd Career Manager 2025/26</title>
 <style>
   :root {
     --color-background-primary: #ffffff;
@@ -75,8 +75,11 @@
   .cmp { padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; text-align: center; color: #fff; }
   .cmp-PL { background: #38003c; }
   .cmp-CL { background: #00266F; }
+  .cmp-EL { background: #f15a24; }
   .cmp-FA { background: #003B7B; }
   .cmp-EFL { background: #003366; }
+  .cmp-CS { background: #856404; }
+  .cmp-FR { background: #5f5e5a; }
   .pnl { background: var(--color-background-secondary); padding: 10px 12px; border-radius: var(--border-radius-md); margin-bottom: 8px; }
   .pnl-t { font-size: 10px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
   .ovr { padding: 2px 5px; border-radius: 4px; font-weight: 500; text-align: center; font-size: 11px; display: inline-block; min-width: 22px; }
@@ -86,6 +89,9 @@
   .ovr.depth { background: #D3D1C7; color: #2C2C2A; }
   .pos { padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 500; text-align: center; display: inline-block; }
   .pos-GK { background: #FAC775; color: #412402; }
+  .pos-RB, .pos-CB, .pos-LB { background: #B5D4F4; color: #042C53; }
+  .pos-CDM, .pos-CM, .pos-CAM, .pos-RM, .pos-LM { background: #C0DD97; color: #173404; }
+  .pos-RW, .pos-LW, .pos-ST { background: #F7C1C1; color: #501313; }
   .pos-DEF { background: #B5D4F4; color: #042C53; }
   .pos-MID { background: #C0DD97; color: #173404; }
   .pos-FWD { background: #F7C1C1; color: #501313; }
@@ -98,6 +104,7 @@
   .form-Neutral { background: #D3D1C7; color: #2C2C2A; }
   .form-Poor { background: #F09595; color: #501313; }
   .role-tag { font-size: 9px; padding: 1px 5px; border-radius: 3px; display: inline-block; color: var(--color-text-tertiary); }
+  .role-select { width: 58px; max-width: 100%; background: var(--color-background-primary); color: var(--color-text-primary); border: 0.5px solid var(--color-border-secondary); border-radius: 4px; font-size: 10px; padding: 2px 3px; }
   .table-row { display: grid; grid-template-columns: 22px 1fr 26px 26px 26px 26px 36px 32px; gap: 6px; padding: 4px 8px; font-size: 11px; font-variant-numeric: tabular-nums; align-items: center; }
   .table-row.head { font-size: 9px; color: var(--color-text-secondary); text-transform: uppercase; }
   .table-row.mun { background: var(--color-background-info); color: var(--color-text-info); border-radius: 4px; font-weight: 500; }
@@ -108,6 +115,7 @@
   .comm-l .min { color: var(--color-text-tertiary); font-variant-numeric: tabular-nums; margin-right: 8px; display: inline-block; min-width: 28px; }
   .comm-l.gm { color: var(--color-text-success); font-weight: 500; }
   .comm-l.go { color: var(--color-text-danger); font-weight: 500; }
+  .comm-l.rc { color: var(--color-text-warning); font-weight: 600; }
   .comm-l.ft { font-weight: 500; border-top: 0.5px solid var(--color-border-tertiary); padding-top: 6px; margin-top: 6px; }
   .comm-l.inj { color: var(--color-text-warning); font-style: italic; }
   .market-row { display: grid; grid-template-columns: 1fr 80px 28px 32px 56px 60px 70px; gap: 6px; align-items: center; padding: 7px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 11px; font-variant-numeric: tabular-nums; }
@@ -120,6 +128,13 @@
   .ptok { background: #DA291C; color: #fff; border-radius: 50%; width: 50px; height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; text-align: center; padding: 2px; line-height: 1.1; position: relative; user-select: none; }
   .ptok-rating { position: absolute; top: -5px; right: -5px; background: #FBE122; color: #1a1a1a; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: 500; }
   .ptok-mark { position: absolute; top: -5px; left: -5px; width: 18px; height: 18px; border-radius: 50%; font-size: 9px; display: flex; align-items: center; justify-content: center; font-weight: 500; background: #97C459; color: #173404; }
+  .slot-card { width: 82px; min-height: 58px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.24); border-radius: var(--border-radius-md); color:#fff; padding:5px; text-align:center; font-size:10px; }
+  .slot-pos { font-size:9px; opacity:0.78; text-transform:uppercase; letter-spacing:0.04em; }
+  .slot-name { font-weight:600; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .slot-meta { display:flex; justify-content:center; gap:4px; align-items:center; margin-top:3px; color:#f8f1cf; }
+  .slot-offrole { color:#FBE122; font-size:9px; margin-top:2px; }
+  .formation-board { display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
+  .slot-list-row { display:grid; grid-template-columns: 42px 1fr 44px 52px; gap:8px; align-items:center; padding:5px 6px; border-bottom:0.5px solid var(--color-border-tertiary); font-size:11px; }
   .lineup-row { display: grid; grid-template-columns: 14px 1fr 32px 56px 60px 80px 40px 40px 78px 26px; gap: 5px; padding: 6px 6px; align-items: center; font-size: 11px; border-bottom: 0.5px solid var(--color-border-tertiary); font-variant-numeric: tabular-nums; }
   .lineup-row.is-starter { background: rgba(218,41,28,0.06); }
   .lineup-row:last-child { border: none; }
@@ -129,6 +144,8 @@
   .rating-chip { display: inline-block; padding: 1px 4px; border-radius: 3px; font-size: 9px; font-weight: 500; margin-right: 2px; font-variant-numeric: tabular-nums; }
   .scout-card { padding: 10px 12px; background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); margin-bottom: 8px; }
   .scout-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+  .academy-row { display:grid; grid-template-columns: 1fr 34px 34px 40px 54px 118px; gap:8px; align-items:center; padding:6px 8px; border-bottom:0.5px solid var(--color-border-tertiary); font-size:11px; }
+  .academy-row.head { font-size:9px; color:var(--color-text-secondary); text-transform:uppercase; letter-spacing:0.04em; }
 </style>
 </head>
 <body>
@@ -140,6 +157,49 @@
   const ROUND = n => Math.round(n);
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const DOM = [31,28,31,30,31,30,31,31,30,31,30,31];
+  const POSITION_ORDER = ['GK','RB','CB','LB','CDM','CM','CAM','RM','LM','RW','LW','ST'];
+  const WINDOW_MONTHS = [0,5,6,7];
+  const SIMILAR_ROLES = {
+    GK: ['GK'],
+    RB: ['RB','CB','LB','RM'],
+    CB: ['CB','RB','LB','CDM'],
+    LB: ['LB','CB','RB','LM'],
+    CDM: ['CDM','CM','CB'],
+    CM: ['CM','CDM','CAM','RM','LM'],
+    CAM: ['CAM','CM','RW','LW','ST'],
+    RM: ['RM','RW','CM','RB','LM'],
+    LM: ['LM','LW','CM','LB','RM'],
+    RW: ['RW','RM','LW','ST','CAM'],
+    LW: ['LW','LM','RW','ST','CAM'],
+    ST: ['ST','LW','RW','CAM']
+  };
+  const ROLE_MAP = {
+    'Onana':'GK','Bayindir':'GK','Heaton':'GK','De Ligt':'CB','Maguire':'CB','Martinez':'CB','Yoro':'CB','Dalot':'RB','Mazraoui':'RB','Shaw':'LB','Heaven':'CB','Malacia':'LB',
+    'Casemiro':'CDM','Mainoo':'CM','Ugarte':'CDM','B. Fernandes':'CAM','Mount':'CAM','Collyer':'CM','Dorgu':'LM','Cunha':'LW','Mbeumo':'RW','Sesko':'ST','Zirkzee':'ST','Diallo':'RW',
+    'Mohamed Salah':'RW','Florian Wirtz':'CAM','Alexis Mac Allister':'CM','Hugo Ekitike':'ST','Ryan Gravenberch':'CM','Dominik Szoboszlai':'CAM','Trent Alexander-Arnold':'RB','Cody Gakpo':'LW','Ibrahima Konaté':'CB',
+    'Bukayo Saka':'RW','Martin Ødegaard':'CAM','William Saliba':'CB','Declan Rice':'CDM','Viktor Gyökeres':'ST','Eberechi Eze':'CAM','Gabriel Magalhães':'CB','Riccardo Calafiori':'LB','Noni Madueke':'RW',
+    'Erling Haaland':'ST','Phil Foden':'CAM','Rodri':'CDM','Jérémy Doku':'LW','Rayan Cherki':'CAM','Omar Marmoush':'LW','Joško Gvardiol':'LB','Manuel Akanji':'CB','Tijjani Reijnders':'CM',
+    'Cole Palmer':'CAM','Moisés Caicedo':'CDM','Enzo Fernández':'CM','João Pedro':'ST','Estêvão':'RW','Reece James':'RB','Nicolas Jackson':'ST','Marc Cucurella':'LB','Alejandro Garnacho':'LW','Robert Sánchez':'GK',
+    'Alexander Isak':'ST','Bruno Guimarães':'CM','Sandro Tonali':'CDM','Anthony Gordon':'LW','Nick Pope':'GK','Anthony Elanga':'RW','Sven Botman':'CB',
+    'Heung-min Son':'LW','James Maddison':'CAM','Mohammed Kudus':'RW','Mathys Tel':'ST','Cristian Romero':'CB','Micky van de Ven':'CB','Guglielmo Vicario':'GK','Dominic Solanke':'ST',
+    'Ollie Watkins':'ST','John McGinn':'CM','Morgan Rogers':'CAM','Leon Bailey':'RW','Ezri Konsa':'CB','Emiliano Martinez':'GK','Amadou Onana':'CDM',
+    'Chris Wood':'ST','Morgan Gibbs-White':'CAM','Elliot Anderson':'CM','Murillo':'CB','Jean-Philippe Mateta':'ST','Ismaïla Sarr':'RW','Marc Guéhi':'CB','Adam Wharton':'CM','Daniel Muñoz':'RB',
+    'Kaoru Mitoma':'LW','Carlos Baleba':'CM','Bart Verbruggen':'GK','Lewis Dunk':'CB','Antoine Semenyo':'LW','Justin Kluivert':'LW','Evanilson':'ST','Yoane Wissa':'ST','Kevin Schade':'LW','Mikkel Damsgaard':'CM',
+    'Alex Iwobi':'RM','Emile Smith Rowe':'CAM','Rodrigo Muniz':'ST','Beto':'ST','Jordan Pickford':'GK','James Tarkowski':'CB','Jarrad Branthwaite':'CB','Jarrod Bowen':'RW','Lucas Paquetá':'CAM','Tomáš Souček':'CM',
+    'Jørgen Strand Larsen':'ST','José Sá':'GK','Alisson Becker':'GK','Virgil van Dijk':'CB','David Raya':'GK','Jurrien Timber':'RB','Rúben Dias':'CB','Bernardo Silva':'RM','Roméo Lavia':'CDM','Pedro Neto':'LW',
+    'Tino Livramento':'RB','Harvey Barnes':'LW','Pedro Porro':'RB','Dejan Kulusevski':'RW','Youri Tielemans':'CM','Pau Torres':'CB','Callum Hudson-Odoi':'LW','Nikola Milenković':'CB','Dean Henderson':'GK','Yankuba Minteh':'RW','Nathan Collins':'CB','Antonee Robinson':'LB',
+    'Lamine Yamal':'RW','Pedri':'CM','Désiré Doué':'LW','Jude Bellingham':'CAM','Vinicius Jr':'LW','Rodrygo':'RW','Khvicha Kvaratskhelia':'LW','Kenan Yıldız':'LW','Rafael Leão':'LW','Victor Osimhen':'ST',
+    'Lautaro Martinez':'ST','Julian Alvarez':'ST','Federico Valverde':'CM','Jamal Musiala':'CAM','Michael Olise':'RW','Harry Kane':'ST','Pau Cubarsí':'CB','Achraf Hakimi':'RB','Bradley Barcola':'LW','João Neves':'CM',
+    'Alessandro Bastoni':'CB','Marcus Rashford':'LW','Rasmus Højlund':'ST','Antony':'RW','Diogo Costa':'GK','Gianluigi Donnarumma':'GK'
+  };
+
+  Object.assign(ROLE_MAP, {
+    'Jeremie Frimpong':'RB','Milos Kerkez':'LB','Alphonso Davies':'LB','Theo Hernandez':'LB','Nuno Mendes':'LB','Alejandro Balde':'LB','Destiny Udogie':'LB','Pervis Estupiñán':'LB',
+    'Denzel Dumfries':'RB','Dani Carvajal':'RB','Kyle Walker':'RB','Ben White':'RB','Malo Gusto':'RB','Conor Bradley':'RB','Aaron Wan-Bissaka':'RB','Rayan Aït-Nouri':'LB',
+    'Miguel Gutierrez':'LB','Vanderson':'RB','Arnau Martinez':'RB','Quilindschy Hartman':'LB','Patrick Dorgu':'LB','Tyrick Mitchell':'LB','Valentino Livramento':'RB','Lewis Hall':'LB',
+    'Eduardo Camavinga':'CM','Aurelien Tchouameni':'CDM','Frenkie de Jong':'CM','Xavi Simons':'CAM','Benjamin Sesko':'ST','Jonathan David':'ST','Serhou Guirassy':'ST','Goncalo Ramos':'ST',
+    'Nico Williams':'LW','Raphinha':'RW','Takefusa Kubo':'RW','Mikel Oyarzabal':'LW','Edmond Tapsoba':'CB','Jonathan Tah':'CB','Antonio Silva':'CB','Giorgio Scalvini':'CB'
+  });
 
   const STARTING_SQUAD = [
     ['Onana','GK',29,80,83],['Bayindir','GK',27,75,78],['Heaton','GK',39,65,65],
@@ -180,6 +240,51 @@
     ['Napoli','NAP',83],['Atalanta','ATA',81],['Milan','MIL',82],['Leverkusen','B04',83],
     ['Sporting','SCP',80],['Benfica','SLB',81],['Marseille','OM',79]
   ];
+  const CL_EXTRA_TEAMS = [
+    ['Liverpool','LIV',87],['Arsenal','ARS',86],['Man City','MCI',86],['Chelsea','CHE',84],
+    ['Newcastle','NEW',82],['Tottenham','TOT',81],['Aston Villa','AVL',81],['Roma','ROM',82],
+    ['Porto','POR',81],['Lazio','LAZ',80],['Real Sociedad','RSO',81],['Villarreal','VIL',80],
+    ['Ajax','AJX',78],['Fenerbahce','FEN',79],['Galatasaray','GAL',80],['Lyon','LYO',79]
+  ];
+  const EUROPA_TEAMS = [
+    ['Roma','ROM',82],['Lazio','LAZ',80],['Real Sociedad','RSO',81],['Villarreal','VIL',80],
+    ['Porto','POR',81],['Ajax','AJX',78],['Fenerbahce','FEN',79],['Galatasaray','GAL',80],
+    ['Rangers','RAN',76],['Celtic','CEL',77],['Lyon','LYO',79],['Fiorentina','FIO',80],
+    ['Frankfurt','SGE',79],['Freiburg','SCF',77],['Braga','BRA',76],['Besiktas','BES',76]
+  ];
+  const CLUB_ROSTER_SEEDS = {
+    'Real Madrid':['Courtois','Carvajal','Rüdiger','Tchouameni','Camavinga','Valverde','Bellingham','Rodrygo','Vinicius Jr','Mbappé'],
+    'Barcelona':['Ter Stegen','Koundé','Cubarsí','Balde','Pedri','De Jong','Gavi','Raphinha','Lamine Yamal','Lewandowski'],
+    'PSG':['Donnarumma','Hakimi','Marquinhos','Nuno Mendes','Vitinha','João Neves','Désiré Doué','Barcola','Kvaratskhelia','Gonçalo Ramos'],
+    'Bayern':['Neuer','Davies','Jonathan Tah','Kimmich','Goretzka','Musiala','Olise','Gnabry','Luis Díaz','Harry Kane'],
+    'Inter':['Sommer','Dumfries','Bastoni','Acerbi','Barella','Calhanoglu','Mkhitaryan','Dimarco','Thuram','Lautaro Martinez'],
+    'Atletico':['Oblak','Molina','Giménez','Le Normand','De Paul','Koke','Barrios','Griezmann','Julian Alvarez','Sørloth'],
+    'Dortmund':['Kobel','Ryerson','Schlotterbeck','Anton','Brandt','Sabitzer','Nmecha','Adeyemi','Guirassy','Beier'],
+    'Juventus':['Di Gregorio','Bremer','Kalulu','Cambiaso','Locatelli','Thuram','Koopmeiners','Yıldız','Jonathan David','Vlahović'],
+    'Napoli':['Meret','Di Lorenzo','Rrahmani','Spinazzola','Lobotka','Anguissa','McTominay','Politano','Højlund','Lukaku'],
+    'Atalanta':['Carnesecchi','Scalvini','Hien','Kolasinac','De Roon','Ederson','Zappacosta','Lookman','De Ketelaere','Scamacca'],
+    'Milan':['Maignan','Theo Hernandez','Tomori','Pavlovic','Fofana','Reijnders','Pulisic','Leão','Chukwueze','Gimenez'],
+    'Leverkusen':['Hradecky','Tapsoba','Tah','Hincapié','Grimaldo','Xhaka','Palacios','Frimpong','Wirtz','Boniface'],
+    'Sporting':['Rui Silva','Diomande','Inácio','Hjulmand','Trincão','Pedro Gonçalves','Quenda','Gyökeres'],
+    'Benfica':['Trubin','Bah','Antonio Silva','Otamendi','Aursnes','Florentino','Kökçü','Di María','Pavlidis'],
+    'Marseille':['Rulli','Murillo','Balerdi','Kondogbia','Højbjerg','Rabiot','Greenwood','Gouiri','Aubameyang'],
+    'Roma':['Svilar','Mancini','Ndicka','Angelino','Cristante','Koné','Pellegrini','Dybala','Soulé','Dovbyk'],
+    'Porto':['Diogo Costa','Martim Fernandes','Perez','Moura','Varela','Nico González','Pepê','Galeno','Omorodion'],
+    'Lazio':['Provedel','Romagnoli','Gila','Guendouzi','Rovella','Zaccagni','Isaksen','Castellanos'],
+    'Real Sociedad':['Remiro','Traoré','Zubeldia','Aguerd','Zubimendi','Brais Méndez','Kubo','Oyarzabal'],
+    'Villarreal':['Jørgensen','Foyth','Bailly','Parejo','Baena','Pépé','Gerard Moreno'],
+    'Ajax':['Pasveer','Hato','Sutalo','Taylor','Klaassen','Berghuis','Brobbey'],
+    'Fenerbahce':['Livakovic','Skriniar','Amrabat','Fred','Tadic','Szymanski','En-Nesyri'],
+    'Galatasaray':['Muslera','Davinson Sánchez','Torreira','Sara','Mertens','Barış Yılmaz','Victor Osimhen'],
+    'Lyon':['Perri','Tagliafico','Niakhaté','Tolisso','Veretout','Cherki','Lacazette']
+  };
+  const PLAYER_ALIASES = {
+    'Salah':'Mohamed Salah','Van Dijk':'Virgil van Dijk','Mac Allister':'Alexis Mac Allister','Wirtz':'Florian Wirtz','Ekitike':'Hugo Ekitike','Szoboszlai':'Dominik Szoboszlai',
+    'Saka':'Bukayo Saka','Ødegaard':'Martin Ødegaard','Saliba':'William Saliba','Rice':'Declan Rice','Gyökeres':'Viktor Gyökeres','Eze':'Eberechi Eze',
+    'Haaland':'Erling Haaland','Foden':'Phil Foden','Doku':'Jérémy Doku','Cherki':'Rayan Cherki','Marmoush':'Omar Marmoush','Joao Pedro':'João Pedro',
+    'Palmer':'Cole Palmer','Caicedo':'Moisés Caicedo','Garnacho':'Alejandro Garnacho','Isak':'Alexander Isak','Gordon':'Anthony Gordon',
+    'Son':'Heung-min Son','Maddison':'James Maddison','Kudus':'Mohammed Kudus','Tel':'Mathys Tel','Watkins':'Ollie Watkins','McGinn':'John McGinn'
+  };
 
   const TRANSFER_POOL = [
     ['Mohamed Salah','FWD',33,87,87,'Liverpool',40],['Florian Wirtz','MID',22,87,91,'Liverpool',120],
@@ -232,6 +337,16 @@
     ['Jarrod Bowen','FWD',29,83,85,'West Ham',50],['Lucas Paquetá','MID',28,82,84,'West Ham',45],
     ['Tomáš Souček','MID',30,79,79,'West Ham',18],
     ['Jørgen Strand Larsen','FWD',25,78,84,'Wolves',32],['José Sá','GK',32,79,79,'Wolves',12],
+    ['Alisson Becker','GK',33,88,88,'Liverpool',55],['Virgil van Dijk','DEF',34,88,88,'Liverpool',45],
+    ['David Raya','GK',30,84,85,'Arsenal',45],['Jurrien Timber','DEF',24,83,87,'Arsenal',50],
+    ['Rúben Dias','DEF',28,86,87,'Man City',70],['Bernardo Silva','MID',31,86,86,'Man City',55],
+    ['Roméo Lavia','MID',22,79,86,'Chelsea',38],['Pedro Neto','FWD',25,81,84,'Chelsea',45],
+    ['Tino Livramento','DEF',23,80,86,'Newcastle',42],['Harvey Barnes','FWD',28,80,82,'Newcastle',30],
+    ['Pedro Porro','DEF',26,83,85,'Tottenham',52],['Dejan Kulusevski','FWD',25,82,86,'Tottenham',50],
+    ['Youri Tielemans','MID',28,82,83,'Aston Villa',35],['Pau Torres','DEF',28,82,84,'Aston Villa',38],
+    ['Callum Hudson-Odoi','FWD',25,78,81,'Nott Forest',25],['Nikola Milenković','DEF',28,79,81,'Nott Forest',22],
+    ['Dean Henderson','GK',28,79,81,'Crystal Palace',18],['Yankuba Minteh','FWD',21,77,86,'Brighton',35],
+    ['Nathan Collins','DEF',24,79,83,'Brentford',28],['Antonee Robinson','DEF',28,80,81,'Fulham',28],
     ['Lamine Yamal','FWD',18,89,95,'Barcelona',180],['Pedri','MID',23,88,92,'Barcelona',140],
     ['Désiré Doué','FWD',20,84,92,'PSG',95],['Jude Bellingham','MID',22,90,94,'Real Madrid',180],
     ['Vinicius Jr','FWD',25,89,92,'Real Madrid',170],['Rodrygo','FWD',25,86,90,'Real Madrid',100],
@@ -247,65 +362,314 @@
     ['Diogo Costa','GK',26,84,88,'Porto',55],['Gianluigi Donnarumma','GK',27,87,89,'PSG',60]
   ];
 
+  const EXTRA_TRANSFER_POOL = [
+    ['Jeremie Frimpong','DEF',25,84,87,'Liverpool',58],['Milos Kerkez','DEF',22,81,87,'Liverpool',45],
+    ['Alphonso Davies','DEF',25,85,88,'Bayern',70],['Theo Hernandez','DEF',28,84,85,'Milan',50],
+    ['Nuno Mendes','DEF',23,84,89,'PSG',78],['Alejandro Balde','DEF',22,82,89,'Barcelona',62],
+    ['Destiny Udogie','DEF',23,80,86,'Tottenham',40],['Pervis Estupiñán','DEF',28,79,81,'Brighton',28],
+    ['Denzel Dumfries','DEF',29,82,82,'Inter',30],['Dani Carvajal','DEF',34,82,82,'Real Madrid',18],
+    ['Kyle Walker','DEF',35,80,80,'Milan',10],['Ben White','DEF',28,82,84,'Arsenal',42],
+    ['Malo Gusto','DEF',22,80,86,'Chelsea',40],['Conor Bradley','DEF',22,78,86,'Liverpool',34],
+    ['Aaron Wan-Bissaka','DEF',28,78,79,'West Ham',20],['Rayan Aït-Nouri','DEF',25,80,84,'Wolves',35],
+    ['Miguel Gutierrez','DEF',24,80,85,'Girona',36],['Vanderson','DEF',24,79,84,'Monaco',32],
+    ['Arnau Martinez','DEF',23,78,84,'Girona',26],['Quilindschy Hartman','DEF',24,78,84,'Feyenoord',24],
+    ['Patrick Dorgu','DEF',21,77,86,'Lecce',32],['Tyrick Mitchell','DEF',26,78,80,'Crystal Palace',22],
+    ['Valentino Livramento','DEF',23,80,86,'Newcastle',42],['Lewis Hall','DEF',21,78,86,'Newcastle',34],
+    ['Eduardo Camavinga','MID',23,85,90,'Real Madrid',90],['Aurelien Tchouameni','MID',26,85,88,'Real Madrid',85],
+    ['Frenkie de Jong','MID',28,86,87,'Barcelona',80],['Xavi Simons','MID',23,84,89,'RB Leipzig',70],
+    ['Benjamin Sesko','FWD',22,82,89,'RB Leipzig',65],['Jonathan David','FWD',26,83,86,'Juventus',55],
+    ['Serhou Guirassy','FWD',29,82,82,'Dortmund',35],['Goncalo Ramos','FWD',24,81,86,'PSG',48],
+    ['Nico Williams','FWD',23,84,89,'Athletic Club',75],['Raphinha','FWD',29,86,86,'Barcelona',70],
+    ['Takefusa Kubo','FWD',25,82,86,'Real Sociedad',50],['Mikel Oyarzabal','FWD',28,83,84,'Real Sociedad',45],
+    ['Edmond Tapsoba','DEF',27,82,84,'Leverkusen',40],['Jonathan Tah','DEF',30,83,83,'Bayern',35],
+    ['Antonio Silva','DEF',22,80,88,'Benfica',48],['Giorgio Scalvini','DEF',22,80,88,'Atalanta',50]
+  ];
+
   let G;
 
   function newGame() {
+    const allTransfers = [...TRANSFER_POOL, ...EXTRA_TRANSFER_POOL];
+    const seenMarket = new Set();
     G = {
-      view: 'dash', season: 1, year: 2025, day: 220,
+      view: 'dash', season: 1, year: 2025, day: 198, clQualified: true, nextCLQualified: true,
       squad: STARTING_SQUAD.map((p,i) => ({
-        id: i, name: p[0], pos: p[1], age: p[2], ovr: p[3], pot: p[4],
-        mins: 0, goals: 0, assists: 0, appearances: 0,
+        id: i, name: p[0], pos: p[1], role: p[5] || inferRole(p[0], p[1]), age: p[2], ovr: p[3], pot: p[4],
+        mins: 0, goals: 0, assists: 0, appearances: 0, clubGoals: 0, clubAssists: 0, clubApps: 0,
         matchRatings: [], bigGameRatings: [], lastUpdate: 0,
         fitness: 100, morale: 75, injuryWeeks: 0, newSigning: false,
-        sold: false, onLoan: null
+        sold: false, onLoan: null, suspended: 0, majorInjuries: 0, devPenalty: 0, academyTeam: null
       })),
       starters: [], tactic: 'balanced', formation: '4-3-3', training: 'balanced',
-      budget: 150, tables: {}, clStandings: {}, cupRounds: { FA: [], EFL: [] },
-      fixtures: [], results: [], trophies: [], currentMatch: null,
+      budget: 80, stadiumLevel: 1, records: {}, tables: {}, clStandings: {}, elStandings: {}, cupRounds: { FA: [], EFL: [] }, clKnockout: null, elKnockout: null,
+      fixtures: [], results: [], trophies: [], seasonHistory: [], currentMatch: null,
       seasonStats: { played:0, won:0, drawn:0, lost:0, gf:0, ga:0 },
-      transferMessages: [],
-      market: TRANSFER_POOL.map((p,i) => ({
-        id: i, name: p[0], pos: p[1], age: p[2], ovr: p[3], pot: p[4],
+      transferMessages: [], injuryHistory: [], incomingBids: [], nextBidId: 1, aiTransfers: {}, aiTransferLog: [], clubRosters: {},
+      academy: { u21: [], u18: [], log: [] }, nextYouthId: 1000,
+      market: allTransfers.filter(p => { if (seenMarket.has(p[0])) return false; seenMarket.add(p[0]); return true; }).map((p,i) => ({
+        id: i, name: p[0], pos: p[1], role: p[7] || inferRole(p[0], p[1]), age: p[2], ovr: p[3], pot: p[4],
         club: p[5], price: p[6], status: 'available'
       })),
       shortlist: [], windowOpen: true, finished: false
     };
-    initTables(); buildFixtures(); autoPickXI(); render();
+    generateAcademy(); refreshTransferWindow(); initTables(); buildFixtures(); autoPickXI(); render();
   }
 
   function initTables() {
     G.tables['Man Utd'] = { P:0,W:0,D:0,L:0,GF:0,GA:0,Pts:0 };
+    initClubRosters();
     PL_TEAMS.forEach(t => G.tables[t[0]] = { P:0,W:0,D:0,L:0,GF:0,GA:0,Pts:0 });
-    const eu = [...EURO_TEAMS].sort(()=>Math.random()-0.5).slice(0,6);
-    G.clOpponents = [...eu.map(t => ({name:t[0],short:t[1],strength:t[2]})),
-      ...['Liverpool','Arsenal'].map(n => { const t = PL_TEAMS.find(x=>x[0]===n); return {name:t[0],short:t[1],strength:t[2]}; })];
+    const clPool = [...EURO_TEAMS, ...CL_EXTRA_TEAMS];
+    const seenCL = new Set(G.clQualified ? ['Man Utd'] : []);
+    G.clTeams = G.clQualified ? [{name:'Man Utd', short:'MUN', strength:84}] : [];
+    clPool.forEach(t => { if (!seenCL.has(t[0]) && G.clTeams.length < 32) { seenCL.add(t[0]); G.clTeams.push({name:t[0],short:t[1],strength:t[2]}); } });
+    G.clOpponents = [...G.clTeams].filter(t => t.name !== 'Man Utd').sort(()=>Math.random()-0.5).slice(0,8);
     G.clStandings = {};
-    [...G.clOpponents.map(t=>t.name),'Man Utd'].forEach(n => G.clStandings[n] = {P:0,W:0,D:0,L:0,GF:0,GA:0,Pts:0});
+    G.clTeams.forEach(t => G.clStandings[t.name] = {P:0,W:0,D:0,L:0,GF:0,GA:0,Pts:0});
+    G.clKnockout = { scheduled:false, round:null, ties:[], history:[], champion:null, manUtdAlive:true };
+    G.elTeams = EUROPA_TEAMS.map(t => ({name:t[0],short:t[1],strength:t[2]}));
+    G.elStandings = {};
+    G.elTeams.forEach(t => G.elStandings[t.name] = {P:0,W:0,D:0,L:0,GF:0,GA:0,Pts:0});
+    G.elKnockout = { scheduled:false, round:null, ties:[], history:[], champion:null };
+  }
+  function initClubRosters() {
+    if (G.clubRosters && Object.keys(G.clubRosters).length) {
+      G.clubRosters['Man Utd'] = G.squad.filter(p => !p.sold).map(p => p.name);
+      [...PL_TEAMS, ...EURO_TEAMS, ...EUROPA_TEAMS, ...CL_EXTRA_TEAMS].forEach(t => {
+        if (!G.clubRosters[t[0]]) G.clubRosters[t[0]] = [...(CLUB_ROSTER_SEEDS[t[0]] || [])].map(n => PLAYER_ALIASES[n] || n);
+        else G.clubRosters[t[0]] = [...new Set([...(G.clubRosters[t[0]] || []), ...(CLUB_ROSTER_SEEDS[t[0]] || [])].map(n => PLAYER_ALIASES[n] || n))];
+      });
+      enforceRosterUniqueness();
+      return;
+    }
+    G.clubRosters = { 'Man Utd': G.squad.filter(p => !p.sold).map(p => p.name) };
+    PL_TEAMS.forEach(t => G.clubRosters[t[0]] = [...(t[3] || [])].map(n => PLAYER_ALIASES[n] || n));
+    [...EURO_TEAMS, ...EUROPA_TEAMS, ...CL_EXTRA_TEAMS].forEach(t => {
+      if (!G.clubRosters[t[0]]) G.clubRosters[t[0]] = [...(CLUB_ROSTER_SEEDS[t[0]] || [])].map(n => PLAYER_ALIASES[n] || n);
+      else G.clubRosters[t[0]] = [...new Set([...(G.clubRosters[t[0]] || []), ...(CLUB_ROSTER_SEEDS[t[0]] || [])].map(n => PLAYER_ALIASES[n] || n))];
+    });
+    (G.market || TRANSFER_POOL.map(p => ({name:p[0], club:p[5], status:'available'}))).forEach(p => {
+      if (p.status === 'signed') return;
+      const name = PLAYER_ALIASES[p.name || p[0]] || p.name || p[0], club = p.club || p[5];
+      if (!G.clubRosters[club]) G.clubRosters[club] = [];
+      if (!G.clubRosters[club].includes(name)) G.clubRosters[club].push(name);
+    });
+    enforceRosterUniqueness();
+  }
+  function getClubRoster(club) {
+    if (club === 'Man Utd') return G.squad.filter(p => !p.sold).map(p => p.name);
+    return G.clubRosters[club] || [];
+  }
+  function addToClubRoster(club, name) {
+    if (!club || club === 'Man Utd') return;
+    name = PLAYER_ALIASES[name] || name;
+    Object.keys(G.clubRosters).forEach(c => { if (c !== club) removeFromClubRoster(c, name); });
+    if (!G.clubRosters[club]) G.clubRosters[club] = [];
+    if (!G.clubRosters[club].includes(name)) G.clubRosters[club].unshift(name);
+  }
+  function removeFromClubRoster(club, name) {
+    if (!club || !G.clubRosters[club]) return;
+    name = PLAYER_ALIASES[name] || name;
+    G.clubRosters[club] = G.clubRosters[club].filter(n => n !== name);
+  }
+  function transferMarketPlayerToClub(target, buyer) {
+    removeFromClubRoster(target.club, target.name);
+    addToClubRoster(buyer, target.name);
+    target.previousClub = target.club;
+    target.club = buyer;
+  }
+  function enforceRosterUniqueness() {
+    const holder = {};
+    Object.keys(G.clubRosters).forEach(club => {
+      const clean = [];
+      (G.clubRosters[club] || []).forEach(name => {
+        if (!name || holder[name]) return;
+        holder[name] = club; clean.push(name);
+      });
+      G.clubRosters[club] = clean;
+    });
   }
   function dayToDate(d) { let y = 2025, doy = d; while (doy > 365) { doy -= 365; y++; } let m = 0, dd = doy; while (dd > DOM[m]) { dd -= DOM[m]; m++; } return { day: dd, mon: m, year: y }; }
   function fmtDate(d) { const x = dayToDate(d); return x.day + ' ' + MONTHS[x.mon]; }
   function fmtDateLong(d) { const x = dayToDate(d); return x.day + ' ' + MONTHS[x.mon] + ' ' + x.year; }
+  function isTransferWindowDay(day) { return WINDOW_MONTHS.includes(dayToDate(day).mon); }
+  function refreshTransferWindow() {
+    const open = isTransferWindowDay(G.day);
+    if (G.windowOpen !== open) G.transferMessages.push(open ? 'Transfer window is open.' : 'Transfer window is closed until January or summer.');
+    G.windowOpen = open;
+  }
 
   function buildFixtures() {
     G.fixtures = []; let id = 0;
+    const preseason = [
+      { day: 203, comp:'FR', opp:'Ajax', oppShort:'AJX', oppStr:78, home:true, round:'Friendly' },
+      { day: 210, comp:'FR', opp:'Roma', oppShort:'ROM', oppStr:82, home:true, round:'Friendly' },
+      { day: 217, comp:'CS', opp:PICK(PL_TEAMS.slice(0,4)), home:true, round:'Community Shield' }
+    ];
+    preseason.forEach(f => {
+      const opp = Array.isArray(f.opp) ? f.opp : [f.opp, f.oppShort, f.oppStr];
+      G.fixtures.push({ id:id++, day:f.day + (G.season-1)*365, comp:f.comp, opp:opp[0], oppShort:opp[1], oppStr:opp[2], home:f.home, played:false, round:f.round });
+    });
     const opps = [...PL_TEAMS, ...PL_TEAMS].sort(()=>Math.random()-0.5);
     const homeAway = opps.map((_,i) => i % 2 === 0);
-    const plStart = 222, plEnd = 510, plSpacing = Math.floor((plEnd - plStart) / 38);
+    const seasonOffset = (G.season-1)*365;
+    const plStart = 222 + seasonOffset, plEnd = 510 + seasonOffset, plSpacing = Math.floor((plEnd - plStart) / 38);
     for (let i = 0; i < 38; i++) {
       const day = plStart + i*plSpacing + Math.floor(Math.random()*3) - 1;
       G.fixtures.push({ id:id++, day, comp:'PL', opp:opps[i][0], oppShort:opps[i][1], oppStr:opps[i][2], home: homeAway[i], played:false });
     }
-    G.fixtures.push({ id:id++, day: 260, comp:'EFL', opp:'Walsall', oppShort:'WAL', oppStr:62, home:true, played:false, round:'R3' });
-    G.fixtures.push({ id:id++, day: 374, comp:'FA', opp:'Sheffield Wed', oppShort:'SHW', oppStr:67, home:true, played:false, round:'R3' });
-    const clDays = [255, 275, 290, 312, 335, 355, 372, 395];
-    G.clOpponents.slice(0,8).forEach((opp, i) => {
-      G.fixtures.push({ id:id++, day: clDays[i] + Math.floor(Math.random()*3), comp:'CL', opp:opp.name, oppShort:opp.short, oppStr:opp.strength, home: i%2===0, played:false, round:'League' });
-    });
+    G.fixtures.push({ id:id++, day: 260 + seasonOffset, comp:'EFL', opp:'Walsall', oppShort:'WAL', oppStr:62, home:true, played:false, round:'R3' });
+    G.fixtures.push({ id:id++, day: 374 + seasonOffset, comp:'FA', opp:'Sheffield Wed', oppShort:'SHW', oppStr:67, home:true, played:false, round:'R3' });
+    if (G.clQualified) {
+      const clDays = [255, 275, 290, 312, 335, 355, 372, 395].map(d => d + seasonOffset);
+      G.clOpponents.slice(0,8).forEach((opp, i) => {
+        G.fixtures.push({ id:id++, day: clDays[i] + Math.floor(Math.random()*3), comp:'CL', opp:opp.name, oppShort:opp.short, oppStr:opp.strength, home: i%2===0, played:false, round:'League' });
+      });
+    } else {
+      G.transferMessages.push('No Champions League this season — finish top 4 to qualify again.');
+    }
+    simEuropaLeague();
     G.fixtures.sort((a,b) => a.day - b.day);
   }
 
   function nextFixture() { return G.fixtures.find(f => !f.played); }
   function tierOf(ovr) { if (ovr >= 92) return 'super'; if (ovr >= 88) return 'star'; if (ovr >= 82) return 'solid'; return 'depth'; }
+  function awardTrophy(name) { if (!G.trophies.includes(name)) G.trophies.push(name); }
+  function seasonLabel() { return G.year + '-' + (G.year+1).toString().slice(2); }
+  function playerValue(p) { return Math.max(2, Math.round((p.ovr - 60) * 4 + (p.pot - p.ovr) * 3)); }
+  function saleBudgetReturn(price) { return Math.round(price * 0.75); }
+  function inferRole(name, pos) {
+    if (ROLE_MAP[name]) return ROLE_MAP[name];
+    if (pos === 'GK') return 'GK';
+    if (pos === 'DEF') return 'CB';
+    if (pos === 'MID') return 'CM';
+    if (pos === 'FWD') return 'ST';
+    return pos;
+  }
+  function roleOf(p) { return p.role || inferRole(p.name, p.pos); }
+  function roleBadge(p) { const r = roleOf(p); return '<span class="pos pos-' + r + '">' + r + '</span>'; }
+  function roleSort(a,b) { return POSITION_ORDER.indexOf(roleOf(a)) - POSITION_ORDER.indexOf(roleOf(b)) || effectiveRating(b) - effectiveRating(a); }
+  function similarRolesFor(p) {
+    const r = roleOf(p);
+    return SIMILAR_ROLES[r] || [r];
+  }
+  function roleSelect(p) {
+    const r = roleOf(p);
+    return '<select class="role-select" onchange="changePlayerRole(' + p.id + ', this.value)">' +
+      similarRolesFor(p).map(role => '<option value="' + role + '"' + (role===r?' selected':'') + '>' + role + '</option>').join('') +
+    '</select>';
+  }
+  function changePlayerRole(id, newRole) {
+    const p = G.squad.find(x => x.id === id);
+    if (!p || p.sold || !POSITION_ORDER.includes(newRole)) return;
+    const oldRole = roleOf(p);
+    if (!similarRolesFor(p).includes(newRole)) return;
+    p.role = newRole;
+    p.pos = slotGroup(newRole);
+    G.transferMessages.push(p.name + ' retrained from ' + oldRole + ' to ' + newRole + '.');
+    render();
+  }
+  function weightedPick(items, weightFn) {
+    if (!items.length) return null;
+    const weights = items.map(x => Math.max(0.1, weightFn(x)));
+    let roll = Math.random() * weights.reduce((a,b)=>a+b,0);
+    for (let i=0; i<items.length; i++) { roll -= weights[i]; if (roll <= 0) return items[i]; }
+    return items[items.length - 1];
+  }
+  function youthName() {
+    const first = ['Ethan','Noah','Leo','Mason','Finley','Kai','Jude','Theo','Isaac','Archie','Rio','Kian','Oscar','Lucas','Toby'];
+    const last = ['Fletcher','Hughes','Bennett','Clarke','Evans','Murray','Reid','Spencer','Walsh','Brooks','Hayes','Foster','Riley','Stone','Parker'];
+    return PICK(first) + ' ' + PICK(last);
+  }
+  function makeYouth(team, i) {
+    const role = PICK(POSITION_ORDER.filter(r => r !== 'GK').concat(['GK']));
+    const age = team === 'u18' ? 16 + Math.floor(Math.random()*2) : 18 + Math.floor(Math.random()*3);
+    const ovr = team === 'u18' ? 51 + Math.floor(Math.random()*10) : 58 + Math.floor(Math.random()*10);
+    const pot = Math.min(94, ovr + 18 + Math.floor(Math.random()*15));
+    return { id:G.nextYouthId++, name:youthName(), pos:slotGroup(role), role, age, ovr, pot, growth:0, apps:0, goals:0, assists:0, team, academy:true };
+  }
+  function generateAcademy() {
+    G.academy.u21 = [];
+    G.academy.u18 = [];
+    for (let i=0; i<5; i++) G.academy.u21.push(makeYouth('u21', i));
+    for (let i=0; i<5; i++) G.academy.u18.push(makeYouth('u18', i));
+  }
+  function academyPlayers(team) { return (G.academy && G.academy[team]) || []; }
+  function simulateAcademyDays(days) {
+    if (!G.academy) return;
+    ['u21','u18'].forEach(team => {
+      academyPlayers(team).forEach(p => {
+        const cap = team === 'u18' ? 76 : 78;
+        const fast = p.ovr < cap ? 1.4 : 0.28;
+        const train = G.training === 'youth' ? 0.55 : 0.25;
+        p.growth += days * (fast + train) * (Math.max(0, p.pot - p.ovr) / 22);
+        if (Math.random() < days / 12) {
+          p.apps++;
+          if (['ST','LW','RW','CAM'].includes(roleOf(p)) && Math.random() < 0.35) p.goals++;
+          if (['CM','CAM','RW','LW','RM','LM'].includes(roleOf(p)) && Math.random() < 0.33) p.assists++;
+        }
+        while (p.growth >= 12 && p.ovr < p.pot) { p.growth -= 12; p.ovr++; }
+      });
+    });
+    G.squad.filter(p => p.academyTeam === 'U21' && !p.sold).forEach(p => {
+      p.fitness = Math.min(100, p.fitness + days * 5);
+      if (p.age <= 23 && p.ovr < Math.min(77, p.pot) && Math.random() < days / 55) p.ovr++;
+    });
+  }
+  function promoteYouth(team, id) {
+    const list = academyPlayers(team);
+    const p = list.find(x => x.id === id);
+    if (!p) return;
+    G.academy[team] = list.filter(x => x.id !== id);
+    const newId = Math.max(...G.squad.map(x=>x.id), 0) + 1;
+    G.squad.push({ id:newId, name:p.name, pos:p.pos, role:p.role, age:p.age, ovr:p.ovr, pot:p.pot,
+      mins:0, goals:0, assists:0, appearances:0, clubGoals:0, clubAssists:0, clubApps:0, matchRatings:[], bigGameRatings:[], lastUpdate:G.day,
+      fitness:100, morale:70, injuryWeeks:0, newSigning:false, sold:false, onLoan:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null });
+    G.transferMessages.push('Promoted ' + p.name + ' from ' + team.toUpperCase() + ' to the first team.');
+    autoPickXI(); render();
+  }
+  function sendSeniorToU21(id) {
+    const p = G.squad.find(x => x.id === id);
+    if (!p || p.sold || p.injuryWeeks > 0 || G.starters.includes(id)) return;
+    p.academyTeam = 'U21';
+    G.starters = G.starters.filter(sid => sid !== id);
+    G.transferMessages.push(p.name + ' moved to U21 games for match sharpness.');
+    autoPickXI(); render();
+  }
+  function recallSenior(id) {
+    const p = G.squad.find(x => x.id === id);
+    if (!p || p.sold) return;
+    p.academyTeam = null;
+    G.transferMessages.push(p.name + ' recalled to the senior squad.');
+    render();
+  }
+  function upgradeStadium() {
+    const cost = 45 + G.stadiumLevel * 35;
+    if (G.budget < cost || G.stadiumLevel >= 5) return;
+    G.budget -= cost; G.stadiumLevel++;
+    G.transferMessages.push('Stadium upgraded to level ' + G.stadiumLevel + '. Reputation boost will help future transfer pitches.');
+    render();
+  }
+  function scorerWeight(p) {
+    const r = roleOf(p);
+    if (r === 'ST') return 10;
+    if (r === 'LW' || r === 'RW') return 8;
+    if (r === 'CAM') return 5;
+    if (r === 'LM' || r === 'RM') return 4;
+    if (r === 'CM') return 2.4;
+    if (r === 'CDM') return 1.5;
+    if (r === 'LB' || r === 'RB') return 0.8;
+    if (r === 'CB') return 0.55;
+    return 0.05;
+  }
+  function assisterWeight(p) {
+    const r = roleOf(p);
+    if (['CAM','RW','LW','RM','LM'].includes(r)) return 7;
+    if (r === 'CM') return 4;
+    if (r === 'ST') return 3.5;
+    if (r === 'CDM' || r === 'RB' || r === 'LB') return 2;
+    if (r === 'CB') return 0.6;
+    return 0.1;
+  }
   function matchWeight(fx) {
     if (fx.round === 'Final' || fx.round === 'SF') return 2.5;
     if (fx.comp === 'CL' && fx.round !== 'League') return 2.5;
@@ -349,10 +713,85 @@
   }
   function formBonus(p) { const f = getFormStatus(p); if (f === 'Elite') return 2; if (f === 'Good') return 1; if (f === 'Poor') return -1; return 0; }
   function isInForm(p) { return getFormStatus(p) === 'Elite'; }
-  function isAvailable(p) { return !p.sold && !p.onLoan && !p.injuryWeeks; }
+  function isAvailable(p) { return !p.sold && !p.onLoan && !p.academyTeam && !p.injuryWeeks && !p.suspended; }
+  function recentInjuryCount(days) {
+    const cutoff = G.day - days;
+    G.injuryHistory = G.injuryHistory.filter(i => i.day >= cutoff);
+    return G.injuryHistory.length;
+  }
+  function injuryChance(p) {
+    const fatigueRisk = Math.max(0, 100 - p.fitness) * 0.00004;
+    const trainingRisk = G.training === 'fitness' ? -0.0004 : 0;
+    const historyRisk = (p.majorInjuries || 0) * 0.00035;
+    const base = Math.max(0.0009, 0.0025 + fatigueRisk + trainingRisk + historyRisk);
+    return roleOf(p) === 'GK' ? base * 0.22 : base;
+  }
+  function recordInjury(p, weeks) {
+    G.injuryHistory.push({ day: G.day, playerId: p.id, weeks });
+    if (weeks >= 8) {
+      p.majorInjuries = (p.majorInjuries || 0) + 1;
+      p.devPenalty = (p.devPenalty || 0) + (weeks >= 14 ? 2 : 1);
+      if (p.age <= 27 && Math.random() < 0.35) p.pot = Math.max(p.ovr, p.pot - 1);
+    }
+  }
   function getFormationSlots(f) {
-    return f === '4-3-3' ? [1,4,3,3] : f === '4-2-3-1' ? [1,4,5,1] : f === '4-4-2' ? [1,4,4,2]
-      : f === '3-5-2' ? [1,3,5,2] : f === '5-3-2' ? [1,5,3,2] : [1,4,3,3];
+    const counts = { GK:0, DEF:0, MID:0, FWD:0 };
+    getFormationShape(f).flat().forEach(slot => counts[slotGroup(slot)]++);
+    return [counts.GK, counts.DEF, counts.MID, counts.FWD];
+  }
+  function getFormationShape(f) {
+    const shapes = {
+      '4-3-3': [['LW','ST','RW'], ['CM','CDM','CM'], ['LB','CB','CB','RB'], ['GK']],
+      '4-2-3-1': [['ST'], ['LM','CAM','RM'], ['CDM','CM'], ['LB','CB','CB','RB'], ['GK']],
+      '4-4-2': [['ST','ST'], ['LM','CM','CM','RM'], ['LB','CB','CB','RB'], ['GK']],
+      '3-5-2': [['ST','ST'], ['LM','CM','CAM','CM','RM'], ['CB','CB','CB'], ['GK']],
+      '5-3-2': [['ST','ST'], ['CM','CDM','CM'], ['LB','CB','CB','CB','RB'], ['GK']]
+    };
+    return shapes[f] || shapes['4-3-3'];
+  }
+  function slotGroup(slot) {
+    if (slot === 'GK') return 'GK';
+    if (['RB','CB','LB'].includes(slot)) return 'DEF';
+    if (['CDM','CM','CAM','RM','LM'].includes(slot)) return 'MID';
+    return 'FWD';
+  }
+  function slotCompatibility(slot, p) {
+    const r = roleOf(p);
+    if (r === slot) return 8;
+    const related = {
+      RB:['CB','RM','LB'], CB:['LB','RB','CDM'], LB:['CB','LM','RB'],
+      CDM:['CM','CB','CAM'], CM:['CDM','CAM','RM','LM'], CAM:['CM','ST','RW','LW'],
+      RM:['RW','CM','RB','LM'], LM:['LW','CM','LB','RM'],
+      RW:['RM','LW','ST','CAM'], LW:['LM','RW','ST','CAM'], ST:['LW','RW','CAM']
+    };
+    if ((related[slot] || []).includes(r)) return 4;
+    if (p.pos === slotGroup(slot)) return 1;
+    return -5;
+  }
+  function slotScore(slot, p, fresh) {
+    return effectiveRating(p) + slotCompatibility(slot, p) * 3 + (fresh ? p.fitness / 5 : 0);
+  }
+  function assignFormationPlayers(f, pool, fresh) {
+    const selected = [];
+    getFormationShape(f).flat().forEach(slot => {
+      const candidates = pool.filter(p => !selected.includes(p.id)).sort((a,b) => slotScore(slot,b,fresh) - slotScore(slot,a,fresh));
+      const pick = candidates[0];
+      if (pick) selected.push(pick.id);
+    });
+    if (selected.length < 11) {
+      pool.filter(p => !selected.includes(p.id)).sort((a,b) => (fresh ? b.fitness - a.fitness : effectiveRating(b) - effectiveRating(a))).slice(0, 11 - selected.length).forEach(p => selected.push(p.id));
+    }
+    return selected.slice(0,11);
+  }
+  function getFormationAssignments() {
+    const xi = getXI();
+    const used = [];
+    return getFormationShape(G.formation).map(row => row.map(slot => {
+      const options = xi.filter(p => !used.includes(p.id)).sort((a,b) => slotScore(slot,b,false) - slotScore(slot,a,false));
+      const player = options[0] || null;
+      if (player) used.push(player.id);
+      return { slot, player };
+    }));
   }
 
   function computeMatchRating(p, fx, perf) {
@@ -400,6 +839,7 @@
       const role = getSquadRole(p);
       const diff = e.target - p.ovr;
       let maxMove = early ? 2 : 1;
+      if ((p.devPenalty || 0) > 0 && diff > 0) maxMove = Math.max(0, maxMove - Math.ceil(p.devPenalty / 2));
       if (role === 'Bench' || role === 'Prove-it') maxMove = Math.min(maxMove, 1);
       if (role === 'Rotation' && diff > 0 && e.composite < 7.3) maxMove = Math.min(maxMove, 1);
       let delta = Math.sign(diff) * Math.min(Math.abs(diff), maxMove);
@@ -427,6 +867,7 @@
           delta = Math.min(delta - loss, delta);
         }
         if (p.ovr >= 88 && p.age < 31) delta = Math.min(delta, 0);
+        if ((p.devPenalty || 0) > 0) p.devPenalty = Math.max(0, p.devPenalty - 0.5);
       }
       p.ovr = Math.max(50, Math.min(99, p.ovr + delta));
       p.lastUpdate = G.day;
@@ -436,21 +877,11 @@
 
   function autoPickXI() {
     const avail = G.squad.filter(isAvailable).sort((a,b) => effectiveRating(b) - effectiveRating(a));
-    const by = { GK: avail.filter(p=>p.pos==='GK'), DEF: avail.filter(p=>p.pos==='DEF'), MID: avail.filter(p=>p.pos==='MID'), FWD: avail.filter(p=>p.pos==='FWD') };
-    const f = getFormationSlots(G.formation);
-    const xi = [...by.GK.slice(0,f[0]), ...by.DEF.slice(0,f[1]), ...by.MID.slice(0,f[2]), ...by.FWD.slice(0,f[3])];
-    if (xi.length < 11) { const filler = avail.filter(p => !xi.includes(p)).slice(0, 11 - xi.length); xi.push(...filler); }
-    G.starters = xi.slice(0,11).map(p => p.id);
+    G.starters = assignFormationPlayers(G.formation, avail, false);
   }
   function setFreshestXI() {
     const avail = G.squad.filter(isAvailable);
-    const by = { GK: [], DEF: [], MID: [], FWD: [] };
-    avail.forEach(p => by[p.pos].push(p));
-    Object.keys(by).forEach(k => by[k].sort((a,b) => (effectiveRating(b) + b.fitness/4) - (effectiveRating(a) + a.fitness/4)));
-    const f = getFormationSlots(G.formation);
-    const xi = [...by.GK.slice(0,f[0]), ...by.DEF.slice(0,f[1]), ...by.MID.slice(0,f[2]), ...by.FWD.slice(0,f[3])];
-    if (xi.length < 11) { const filler = avail.filter(p => !xi.includes(p)).sort((a,b) => b.fitness - a.fitness).slice(0, 11 - xi.length); xi.push(...filler); }
-    G.starters = xi.slice(0,11).map(p => p.id);
+    G.starters = assignFormationPlayers(G.formation, avail, true);
     render();
   }
   function getXI() { return G.starters.map(id => G.squad.find(p => p.id === id)).filter(Boolean); }
@@ -458,12 +889,14 @@
   function startPlayer(id) {
     const p = G.squad.find(x => x.id === id);
     if (!p || p.sold || p.injuryWeeks > 0 || G.starters.includes(id)) return;
-    const positionStarters = G.starters.map(sid => G.squad.find(x => x.id === sid))
-      .filter(s => s && s.pos === p.pos).sort((a,b) => effectiveRating(a) - effectiveRating(b));
-    const required = getFormationSlots(G.formation)[{GK:0,DEF:1,MID:2,FWD:3}[p.pos]];
-    if (positionStarters.length >= required && positionStarters.length > 0) {
-      const swap = positionStarters[0];
-      G.starters = G.starters.map(sid => sid === swap.id ? id : sid);
+    const assignments = getFormationAssignments().flat().filter(a => a.player && slotGroup(a.slot) === p.pos);
+    const swapOption = assignments.sort((a,b) => {
+      const aGain = slotScore(a.slot, p, false) - slotScore(a.slot, a.player, false);
+      const bGain = slotScore(b.slot, p, false) - slotScore(b.slot, b.player, false);
+      return bGain - aGain;
+    })[0];
+    if (swapOption) {
+      G.starters = G.starters.map(sid => sid === swapOption.player.id ? id : sid);
     } else {
       G.starters.push(id);
       if (G.starters.length > 11) {
@@ -477,7 +910,7 @@
     if (!G.starters.includes(id)) return;
     const p = G.squad.find(x => x.id === id);
     const candidates = G.squad.filter(x => !x.sold && x.injuryWeeks === 0 && !G.starters.includes(x.id) && x.pos === p.pos)
-      .sort((a,b) => effectiveRating(b) - effectiveRating(a));
+      .sort((a,b) => slotCompatibility(roleOf(p), b) - slotCompatibility(roleOf(p), a) || effectiveRating(b) - effectiveRating(a));
     if (candidates.length > 0) {
       G.starters = G.starters.map(sid => sid === id ? candidates[0].id : sid);
     } else {
@@ -487,7 +920,7 @@
   }
 
   function playFixture(fx) {
-    G.currentMatch = { fx, home:0, away:0, comm:[], playing:true, done:false, scorers: [], assists: [], injured: [], perPlayerGoals: {}, perPlayerAssists: {} };
+    G.currentMatch = { fx, home:0, away:0, comm:[], playing:true, done:false, scorers: [], assists: [], injured: [], sentOff: [], oppReds:0, injuryThisMatch: false, perPlayerGoals: {}, perPlayerAssists: {} };
     G.view = 'match';
     const xi = getXI();
     const munStr = xi.reduce((s,p)=>s+effectiveRating(p),0) / Math.max(1,xi.length);
@@ -497,35 +930,49 @@
     const munAtk = munStr + tAtk + hAdv, munDef = munStr + tDef + hAdv;
     const oppAtk = fx.oppStr, oppDef = fx.oppStr;
     const attackers = xi.filter(p => p.pos==='FWD' || p.pos==='MID');
-    const oppRoster = PL_TEAMS.find(t=>t[0]===fx.opp)?.[3];
-    const oppNames = Array.isArray(oppRoster) ? oppRoster : ['Smith','Walker','Cole','Davies','Wilson'];
+    const oppRoster = getClubRoster(fx.opp);
+    const oppNames = oppRoster.length ? oppRoster : ['Smith','Walker','Cole','Davies','Wilson'];
     const minutes = [4,12,21,29,38,45,53,62,70,78,85,90];
     let i = 0;
     const tick = setInterval(() => {
       if (i >= minutes.length) { clearInterval(tick); finishMatch(); return; }
       const m = minutes[i++];
       const cm = G.currentMatch;
-      const xiNow = getXI().filter(p => !cm.injured.includes(p.id));
-      xiNow.forEach(p => {
-        const injChance = 0.011 + (100 - p.fitness) * 0.0008;
-        if (Math.random() < injChance) {
-          const weeks = 1 + Math.floor(Math.random() * 8);
+      const xiNow = getXI().filter(p => !cm.injured.includes(p.id) && !cm.sentOff.includes(p.id));
+      if (!cm.injuryThisMatch && recentInjuryCount(30) < 3) {
+        for (const p of xiNow.filter(p => roleOf(p) !== 'GK').concat(xiNow.filter(p => roleOf(p) === 'GK'))) {
+          if (Math.random() >= injuryChance(p)) continue;
+          const severe = Math.random() < 0.18;
+          const weeks = severe ? 8 + Math.floor(Math.random() * 12) : 1 + Math.floor(Math.random() * 6);
           cm.injured.push(p.id); p.injuryWeeks = weeks;
-          cm.comm.push({m, text:'Injury — ' + p.name + ' hobbles off. Out ' + weeks + ' week' + (weeks>1?'s':'') + '.', t:'inj'});
+          cm.injuryThisMatch = true; recordInjury(p, weeks);
+          cm.comm.push({m, text:'Injury — ' + p.name + (severe ? ' suffers a serious one' : ' hobbles off') + '. Out ' + weeks + ' week' + (weeks>1?'s':'') + '.', t:'inj'});
+          break;
         }
-      });
+      }
+      if (Math.random() < 0.018) {
+        if (Math.random() < 0.48 && xiNow.length > 7) {
+          const offender = PICK(xiNow.filter(p => p.pos !== 'GK'));
+          cm.sentOff.push(offender.id);
+          cm.comm.push({m, text:'Red card — ' + offender.name + ' is sent off. He will miss the next match.', t:'rc'});
+        } else {
+          cm.oppReds++;
+          cm.comm.push({m, text:'Red card — ' + fx.opp + ' go down to ten men.', t:'rc'});
+        }
+      }
       const r = Math.random();
       if (r < 0.34) {
-        const ch = Math.max(0.07, (munAtk - oppDef)/85 + 0.32);
+        const redSwing = cm.oppReds * 0.20 - cm.sentOff.length * 0.10;
+        const ch = Math.max(0.07, (munAtk - oppDef)/85 + 0.32 + redSwing);
         if (Math.random() < ch) {
-          const pool = attackers.length ? attackers : xi;
-          const s = PICK(pool);
-          cm.home++; s.goals++; cm.scorers.push(s.id);
+          const pool = xi.filter(p => p.pos !== 'GK' && !cm.injured.includes(p.id) && !cm.sentOff.includes(p.id));
+          const s = weightedPick(pool, scorerWeight) || PICK(attackers.length ? attackers : xi);
+          cm.home++; s.goals++; s.clubGoals = (s.clubGoals || 0) + 1; cm.scorers.push(s.id);
           cm.perPlayerGoals[s.id] = (cm.perPlayerGoals[s.id] || 0) + 1;
           if (Math.random() < 0.55) {
             const assisters = pool.filter(p => p.id !== s.id);
             if (assisters.length) {
-              const a = PICK(assisters); a.assists++;
+              const a = weightedPick(assisters, assisterWeight); a.assists++; a.clubAssists = (a.clubAssists || 0) + 1;
               cm.assists.push(a.id); cm.perPlayerAssists[a.id] = (cm.perPlayerAssists[a.id] || 0) + 1;
               cm.comm.push({m, text:'Goal! ' + s.name + ' finishes, assisted by ' + a.name + '. (' + cm.home + '-' + cm.away + ')', t:'gm'});
               return;
@@ -537,7 +984,8 @@
           cm.comm.push({m, text: PICK([a.name + ' fires just wide.', a.name + "'s effort is saved.", a.name + ' smashes the post!']), t:'cm'});
         }
       } else if (r < 0.62) {
-        const ch = Math.max(0.07, (oppAtk - munDef)/85 + 0.30);
+        const redSwing = cm.sentOff.length * 0.10 - cm.oppReds * 0.16;
+        const ch = Math.max(0.07, (oppAtk - munDef)/85 + 0.30 + redSwing);
         if (Math.random() < ch) {
           cm.away++;
           cm.comm.push({m, text: fx.opp + ' score. ' + PICK(oppNames) + ' beats Onana from close range. (' + cm.home + '-' + cm.away + ')', t:'go'});
@@ -561,10 +1009,11 @@
     const cleanSheet = cm.away === 0;
     cm.matchRatings = {};
     xi.forEach(p => {
-      p.mins += 90; p.appearances++;
-      p.fitness = Math.max(15, p.fitness - 18 - Math.random()*12);
+      p.mins += 90; p.appearances++; p.clubApps = (p.clubApps || 0) + 1;
+      p.fitness = Math.max(15, p.fitness - (fx.comp === 'FR' || fx.comp === 'CS' ? 10 : 18) - Math.random()*10);
       const perf = { goals: cm.perPlayerGoals[p.id] || 0, assists: cm.perPlayerAssists[p.id] || 0, result, cleanSheet, goalsConceded: cm.away };
       const mr = computeMatchRating(p, fx, perf);
+      if (cm.sentOff.includes(p.id)) p.suspended = 1;
       cm.matchRatings[p.id] = mr;
       p.matchRatings.push(mr);
       if (isBigGame(fx)) p.bigGameRatings.push(mr);
@@ -577,15 +1026,19 @@
       if (p.sold || G.starters.includes(p.id) || p.injuryWeeks > 0) return;
       p.fitness = Math.min(100, p.fitness + 22);
       p.morale = Math.max(0, p.morale - 2);
+      if (p.suspended > 0) p.suspended = Math.max(0, p.suspended - 1);
     });
     fx.played = true; fx.score = cm.home + '-' + cm.away;
     G.results.push(Object.assign({}, fx, { munGoals: cm.home, oppGoals: cm.away }));
-    G.seasonStats.played++; G.seasonStats.gf += cm.home; G.seasonStats.ga += cm.away;
-    if (result === 'W') G.seasonStats.won++;
-    else if (result === 'L') G.seasonStats.lost++;
-    else G.seasonStats.drawn++;
+    if (fx.comp !== 'FR' && fx.comp !== 'CS') {
+      G.seasonStats.played++; G.seasonStats.gf += cm.home; G.seasonStats.ga += cm.away;
+      if (result === 'W') G.seasonStats.won++;
+      else if (result === 'L') G.seasonStats.lost++;
+      else G.seasonStats.drawn++;
+    }
     if (fx.comp === 'PL') { updatePLTable(fx, cm.home, cm.away); simOtherPLWeek(fx); }
-    if (fx.comp === 'CL') updateCLTable(fx, cm.home, cm.away);
+    if (fx.comp === 'CL' && fx.round === 'League') { updateCLTable(fx, cm.home, cm.away); simOtherCLWeek(fx); if (!G.fixtures.some(f => f.comp === 'CL' && f.round === 'League' && !f.played)) scheduleCLKnockouts(); }
+    if (fx.comp === 'CL' && fx.round !== 'League') handleCLKnockout(fx, cm.home, cm.away);
     if (fx.comp === 'FA' || fx.comp === 'EFL') handleCupRound(fx, cm.home, cm.away);
     if (G.seasonStats.played % 4 === 0) updatePlayerRatings(false);
     G.currentMatch = cm;
@@ -623,11 +1076,232 @@
     else if (mg<og) { mun.L++; opp.W++; opp.Pts+=3; }
     else { mun.D++; opp.D++; mun.Pts++; opp.Pts++; }
   }
+  function clTeamInfo(name) {
+    if (name === 'Man Utd') return {name:'Man Utd', short:'MUN', strength: Math.round(getXI().reduce((s,p)=>s+effectiveRating(p),0) / Math.max(1,getXI().length)) || 84};
+    return G.clTeams.find(t => t.name === name) || {name, short:name.slice(0,3).toUpperCase(), strength:80};
+  }
+  function simGoals(aStr, bStr, home) {
+    const adv = home ? 3 : 0;
+    return Math.max(0, Math.floor((aStr - bStr + adv + 70 + Math.random()*24) / 34));
+  }
+  function resolveElimination(aName, bName, aStr, bStr, aGoals, bGoals) {
+    const res = { aGoals, bGoals, extra:false, pens:false, aPens:null, bPens:null, winner:null, note:'' };
+    if (aGoals !== bGoals) {
+      res.winner = aGoals > bGoals ? aName : bName;
+      return res;
+    }
+    res.extra = true;
+    const aET = Math.random() < Math.max(0.12, 0.27 + (aStr - bStr) / 120);
+    const bET = Math.random() < Math.max(0.12, 0.27 + (bStr - aStr) / 120);
+    res.aGoals += aET ? 1 : 0;
+    res.bGoals += bET ? 1 : 0;
+    if (res.aGoals !== res.bGoals) {
+      res.winner = res.aGoals > res.bGoals ? aName : bName;
+      res.note = 'AET';
+      return res;
+    }
+    res.pens = true;
+    const aBase = 3 + Math.floor(Math.random()*3), bBase = 3 + Math.floor(Math.random()*3);
+    res.aPens = aBase; res.bPens = bBase;
+    while (res.aPens === res.bPens) {
+      if (Math.random() < aStr / (aStr + bStr)) res.aPens++;
+      else res.bPens++;
+    }
+    res.winner = res.aPens > res.bPens ? aName : bName;
+    res.note = 'pens ' + res.aPens + '-' + res.bPens;
+    return res;
+  }
+  function applyCLResult(a, b, ag, bg) {
+    const ta = G.clStandings[a], tb = G.clStandings[b];
+    if (!ta || !tb) return;
+    ta.P++; tb.P++; ta.GF+=ag; ta.GA+=bg; tb.GF+=bg; tb.GA+=ag;
+    if (ag>bg) { ta.W++; ta.Pts+=3; tb.L++; }
+    else if (ag<bg) { tb.W++; tb.Pts+=3; ta.L++; }
+    else { ta.D++; tb.D++; ta.Pts++; tb.Pts++; }
+  }
+  function simOtherCLWeek(fx) {
+    const teams = G.clTeams.map(t=>t.name).filter(n => n !== 'Man Utd' && n !== fx.opp).sort(()=>Math.random()-0.5);
+    for (let i=0; i+1<teams.length; i+=2) {
+      const a = clTeamInfo(teams[i]), b = clTeamInfo(teams[i+1]);
+      const ag = simGoals(a.strength, b.strength, true), bg = simGoals(b.strength, a.strength, false);
+      applyCLResult(a.name, b.name, ag, bg);
+    }
+  }
+  function clSorted() {
+    return Object.entries(G.clStandings).map(([n,s]) => ({name:n, ...s, GD: s.GF-s.GA}))
+      .sort((a,b)=>b.Pts-a.Pts||b.GD-a.GD||b.GF-a.GF);
+  }
+  function elSorted() {
+    return Object.entries(G.elStandings).map(([n,s]) => ({name:n, ...s, GD: s.GF-s.GA}))
+      .sort((a,b)=>b.Pts-a.Pts||b.GD-a.GD||b.GF-a.GF);
+  }
+  function makeCLTie(a, b, round) {
+    const tie = { round, a:a.name, b:b.name, aShort:clTeamInfo(a.name).short, bShort:clTeamInfo(b.name).short,
+      aStr:clTeamInfo(a.name).strength, bStr:clTeamInfo(b.name).strength, aGoals:0, bGoals:0, leg:0, winner:null };
+    if (round === 'Final') tie.oneLeg = true;
+    return tie;
+  }
+  function makeCLPlayoffTie(a, b) {
+    const tie = makeCLTie(a, b, 'PO');
+    tie.oneLeg = true;
+    return tie;
+  }
+  function makeEuropaTie(a, b, round) {
+    return { round, a:a.name, b:b.name, aStr:a.strength, bStr:b.strength, aGoals:0, bGoals:0, leg:0, winner:null };
+  }
+  function applyEuropaResult(a, b, ag, bg) {
+    const ta = G.elStandings[a], tb = G.elStandings[b];
+    if (!ta || !tb) return;
+    ta.P++; tb.P++; ta.GF+=ag; ta.GA+=bg; tb.GF+=bg; tb.GA+=ag;
+    if (ag>bg) { ta.W++; ta.Pts+=3; tb.L++; }
+    else if (ag<bg) { tb.W++; tb.Pts+=3; ta.L++; }
+    else { ta.D++; tb.D++; ta.Pts++; tb.Pts++; }
+  }
+  function simEuropaTie(tie) {
+    const a1 = simGoals(tie.aStr, tie.bStr, false), b1 = simGoals(tie.bStr, tie.aStr, true);
+    const a2 = simGoals(tie.aStr, tie.bStr, true), b2 = simGoals(tie.bStr, tie.aStr, false);
+    const resolved = resolveElimination(tie.a, tie.b, tie.aStr, tie.bStr, a1 + a2, b1 + b2);
+    tie.aGoals = resolved.aGoals; tie.bGoals = resolved.bGoals; tie.leg = 2; tie.winner = resolved.winner; tie.note = resolved.note;
+    return tie.winner;
+  }
+  function simEuropaLeague() {
+    const weeks = 8;
+    for (let w=0; w<weeks; w++) {
+      const teams = [...G.elTeams].sort(()=>Math.random()-0.5);
+      for (let i=0; i+1<teams.length; i+=2) {
+        const a = teams[i], b = teams[i+1];
+        const ag = simGoals(a.strength, b.strength, true), bg = simGoals(b.strength, a.strength, false);
+        applyEuropaResult(a.name, b.name, ag, bg);
+      }
+    }
+    const seeds = elSorted().slice(0,16).map(t => G.elTeams.find(x => x.name === t.name));
+    const history = [];
+    let ties = [];
+    for (let i=0; i<8; i++) ties.push(makeEuropaTie(seeds[i], seeds[15-i], 'R16'));
+    while (ties.length) {
+      ties.forEach(simEuropaTie);
+      history.push(...ties.map(t => Object.assign({}, t)));
+      const winners = ties.map(t => G.elTeams.find(x => x.name === t.winner));
+      if (winners.length === 1) {
+        G.elKnockout = { scheduled:true, round:'Complete', ties:[], history, champion:winners[0].name };
+        return;
+      }
+      const nextRound = winners.length === 8 ? 'QF' : winners.length === 4 ? 'SF' : 'Final';
+      ties = [];
+      for (let i=0; i<winners.length; i+=2) ties.push(makeEuropaTie(winners[i], winners[i+1], nextRound));
+    }
+  }
+  function scheduleCLKnockouts() {
+    if (G.clKnockout && G.clKnockout.scheduled) return;
+    const seeds = clSorted();
+    const top8 = seeds.slice(0,8);
+    const playoffSeeds = seeds.slice(8,24);
+    const ties = [];
+    for (let i=0; i<8; i++) ties.push(makeCLPlayoffTie(playoffSeeds[i], playoffSeeds[15-i]));
+    G.clKnockout = { scheduled:true, round:'PO', ties, history:[], byes:top8, champion:null, manUtdAlive: seeds.slice(0,24).some(t=>t.name==='Man Utd') };
+    G.transferMessages.push('Champions League league phase complete — top 8 advance to R16, 9th-24th enter the playoff round.');
+    ties.filter(t => !(t.a === 'Man Utd' || t.b === 'Man Utd')).forEach(simCLTie);
+    scheduleManUtdCLTie(ties.find(t => t.a === 'Man Utd' || t.b === 'Man Utd'), 420 + (G.season-1)*365);
+    advanceCLRound();
+  }
+  function scheduleManUtdCLTie(tie, baseDay) {
+    if (!tie || tie.winner) return;
+    const isA = tie.a === 'Man Utd';
+    if (tie.oneLeg) {
+      G.fixtures.push({ id:G.fixtures.length, day:baseDay, comp:'CL', opp:isA?tie.b:tie.a, oppShort:isA?tie.bShort:tie.aShort, oppStr:isA?tie.bStr:tie.aStr, home:false, played:false, round:tie.round, tie });
+    } else {
+      G.fixtures.push({ id:G.fixtures.length, day:baseDay, comp:'CL', opp:isA?tie.b:tie.a, oppShort:isA?tie.bShort:tie.aShort, oppStr:isA?tie.bStr:tie.aStr, home:!isA, played:false, round:tie.round + ' L1', tie });
+      G.fixtures.push({ id:G.fixtures.length + 1, day:baseDay + 14, comp:'CL', opp:isA?tie.b:tie.a, oppShort:isA?tie.bShort:tie.aShort, oppStr:isA?tie.bStr:tie.aStr, home:isA, played:false, round:tie.round + ' L2', tie });
+    }
+    G.fixtures.sort((a,b) => a.day - b.day);
+  }
+  function simCLTie(tie) {
+    if (tie.winner) return tie.winner;
+    if (tie.oneLeg) {
+      const ag = simGoals(tie.aStr, tie.bStr, true), bg = simGoals(tie.bStr, tie.aStr, false);
+      const resolved = resolveElimination(tie.a, tie.b, tie.aStr, tie.bStr, ag, bg);
+      tie.aGoals = resolved.aGoals; tie.bGoals = resolved.bGoals; tie.leg = 1; tie.winner = resolved.winner; tie.note = resolved.note;
+      return tie.winner;
+    }
+    const a1 = simGoals(tie.aStr, tie.bStr, false), b1 = simGoals(tie.bStr, tie.aStr, true);
+    const a2 = simGoals(tie.aStr, tie.bStr, true), b2 = simGoals(tie.bStr, tie.aStr, false);
+    tie.aGoals = a1 + a2; tie.bGoals = b1 + b2; tie.leg = 2;
+    const resolved = resolveElimination(tie.a, tie.b, tie.aStr, tie.bStr, tie.aGoals, tie.bGoals);
+    tie.aGoals = resolved.aGoals; tie.bGoals = resolved.bGoals; tie.winner = resolved.winner; tie.note = resolved.note;
+    return tie.winner;
+  }
+  function handleCLKnockout(fx, mg, og) {
+    const tie = fx.tie;
+    if (!tie || tie.winner) return;
+    tie.leg++;
+    if (tie.a === 'Man Utd') { tie.aGoals += mg; tie.bGoals += og; }
+    else { tie.aGoals += og; tie.bGoals += mg; }
+    if (tie.oneLeg) {
+      const resolved = resolveElimination(tie.a, tie.b, tie.aStr, tie.bStr, tie.aGoals, tie.bGoals);
+      tie.aGoals = resolved.aGoals; tie.bGoals = resolved.bGoals; tie.winner = resolved.winner; tie.note = resolved.note;
+      if (G.currentMatch && tie.note) G.currentMatch.comm.push({m:'ET', text:'Elimination match decided after extra time/penalties: ' + tie.winner + ' advance ' + tie.aGoals + '-' + tie.bGoals + ' (' + tie.note + ').', t: tie.winner === 'Man Utd' ? 'gm' : 'go'});
+      const wonPO = tie.winner === 'Man Utd';
+      G.transferMessages.push('Champions League ' + tie.round + ' — ' + tie.winner + ' advance ' + tie.aGoals + '-' + tie.bGoals + (tie.note ? ' (' + tie.note + ')' : '') + '.');
+      if (!wonPO) G.clKnockout.manUtdAlive = false;
+      advanceCLRound();
+      return;
+    }
+    if (tie.leg < 2) return;
+    const resolved = resolveElimination(tie.a, tie.b, tie.aStr, tie.bStr, tie.aGoals, tie.bGoals);
+    tie.aGoals = resolved.aGoals; tie.bGoals = resolved.bGoals; tie.winner = resolved.winner; tie.note = resolved.note;
+    if (G.currentMatch && tie.note) G.currentMatch.comm.push({m:'ET', text:'Aggregate tie decided after extra time/penalties: ' + tie.winner + ' advance ' + tie.aGoals + '-' + tie.bGoals + ' (' + tie.note + ').', t: tie.winner === 'Man Utd' ? 'gm' : 'go'});
+    const won = tie.winner === 'Man Utd';
+    G.transferMessages.push('Champions League ' + tie.round + ' — ' + tie.winner + ' advance ' + tie.aGoals + '-' + tie.bGoals + ' on aggregate' + (tie.note ? ' (' + tie.note + ')' : '') + '.');
+    if (!won) G.clKnockout.manUtdAlive = false;
+    advanceCLRound();
+  }
+  function advanceCLRound() {
+    const ko = G.clKnockout;
+    if (!ko || !ko.ties.every(t => t.winner)) return;
+    ko.history.push(...ko.ties.map(t => Object.assign({}, t)));
+    let winners = ko.ties.map(t => ({ name:t.winner }));
+    if (ko.round === 'PO') {
+      const top8 = ko.byes || [];
+      const playoffWinners = winners;
+      const r16Teams = [];
+      for (let i=0; i<8; i++) {
+        r16Teams.push(top8[i]);
+        r16Teams.push(playoffWinners[7-i]);
+      }
+      const r16Ties = [];
+      for (let i=0; i<8; i++) r16Ties.push(makeCLTie(r16Teams[i*2], r16Teams[i*2+1], 'R16'));
+      ko.round = 'R16'; ko.ties = r16Ties;
+      ko.ties.filter(t => !(t.a === 'Man Utd' || t.b === 'Man Utd')).forEach(simCLTie);
+      const manTie = ko.ties.find(t => t.a === 'Man Utd' || t.b === 'Man Utd');
+      if (manTie) scheduleManUtdCLTie(manTie, 440 + (G.season-1)*365);
+      advanceCLRound();
+      return;
+    }
+    if (winners.length === 1) {
+      ko.champion = winners[0].name;
+      if (ko.champion === 'Man Utd') awardTrophy(seasonLabel() + ' Champions League');
+      G.transferMessages.push('Champions League winners: ' + ko.champion + '.');
+      return;
+    }
+    const nextRound = winners.length === 8 ? 'QF' : winners.length === 4 ? 'SF' : 'Final';
+    const baseDay = (nextRound === 'QF' ? 470 : nextRound === 'SF' ? 500 : 528) + (G.season-1)*365;
+    const nextTies = [];
+    for (let i=0; i<winners.length; i+=2) nextTies.push(makeCLTie(winners[i], winners[i+1], nextRound));
+    ko.round = nextRound; ko.ties = nextTies;
+    ko.ties.filter(t => !(t.a === 'Man Utd' || t.b === 'Man Utd')).forEach(simCLTie);
+    const manTie = ko.ties.find(t => t.a === 'Man Utd' || t.b === 'Man Utd');
+    if (manTie) scheduleManUtdCLTie(manTie, baseDay);
+    advanceCLRound();
+  }
   function handleCupRound(fx, mg, og) {
-    const won = mg > og || (mg === og && Math.random() < 0.5);
-    G.cupRounds[fx.comp].push({round:fx.round, opp:fx.opp, score:mg + '-' + og, won});
+    const resolved = resolveElimination('Man Utd', fx.opp, 84, fx.oppStr, mg, og);
+    const won = resolved.winner === 'Man Utd';
+    const score = resolved.aGoals + '-' + resolved.bGoals + (resolved.note ? ' ' + resolved.note : '');
+    fx.won = won;
+    if (G.currentMatch && resolved.note) G.currentMatch.comm.push({m:'ET', text:'Elimination game decided after extra time/penalties: ' + resolved.winner + ' advance ' + score + '.', t: won ? 'gm' : 'go'});
+    G.cupRounds[fx.comp].push({round:fx.round, opp:fx.opp, score, won});
     if (won) scheduleNextCupRound(fx);
-    else G.transferMessages.push((fx.comp === 'FA' ? 'FA Cup' : 'EFL Cup') + ' exit — lost ' + mg + '-' + og + ' to ' + fx.opp + '.');
+    else G.transferMessages.push((fx.comp === 'FA' ? 'FA Cup' : 'EFL Cup') + ' exit — lost ' + score + ' to ' + fx.opp + '.');
   }
   function scheduleNextCupRound(fx) {
     const nextRounds = fx.comp === 'FA' ? ['R3','R4','R5','QF','SF','Final'] : ['R3','R4','QF','SF','Final'];
@@ -642,47 +1316,109 @@
 
   function closeMatch() {
     const cm = G.currentMatch;
-    if (cm && (cm.fx.comp === 'FA' || cm.fx.comp === 'EFL') && cm.fx.round === 'Final' && cm.home > cm.away) {
-      G.trophies.push(G.year + '-' + (G.year+1).toString().slice(2) + ' ' + (cm.fx.comp === 'FA' ? 'FA Cup' : 'EFL Cup'));
+    if (cm && (cm.fx.comp === 'FA' || cm.fx.comp === 'EFL') && cm.fx.round === 'Final' && cm.fx.won) {
+      awardTrophy(seasonLabel() + ' ' + (cm.fx.comp === 'FA' ? 'FA Cup' : 'EFL Cup'));
     }
     G.day = cm ? cm.fx.day + 1 : G.day + 1;
     G.currentMatch = null;
-    if (G.day > 510 && !G.fixtures.some(f => !f.played)) endSeason();
+    refreshTransferWindow();
+    maybeGenerateIncomingBid();
+    maybeRunAITransfers();
+    if (G.day > 510 + (G.season-1)*365 && !G.fixtures.some(f => !f.played)) endSeason();
     else G.view = 'dash';
     render();
   }
 
   function endSeason() {
     const munPos = leagueSorted().findIndex(t => t.name==='Man Utd') + 1;
-    if (munPos === 1) G.trophies.push(G.year + '-' + (G.year+1).toString().slice(2) + ' Premier League');
+    const trophiesBefore = G.trophies.length;
+    if (munPos === 1) {
+      awardTrophy(seasonLabel() + ' Premier League');
+      G.transferMessages.push('Premier League champions — title added to the trophy cabinet.');
+    }
+    const clWinner = (G.clKnockout && G.clKnockout.champion) || PICK([...EURO_TEAMS, ...CL_EXTRA_TEAMS])[0];
+    const plCLWinner = ['Man Utd', ...PL_TEAMS.map(t=>t[0])].includes(clWinner);
+    G.nextCLQualified = munPos <= 4 || (munPos === 5 && plCLWinner);
+    G.transferMessages.push(G.nextCLQualified ? 'Champions League qualification secured for next season.' : 'Missed Champions League qualification — finish top 4 next year to return.');
+    saveSeasonHistory(munPos, trophiesBefore);
     updatePlayerRatings(true);
     G.squad.forEach(p => {
       if (p.sold) return;
+      if (p.onLoan && p.age <= 24 && p.ovr < p.pot) {
+        p.ovr = Math.min(p.pot, p.ovr + (Math.random() < 0.55 ? 2 : 1));
+        p.morale = Math.min(100, p.morale + 4);
+      }
       p.age++;
       p.mins = 0; p.goals = 0; p.assists = 0; p.appearances = 0;
       p.matchRatings = []; p.bigGameRatings = [];
       p.fitness = 100; p.morale = Math.max(60, p.morale);
-      p.injuryWeeks = 0; p.onLoan = null;
+      p.injuryWeeks = 0; p.onLoan = null; p.suspended = 0; p.academyTeam = null;
       if (p.age >= 38 && p.ovr < 65) p.sold = true;
     });
+    ['u21','u18'].forEach(team => academyPlayers(team).forEach(p => p.age++));
     G.season++; G.year++;
-    G.day = 220 + (G.season-1)*365;
+    G.clQualified = G.nextCLQualified;
+    G.day = 198 + (G.season-1)*365;
     G.seasonStats = { played:0, won:0, drawn:0, lost:0, gf:0, ga:0 };
     G.results = []; G.fixtures = []; G.cupRounds = { FA: [], EFL: [] };
-    G.budget += 80; G.windowOpen = true;
+    G.budget += 25; G.windowOpen = true; G.incomingBids = []; G.aiTransfers = {}; G.aiTransferLog = [];
     G.view = 'season-end';
-    initTables(); buildFixtures(); autoPickXI(); render();
+    refreshTransferWindow(); initTables(); buildFixtures(); autoPickXI(); render();
+  }
+
+  function saveSeasonHistory(munPos, trophiesBefore) {
+    if (G.seasonHistory.some(s => s.season === G.season)) return;
+    const label = G.year + '/' + (G.year+1).toString().slice(2);
+    const players = G.squad.filter(p => !p.sold || p.appearances > 0 || p.goals > 0 || p.assists > 0).map(p => ({
+      name:p.name, pos:p.pos, role:roleOf(p), age:p.age, ovr:p.ovr, goals:p.goals, assists:p.assists,
+      ga:p.goals + p.assists, apps:p.appearances, mins:p.mins,
+      clubGoals:p.clubGoals || 0, clubAssists:p.clubAssists || 0, clubApps:p.clubApps || 0
+    })).sort((a,b) => b.ga - a.ga || b.goals - a.goals || b.assists - a.assists || b.apps - a.apps);
+    const stats = Object.assign({}, G.seasonStats);
+    const topScorer = [...players].sort((a,b) => b.goals - a.goals || b.assists - a.assists)[0] || null;
+    const topCreator = [...players].sort((a,b) => b.assists - a.assists || b.goals - a.goals)[0] || null;
+    G.seasonHistory.push({
+      season:G.season, label, year:G.year, leaguePos:munPos, stats,
+      trophies:G.trophies.slice(trophiesBefore), totalTrophies:G.trophies.length,
+      topScorer, topCreator, players
+    });
+    updateClubRecords(label, players);
+  }
+  function ensureRecords() {
+    if (!G.records) G.records = {};
+    return G.records;
+  }
+  function setRecord(key, title, player, value, label) {
+    if (!player || value <= 0) return;
+    const records = ensureRecords();
+    if (!records[key] || value > records[key].value) {
+      records[key] = { title, player:player.name, value, year:label };
+    }
+  }
+  function updateClubRecords(label, players) {
+    players.forEach(p => {
+      setRecord('seasonGoals', 'Most goals in a season', p, p.goals, label);
+      setRecord('seasonAssists', 'Most assists in a season', p, p.assists, label);
+      setRecord('seasonGA', 'Most G+A in a season', p, p.goals + p.assists, label);
+    });
+    G.squad.forEach(p => {
+      setRecord('clubGoals', 'All-time club goals', p, p.clubGoals || 0, label);
+      setRecord('clubAssists', 'All-time club assists', p, p.clubAssists || 0, label);
+      setRecord('clubApps', 'All-time club appearances', p, p.clubApps || 0, label);
+    });
   }
 
   function advance() {
     const fx = nextFixture();
     if (!fx) { endSeason(); return; }
     const daysBetween = Math.max(1, fx.day - G.day);
+    simulateAcademyDays(daysBetween);
     G.squad.forEach(p => {
       p.fitness = Math.min(100, p.fitness + daysBetween * 8);
       if (p.injuryWeeks > 0) p.injuryWeeks = Math.max(0, p.injuryWeeks - daysBetween/7);
     });
     G.day = fx.day;
+    refreshTransferWindow();
     const stillValid = G.starters.map(id => G.squad.find(p => p.id === id)).filter(p => p && isAvailable(p));
     if (stillValid.length < 11) autoPickXI();
     playFixture(fx);
@@ -694,17 +1430,21 @@
   }
 
   function bidForPlayer(id) {
+    refreshTransferWindow();
     const target = G.market.find(p => p.id === id);
     if (!target || target.status !== 'available') return;
+    if (!G.windowOpen) { G.transferMessages.push('Transfer window closed — you can only buy in June, July, August, or January.'); render(); return; }
     if (G.budget < target.price) { G.transferMessages.push('Bid for ' + target.name + ' rejected — over budget.'); render(); return; }
-    const chance = target.ovr >= 88 ? 0.45 : target.ovr >= 85 ? 0.65 : 0.85;
+    const reputationBoost = Math.min(0.12, (G.stadiumLevel - 1) * 0.03);
+    const chance = Math.min(0.95, (target.ovr >= 88 ? 0.45 : target.ovr >= 85 ? 0.65 : 0.85) + reputationBoost);
     if (Math.random() < chance) {
       G.budget -= target.price;
       target.status = 'signed';
+      removeFromClubRoster(target.club, target.name);
       const newId = Math.max(...G.squad.map(p=>p.id)) + 1;
-      G.squad.push({ id:newId, name:target.name, pos:target.pos, age:target.age, ovr:target.ovr, pot:target.pot,
-        mins:0, goals:0, assists:0, appearances:0, matchRatings: [], bigGameRatings: [], lastUpdate: G.day,
-        fitness:100, morale:75, injuryWeeks:0, newSigning: true, sold:false, onLoan:null });
+      G.squad.push({ id:newId, name:target.name, pos:target.pos, role:roleOf(target), age:target.age, ovr:target.ovr, pot:target.pot,
+        mins:0, goals:0, assists:0, appearances:0, clubGoals:0, clubAssists:0, clubApps:0, matchRatings: [], bigGameRatings: [], lastUpdate: G.day,
+        fitness:100, morale:75, injuryWeeks:0, newSigning: true, sold:false, onLoan:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null });
       G.transferMessages.push('Signed ' + target.name + ' from ' + target.club + ' for £' + target.price + 'm.');
       autoPickXI();
     } else {
@@ -718,12 +1458,104 @@
     }
     render();
   }
+  function aiBuyerClubs() {
+    return [...PL_TEAMS.map(t => t[0]), ...EURO_TEAMS.map(t => t[0])].filter(c => c !== 'Man Utd');
+  }
+  function aiClubTransferCount(club) { return G.aiTransfers[club] || 0; }
+  function aiClubCanBuy(club) { return aiClubTransferCount(club) < 3; }
+  function maybeRunAITransfers() {
+    refreshTransferWindow();
+    if (!G.windowOpen || Math.random() > 0.28) return;
+    const clubs = aiBuyerClubs().filter(aiClubCanBuy);
+    const available = G.market.filter(p => p.status === 'available' && p.club !== 'Man Utd');
+    if (!clubs.length || !available.length) return;
+    const buyer = PICK(clubs);
+    const buyerStrength = (PL_TEAMS.find(t=>t[0]===buyer)?.[2] || EURO_TEAMS.find(t=>t[0]===buyer)?.[2] || 80);
+    const targets = available.filter(p => p.club !== buyer).map(p => {
+      const need = Math.max(1, p.ovr - 74) + Math.max(0, p.pot - p.ovr) * 0.8 + (p.age <= 23 ? 4 : 0);
+      const affordability = p.price <= buyerStrength ? 4 : p.price <= buyerStrength * 1.5 ? 1 : -4;
+      return { p, score: Math.max(0.1, need + affordability) };
+    }).filter(x => x.score > 0.2);
+    if (!targets.length) return;
+    const total = targets.reduce((s,x) => s + x.score, 0);
+    let roll = Math.random() * total, target = targets[0].p;
+    for (const x of targets) { roll -= x.score; if (roll <= 0) { target = x.p; break; } }
+    if (target.price > buyerStrength * 1.8 && Math.random() < 0.65) return;
+    G.aiTransfers[buyer] = aiClubTransferCount(buyer) + 1;
+    const sellingClub = target.club;
+    target.status = 'ai-signed';
+    target.signedBy = buyer;
+    transferMarketPlayerToClub(target, buyer);
+    const msg = buyer + ' signed ' + target.name + ' from ' + sellingClub + ' for £' + target.price + 'm.';
+    G.aiTransferLog.push({ day:G.day, club:buyer, player:target.name, from:sellingClub, price:target.price });
+    G.aiTransferLog = G.aiTransferLog.slice(-12);
+    G.transferMessages.push(msg);
+  }
+  function maybeGenerateIncomingBid() {
+    refreshTransferWindow();
+    if (!G.windowOpen || G.incomingBids.length >= 3 || Math.random() > 0.22) return;
+    const candidates = G.squad.filter(p => !p.sold && !p.onLoan && p.age < 36 && !G.incomingBids.some(b => b.playerId === p.id));
+    if (!candidates.length) return;
+    const weighted = candidates.map(p => ({ p, score: Math.max(1, p.ovr - 68) + (p.age <= 23 ? 7 : 0) + (G.starters.includes(p.id) ? 3 : 0) }));
+    const total = weighted.reduce((s,x) => s + x.score, 0);
+    let roll = Math.random() * total, pick = weighted[0].p;
+    for (const x of weighted) { roll -= x.score; if (roll <= 0) { pick = x.p; break; } }
+    const clubs = [...PL_TEAMS.map(t => t[0]), ...EURO_TEAMS.map(t => t[0])].filter(c => c !== 'Man Utd');
+    const base = playerValue(pick);
+    const premium = G.starters.includes(pick.id) ? 1.18 : 1.02;
+    const price = Math.round(base * premium * (0.88 + Math.random() * 0.34));
+    const bidder = PICK(clubs);
+    G.incomingBids.push({ id:G.nextBidId++, playerId:pick.id, playerName:pick.name, club:bidder, price, day:G.day });
+    G.transferMessages.push(bidder + ' submitted a £' + price + 'm bid for ' + pick.name + '.');
+  }
+  function acceptIncomingBid(id) {
+    refreshTransferWindow();
+    if (!G.windowOpen) { G.transferMessages.push('Transfer window closed — sales can only be completed in June, July, August, or January.'); render(); return; }
+    const bid = G.incomingBids.find(b => b.id === id);
+    if (!bid) return;
+    const p = G.squad.find(x => x.id === bid.playerId);
+    G.incomingBids = G.incomingBids.filter(b => b.id !== id);
+    if (!p || p.sold) { render(); return; }
+    const kept = saleBudgetReturn(bid.price);
+    p.sold = true; G.budget += kept;
+    addToClubRoster(bid.club, p.name);
+    G.starters = G.starters.filter(sid => sid !== p.id);
+    G.transferMessages.push('Accepted ' + bid.club + ' bid — sold ' + p.name + ' for £' + bid.price + 'm. £' + kept + 'm added to the budget.');
+    autoPickXI(); render();
+  }
+  function declineIncomingBid(id) {
+    const bid = G.incomingBids.find(b => b.id === id);
+    if (!bid) return;
+    G.incomingBids = G.incomingBids.filter(b => b.id !== id);
+    const p = G.squad.find(x => x.id === bid.playerId);
+    if (p && !p.sold) p.morale = Math.max(0, p.morale - 1);
+    G.transferMessages.push('Declined ' + bid.club + ' bid for ' + bid.playerName + '.');
+    render();
+  }
   function sellPlayer(id) {
+    refreshTransferWindow();
     const p = G.squad.find(x=>x.id===id);
     if (!p || p.sold) return;
-    const price = Math.round((p.ovr - 60) * 4 + (p.pot - p.ovr) * 3);
-    p.sold = true; G.budget += price;
-    G.transferMessages.push('Sold ' + p.name + ' for £' + price + 'm.');
+    if (!G.windowOpen) { G.transferMessages.push('Transfer window closed — you can only sell in June, July, August, or January.'); render(); return; }
+    const price = playerValue(p);
+    const kept = saleBudgetReturn(price);
+    p.sold = true; G.budget += kept;
+    G.incomingBids = G.incomingBids.filter(b => b.playerId !== p.id);
+    G.transferMessages.push('Sold ' + p.name + ' for £' + price + 'm. £' + kept + 'm added to the budget.');
+    autoPickXI(); render();
+  }
+  function loanOutPlayer(id) {
+    refreshTransferWindow();
+    const p = G.squad.find(x=>x.id===id);
+    if (!p || p.sold || p.onLoan || G.starters.includes(id) || p.injuryWeeks > 0) return;
+    if (!G.windowOpen) { G.transferMessages.push('Transfer window closed — loans can only be arranged in June, July, August, or January.'); render(); return; }
+    const clubs = [...PL_TEAMS.map(t => t[0]), ...EUROPA_TEAMS.map(t => t[0])].filter(c => c !== 'Man Utd');
+    const loanClub = PICK(clubs);
+    p.onLoan = loanClub;
+    p.fitness = 100;
+    p.morale = Math.min(100, p.morale + 3);
+    G.starters = G.starters.filter(sid => sid !== id);
+    G.transferMessages.push('Loaned ' + p.name + ' to ' + loanClub + ' for the season.');
     autoPickXI(); render();
   }
   function toggleShortlist(id) {
@@ -778,7 +1610,7 @@
       '<div class="hs"><div class="hsl">Trophies</div><div class="hsv">' + G.trophies.length + '</div></div>' +
       '<div class="hs"><div class="hsl">Next</div><div class="hsv">' + (next ? next.oppShort : '—') + '</div></div>' +
     '</div>';
-    const tabList = [['dash','Dashboard'],['squad','Squad'],['transfers','Transfers'],['scouting','Scouting'],['tables','Tables'],['training','Training']];
+    const tabList = [['dash','Dashboard'],['squad','Squad'],['academy','Academy'],['stats','Stats'],['transfers','Transfers'],['scouting','Scouting'],['tables','Tables'],['training','Training']];
     const tabs = tabList.map(t => '<button class="tab ' + (G.view===t[0]?'active':'') + '" onclick="setView(\'' + t[0] + '\')">' + t[1] + '</button>').join('');
     const tabBar = G.view === 'match' || G.view === 'season-end' ? '' : '<div class="tabs">' + tabs + '</div>';
     let body = '';
@@ -786,6 +1618,8 @@
       if (G.view === 'dash') body = renderDash();
       else if (G.view === 'match') body = renderMatch();
       else if (G.view === 'squad') body = renderSquadHub();
+      else if (G.view === 'academy') body = renderAcademy();
+      else if (G.view === 'stats') body = renderStats();
       else if (G.view === 'transfers') body = renderTransfers();
       else if (G.view === 'scouting') body = renderScouting();
       else if (G.view === 'tables') body = renderTables();
@@ -802,22 +1636,35 @@
     const upcoming = G.fixtures.filter(f => !f.played).slice(0, 5);
     const recent = G.results.slice(-4).reverse();
     const msgs = G.transferMessages.slice(-3).reverse();
+    const bids = G.incomingBids.filter(b => G.squad.some(p => p.id === b.playerId && !p.sold));
     const injuries = G.squad.filter(p => p.injuryWeeks > 0 && !p.sold);
     const inForm = G.squad.filter(p => isInForm(p) && !p.sold);
     const next = nextFixture();
     return msgs.map(m => '<div class="toast">' + m + '</div>').join('') +
+      (bids.length ? '<div class="pnl"><div class="pnl-t">Incoming transfer bids</div>' + bids.map(b => {
+        const p = G.squad.find(x => x.id === b.playerId);
+        return '<div style="display:grid; grid-template-columns: 1fr 72px 132px; gap:8px; align-items:center; padding:7px 0; border-bottom:0.5px solid var(--color-border-tertiary); font-size:12px;">' +
+          '<div><strong>' + b.club + '</strong> want ' + b.playerName + '<div style="font-size:10px; color:var(--color-text-secondary); margin-top:2px;">' + (p ? roleOf(p) + ' · OVR ' + p.ovr + ' · value £' + playerValue(p) + 'm' : 'Player unavailable') + '</div></div>' +
+          '<div style="font-weight:600;">£' + b.price + 'm</div>' +
+          '<div style="display:flex; gap:5px; justify-content:flex-end;"><button class="btn sm pri" onclick="acceptIncomingBid(' + b.id + ')">Accept</button><button class="btn sm" onclick="declineIncomingBid(' + b.id + ')">Decline</button></div>' +
+        '</div>';
+      }).join('') + '</div>' : '') +
       '<div class="grid2"><div><div class="pnl-t">Upcoming fixtures</div>' +
-      '<div class="pnl" style="padding:4px 0;">' + (upcoming.length ? upcoming.map(f => '<div class="fix">' +
-        '<div class="fix-date">' + fmtDate(f.day) + '</div><div class="cmp cmp-' + f.comp + '">' + f.comp + (f.round?' '+f.round:'') + '</div>' +
-        '<div>' + (f.home ? 'vs' : 'at') + ' ' + f.opp + '</div><div style="text-align:right; color:var(--color-text-secondary);">OVR ' + f.oppStr + '</div></div>').join('') : '<div style="padding:10px; color:var(--color-text-secondary);">No fixtures.</div>') + '</div></div>' +
+      '<div class="pnl" style="padding:4px 0;">' + (upcoming.length ? upcoming.map(f => {
+        const roster = getClubRoster(f.opp).slice(0,4).join(', ');
+        return '<div class="fix">' +
+          '<div class="fix-date">' + fmtDate(f.day) + '</div><div class="cmp cmp-' + f.comp + '">' + f.comp + (f.round?' '+f.round:'') + '</div>' +
+          '<div>' + (f.home ? 'vs' : 'at') + ' ' + f.opp + (roster ? '<div style="font-size:10px; color:var(--color-text-tertiary); margin-top:2px;">' + roster + '</div>' : '') + '</div><div style="text-align:right; color:var(--color-text-secondary);">OVR ' + f.oppStr + '</div></div>';
+      }).join('') : '<div style="padding:10px; color:var(--color-text-secondary);">No fixtures.</div>') + '</div></div>' +
       '<div><div class="pnl-t">Recent results</div><div class="pnl" style="padding:4px 0;">' + (recent.length ? recent.map(r => {
         const win = r.munGoals > r.oppGoals, drew = r.munGoals === r.oppGoals;
         const col = win ? 'var(--color-text-success)' : drew ? 'var(--color-text-warning)' : 'var(--color-text-danger)';
+        const roster = getClubRoster(r.opp).slice(0,4).join(', ');
         return '<div class="fix"><div class="fix-date">' + fmtDate(r.day) + '</div><div class="cmp cmp-' + r.comp + '">' + r.comp + '</div>' +
-          '<div>' + (r.home ? 'vs' : 'at') + ' ' + r.opp + '</div><div style="text-align:right; font-weight:500; color:' + col + ';">' + r.munGoals + '-' + r.oppGoals + '</div></div>';
+          '<div>' + (r.home ? 'vs' : 'at') + ' ' + r.opp + (roster ? '<div style="font-size:10px; color:var(--color-text-tertiary); margin-top:2px;">' + roster + '</div>' : '') + '</div><div style="text-align:right; font-weight:500; color:' + col + ';">' + r.munGoals + '-' + r.oppGoals + '</div></div>';
       }).join('') : '<div style="padding:10px; color:var(--color-text-secondary);">No matches played.</div>') + '</div></div></div>' +
-      '<div class="grid2"><div class="pnl"><div class="pnl-t">Injury list (' + injuries.length + ')</div>' + (injuries.length ? injuries.map(p => '<div style="display:flex; justify-content:space-between; padding:4px 0; font-size:12px;"><span>' + p.name + ' (' + p.pos + ')</span><span style="color:var(--color-text-danger);">' + Math.ceil(p.injuryWeeks) + 'w</span></div>').join('') : '<div style="color:var(--color-text-secondary); font-size:12px;">Everyone fit.</div>') + '</div>' +
-      '<div class="pnl"><div class="pnl-t">Elite form (' + inForm.length + ')</div>' + (inForm.length ? inForm.map(p => '<div style="display:flex; justify-content:space-between; padding:4px 0; font-size:12px;"><span>' + p.name + ' (' + p.pos + ')</span><span style="color:var(--color-text-success);">avg ' + (p.matchRatings.slice(-5).reduce((a,b)=>a+b,0)/Math.min(5,p.matchRatings.length)).toFixed(1) + '</span></div>').join('') : '<div style="color:var(--color-text-secondary); font-size:12px;">No one hot.</div>') + '</div></div>' +
+      '<div class="grid2"><div class="pnl"><div class="pnl-t">Injury list (' + injuries.length + ')</div>' + (injuries.length ? injuries.map(p => '<div style="display:flex; justify-content:space-between; padding:4px 0; font-size:12px;"><span>' + p.name + ' (' + roleOf(p) + ')</span><span style="color:var(--color-text-danger);">' + Math.ceil(p.injuryWeeks) + 'w</span></div>').join('') : '<div style="color:var(--color-text-secondary); font-size:12px;">Everyone fit.</div>') + '</div>' +
+      '<div class="pnl"><div class="pnl-t">Elite form (' + inForm.length + ')</div>' + (inForm.length ? inForm.map(p => '<div style="display:flex; justify-content:space-between; padding:4px 0; font-size:12px;"><span>' + p.name + ' (' + roleOf(p) + ')</span><span style="color:var(--color-text-success);">avg ' + (p.matchRatings.slice(-5).reduce((a,b)=>a+b,0)/Math.min(5,p.matchRatings.length)).toFixed(1) + '</span></div>').join('') : '<div style="color:var(--color-text-secondary); font-size:12px;">No one hot.</div>') + '</div></div>' +
       (G.trophies.length ? '<div class="pnl"><div class="pnl-t">Trophy cabinet</div>' + G.trophies.map(t=>'<span class="trophy">' + t + '</span>').join('') + '</div>' : '') +
       '<button class="play-btn" onclick="advance()">' + (next ? 'Advance to ' + fmtDate(next.day) + ' · ' + next.comp + (next.round?' '+next.round:'') + ' ' + (next.home?'vs':'at') + ' ' + next.opp : 'End season') + '</button>';
   }
@@ -825,12 +1672,14 @@
   function renderMatch() {
     if (!G.currentMatch) return '<div>No match.</div>';
     const cm = G.currentMatch, fx = cm.fx;
+    const oppRoster = getClubRoster(fx.opp);
+    const oppKeyPlayers = oppRoster.length ? oppRoster.slice(0,6).join(', ') : 'No tracked squad data';
     const postMatch = cm.done && cm.matchRatings ? '<div class="pnl"><div class="pnl-t">Match ratings</div>' +
       getXI().sort((a,b) => (cm.matchRatings[b.id]||0) - (cm.matchRatings[a.id]||0)).map(p => {
         const mr = cm.matchRatings[p.id];
         const col = mr >= 8 ? '#3B6D11' : mr >= 7 ? '#173404' : mr >= 6 ? '#854F0B' : '#A32D2D';
         return '<div style="display:grid; grid-template-columns: 14px 1fr 32px 50px 60px; gap:6px; padding:3px 6px; font-size:11px; align-items:center;">' +
-          '<span><span class="pos pos-' + p.pos + '">' + p.pos[0] + '</span></span><span>' + p.name + '</span>' +
+          '<span>' + roleBadge(p) + '</span><span>' + p.name + '</span>' +
           '<span>' + ((cm.perPlayerGoals[p.id]||0) > 0 ? '⚽' + cm.perPlayerGoals[p.id] : '') + '</span>' +
           '<span style="color:var(--color-text-secondary);">' + ((cm.perPlayerAssists[p.id]||0) > 0 ? 'assist ' + cm.perPlayerAssists[p.id] : '') + '</span>' +
           '<span style="font-weight:500; color:' + col + ';">' + mr.toFixed(1) + '</span></div>';
@@ -843,6 +1692,7 @@
         '<div style="font-size:11px; color:var(--color-text-tertiary); text-transform:uppercase; letter-spacing:0.08em;">' + (cm.playing?'Live':'Full time') + '</div>' +
         '<div style="text-align:right;"><div style="font-size:11px; color:var(--color-text-secondary);">' + fx.opp + '</div><div style="font-size:30px; font-weight:500;">' + cm.away + '</div></div>' +
       '</div>' +
+      '<div class="pnl"><div class="pnl-t">' + fx.opp + ' tracked squad</div><div style="font-size:12px; color:var(--color-text-secondary);">' + oppKeyPlayers + '</div></div>' +
       '<div class="pnl"><div class="pnl-t">Commentary</div><div class="comm" id="comm-log">' +
         cm.comm.map(c => '<div class="comm-l ' + c.t + '"><span class="min">' + (typeof c.m==='number'?c.m+"'":c.m) + '</span>' + c.text + '</div>').join('') +
       '</div></div>' + postMatch +
@@ -850,15 +1700,28 @@
   }
 
   function renderSquadHub() {
-    const xi = getXI();
-    const fwd = xi.filter(p => p.pos==='FWD'), mid = xi.filter(p => p.pos==='MID'), def = xi.filter(p => p.pos==='DEF'), gk = xi.filter(p => p.pos==='GK');
-    const tok = (p) => {
-      const eff = ROUND(effectiveRating(p));
-      const lastName = p.name.split(' ').pop().slice(0,8);
-      return '<div class="ptok" title="' + p.name + ' · OVR ' + eff + '"><div>' + lastName + '</div><div class="ptok-rating">' + eff + '</div>' + (isInForm(p)?'<div class="ptok-mark">★</div>':'') + '</div>';
+    const roleLabels = { GK:'Goalkeepers', RB:'Right backs', CB:'Centre backs', LB:'Left backs', CDM:'Defensive mids', CM:'Central mids', CAM:'Attacking mids', RM:'Right mids', LM:'Left mids', RW:'Right wingers', LW:'Left wingers', ST:'Strikers' };
+    const assignments = getFormationAssignments();
+    const slotCard = (a) => {
+      const p = a.player;
+      if (!p) return '<div class="slot-card"><div class="slot-pos">' + a.slot + '</div><div class="slot-name">Open</div></div>';
+      const offRole = roleOf(p) !== a.slot ? '<div class="slot-offrole">natural ' + roleOf(p) + '</div>' : '';
+      return '<div class="slot-card" title="' + p.name + ' · ' + roleOf(p) + ' · OVR ' + ROUND(effectiveRating(p)) + '">' +
+        '<div class="slot-pos">' + a.slot + '</div><div class="slot-name">' + p.name.split(' ').pop().slice(0,10) + '</div>' +
+        '<div class="slot-meta"><span>' + ROUND(effectiveRating(p)) + '</span>' + (isInForm(p)?'<span>★</span>':'') + '</div>' + offRole + '</div>';
     };
-    const slots = getFormationSlots(G.formation);
-    const positionLabels = { GK: ['Goalkeepers', slots[0]], DEF: ['Defenders', slots[1]], MID: ['Midfielders', slots[2]], FWD: ['Forwards', slots[3]] };
+    const slotRows = assignments.map(row => '<div class="pitch-row">' + row.map(slotCard).join('') + '</div>').join('');
+    const slotList = assignments.flat().map(a => {
+      const p = a.player;
+      return '<div class="slot-list-row">' +
+        '<span>' + roleBadge({ name:a.slot, pos:slotGroup(a.slot), role:a.slot }) + '</span>' +
+        '<span>' + (p ? p.name : 'Open slot') + (p && roleOf(p)!==a.slot ? ' <span style="color:var(--color-text-warning); font-size:10px;">natural ' + roleOf(p) + '</span>' : '') + '</span>' +
+        '<span>' + (p ? ROUND(effectiveRating(p)) : '—') + '</span>' +
+        '<span style="color:var(--color-text-secondary);">' + slotGroup(a.slot) + '</span>' +
+      '</div>';
+    }).join('');
+    const shape = getFormationShape(G.formation).flat();
+    const shapeSummary = POSITION_ORDER.filter(r => shape.includes(r)).map(r => r + ' x' + shape.filter(s => s===r).length).join(' · ');
     return '<div class="pnl">' +
       '<div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">' +
         '<span style="font-size:10px; color:var(--color-text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Formation</span>' +
@@ -869,22 +1732,21 @@
       '<div style="display:flex; gap:6px; margin-top:8px;">' +
         '<button class="btn pri" onclick="autoPickXIAndRender()">Best XI</button>' +
         '<button class="btn" onclick="setFreshestXI()">Freshest XI</button>' +
-      '</div></div>' +
-      '<div class="pnl" style="padding: 6px;"><div class="pitch">' +
-        '<div class="pitch-row">' + fwd.map(tok).join('') + '</div>' +
-        '<div class="pitch-row">' + mid.map(tok).join('') + '</div>' +
-        '<div class="pitch-row">' + def.map(tok).join('') + '</div>' +
-        '<div class="pitch-row">' + gk.map(tok).join('') + '</div>' +
-      '</div></div>' +
-      '<div class="toast">Click <strong>Start</strong> next to any player to put them in the XI. Click <strong>Bench</strong> to drop a starter. Injured players are unavailable.</div>' +
-      ['GK','DEF','MID','FWD'].map(pos => {
-        const label = positionLabels[pos][0], count = positionLabels[pos][1];
-        const players = G.squad.filter(p => !p.sold && p.pos === pos).sort((a,b) => effectiveRating(b) - effectiveRating(a));
+      '</div><div style="font-size:11px; color:var(--color-text-secondary); margin-top:8px;">Shape: ' + shapeSummary + '</div></div>' +
+      '<div class="formation-board">' +
+        '<div class="pnl" style="padding: 6px;"><div class="pnl-t">' + G.formation + ' tactical board</div><div class="pitch">' + slotRows + '</div></div>' +
+        '<div class="pnl" style="padding: 6px;"><div class="pnl-t">Formation slots</div>' +
+          '<div class="slot-list-row lineup-head" style="background:transparent;"><span>Pos</span><span>Player</span><span>Eff</span><span>Band</span></div>' + slotList + '</div>' +
+      '</div>' +
+      '<div class="toast">Best XI now fills the specific formation positions first, then uses compatible players if a natural fit is unavailable.</div>' +
+      POSITION_ORDER.map(pos => {
+        const players = G.squad.filter(p => !p.sold && !p.academyTeam && roleOf(p) === pos).sort((a,b) => effectiveRating(b) - effectiveRating(a));
+        if (!players.length) return '';
         const startersCount = players.filter(p => G.starters.includes(p.id)).length;
         return '<div class="pnl" style="padding: 6px 8px;">' +
-          '<div class="lineup-head">' + label + ' · ' + startersCount + ' of ' + count + ' in XI · ' + players.length + ' in squad</div>' +
+          '<div class="lineup-head">' + roleLabels[pos] + ' · ' + startersCount + ' in XI · ' + players.length + ' in squad</div>' +
           '<div class="lineup-row lineup-head" style="background:transparent; padding:2px 6px;">' +
-            '<span></span><span>Player</span><span>Pos</span><span>OVR (eff)</span><span>Form</span><span>Role</span><span>Fit</span><span>Mor</span><span>Action</span><span></span>' +
+            '<span></span><span>Player</span><span>Pos</span><span>OVR (eff)</span><span>Form</span><span>Change</span><span>Fit</span><span>Mor</span><span>Action</span><span></span>' +
           '</div>' +
           players.map(p => renderLineupRow(p)).join('') +
         '</div>';
@@ -913,19 +1775,21 @@
       '<span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' +
         p.name + ' <span style="color:var(--color-text-tertiary); font-size:10px;">' + p.age + '</span>' +
         (injured ? '<span class="badge inj">INJ ' + Math.ceil(p.injuryWeeks) + 'w</span>' : '') +
+        (p.suspended ? '<span class="badge inj">SUS</span>' : '') +
+        (p.onLoan ? '<span class="badge new">LOAN</span>' : '') +
         (p.newSigning ? '<span class="badge new">NEW</span>' : '') +
         '<span style="display:block; font-size:10px; color:var(--color-text-tertiary); margin-top:1px;">' + (recentChips || '<span style="opacity:0.5;">no matches yet</span>') + '</span>' +
       '</span>' +
-      '<span><span class="pos pos-' + p.pos + '">' + p.pos + '</span></span>' +
+      '<span>' + roleBadge(p) + '</span>' +
       '<span><span class="ovr ' + tier + '">' + eff + '</span>' + (bonus!==0?' <span style="font-size:9px; color:' + (bonus>0?'#3B6D11':'#A32D2D') + ';">' + (bonus>0?'+':'') + bonus + '</span>':'') + '</span>' +
       '<span><span class="form-tag form-' + form + '">' + form + '</span></span>' +
-      '<span><span class="role-tag">' + role + '</span></span>' +
+      '<span>' + roleSelect(p) + '</span>' +
       '<span><span class="mor-bar"><span class="mor-fill" style="width:' + p.fitness + '%; background:' + fitCol + ';"></span></span></span>' +
       '<span><span class="mor-bar"><span class="mor-fill" style="width:' + p.morale + '%; background:' + moraleCol + ';"></span></span></span>' +
-      '<span>' + (injured ? '<span style="font-size:10px; color:var(--color-text-tertiary);">Unavailable</span>'
+      '<span>' + (injured || p.suspended || p.onLoan ? '<span style="font-size:10px; color:var(--color-text-tertiary);">' + (p.onLoan ? 'At ' + p.onLoan : 'Unavailable') + '</span>'
         : isStarter ? '<button class="btn sm" onclick="benchPlayer(' + p.id + ')" style="width: 70px;">Bench →</button>'
         : '<button class="btn sm pri" onclick="startPlayer(' + p.id + ')" style="width: 70px;">→ Start</button>') + '</span>' +
-      '<span><button class="btn sm" onclick="sellPlayer(' + p.id + ')" title="Transfer list">£</button></span>' +
+      '<span style="display:flex; gap:3px;"><button class="btn sm" onclick="loanOutPlayer(' + p.id + ')" title="Loan out" ' + (isStarter || injured || p.onLoan ? 'disabled' : '') + '>L</button><button class="btn sm" onclick="sellPlayer(' + p.id + ')" title="Transfer list">£</button></span>' +
     '</div>';
   }
 
@@ -933,16 +1797,21 @@
     const available = G.market.filter(p => p.status === 'available').sort((a,b) => {
       const aS = G.shortlist.includes(a.id) ? 1 : 0;
       const bS = G.shortlist.includes(b.id) ? 1 : 0;
-      return bS - aS || b.ovr - a.ovr;
+      return bS - aS || POSITION_ORDER.indexOf(roleOf(a)) - POSITION_ORDER.indexOf(roleOf(b)) || b.ovr - a.ovr;
     });
+    const aiMoves = G.aiTransferLog.slice(-5).reverse();
     return (!G.windowOpen ? '<div class="toast">Transfer window closed.</div>' : '') +
       (G.shortlist.length ? '<div class="toast">Shortlist: ' + G.shortlist.length + ' player' + (G.shortlist.length>1?'s':'') + ' tracked.</div>' : '') +
+      (aiMoves.length ? '<div class="pnl"><div class="pnl-t">Other clubs · recent market moves</div>' +
+        aiMoves.map(m => '<div style="display:grid; grid-template-columns: 62px 1fr 58px; gap:8px; align-items:center; padding:5px 0; font-size:11px; border-bottom:0.5px solid var(--color-border-tertiary);">' +
+          '<span class="fix-date">' + fmtDate(m.day) + '</span><span><strong>' + m.club + '</strong> signed ' + m.player + ' from ' + m.from + '</span><span style="text-align:right;">£' + m.price + 'm</span></div>').join('') +
+        '<div style="font-size:10px; color:var(--color-text-tertiary); margin-top:6px;">AI clubs are capped at 3 transfer-market signings each season.</div></div>' : '') +
       '<div class="pnl"><div class="pnl-t">Available targets · Budget £' + G.budget + 'm · ' + available.length + ' players</div>' +
         '<div class="market-row head"><span>Player</span><span>Club</span><span>Age</span><span>Pos</span><span>OVR · POT</span><span>Price</span><span></span></div>' +
-        available.slice(0, 60).map(p => '<div class="market-row" style="' + (G.shortlist.includes(p.id)?'background: rgba(251,225,34,0.08);':'') + '">' +
+        available.map(p => '<div class="market-row" style="' + (G.shortlist.includes(p.id)?'background: rgba(251,225,34,0.08);':'') + '">' +
           '<span>' + (G.shortlist.includes(p.id)?'<span style="color:#BA7517;">★</span> ':'') + p.name + '</span>' +
           '<span style="color:var(--color-text-secondary);">' + p.club + '</span><span>' + p.age + '</span>' +
-          '<span><span class="pos pos-' + p.pos + '">' + p.pos + '</span></span>' +
+          '<span>' + roleBadge(p) + '</span>' +
           '<span><span class="ovr ' + tierOf(p.ovr) + '">' + p.ovr + '</span> <span style="color:var(--color-text-secondary);">' + p.pot + '</span></span>' +
           '<span>£' + p.price + 'm</span>' +
           '<span style="display:flex; gap:3px;">' +
@@ -957,7 +1826,7 @@
     return '<div class="pnl"><div class="pnl-t">Chief scout\'s report</div>' +
       '<p style="font-size:12px; color:var(--color-text-secondary); margin: 0 0 8px;">Targets identified for our positions of need.</p></div>' +
       recs.map(p => '<div class="scout-card"><div class="scout-row">' +
-        '<div><div style="font-weight:500; font-size:13px;">' + p.name + ' <span class="pos pos-' + p.pos + '" style="margin-left:6px;">' + p.pos + '</span> <span style="color:var(--color-text-secondary); font-size:11px; margin-left:6px;">' + p.club + ' · ' + p.age + 'yo</span></div>' +
+        '<div><div style="font-weight:500; font-size:13px;">' + p.name + ' <span style="margin-left:6px;">' + roleBadge(p) + '</span> <span style="color:var(--color-text-secondary); font-size:11px; margin-left:6px;">' + p.club + ' · ' + p.age + 'yo</span></div>' +
         '<div style="font-size:11px; color:var(--color-text-secondary); margin-top:3px;">' + scoutReport(p) + '</div></div>' +
         '<div style="text-align:right;"><div><span class="ovr ' + tierOf(p.ovr) + '">' + p.ovr + '</span> <span style="color:var(--color-text-secondary); font-size:11px;">→ ' + p.pot + '</span></div>' +
         '<div style="font-size:11px; margin-top:3px;">£' + p.price + 'm</div></div></div>' +
@@ -969,16 +1838,37 @@
 
   function renderTables() {
     const pl = leagueSorted();
-    const cl = Object.entries(G.clStandings).map(([n,s]) => ({name:n, ...s, GD: s.GF-s.GA})).sort((a,b)=>b.Pts-a.Pts||b.GD-a.GD);
+    const cl = clSorted();
+    const el = elSorted();
+    const ko = G.clKnockout;
+    const elKo = G.elKnockout;
+    const bracketRows = ko && (ko.history.length || ko.ties.length) ? [...ko.history, ...ko.ties].map(t =>
+      '<div class="fix"><div class="fix-date">' + t.round + '</div><div></div><div>' + t.a + ' vs ' + t.b + '</div><div style="text-align:right; font-weight:500; color:' + (t.winner==='Man Utd'?'var(--color-text-success)':t.winner?'var(--color-text-secondary)':'var(--color-text-warning)') + ';">' +
+      (t.leg ? t.aGoals + '-' + t.bGoals + (t.note ? ' ' + t.note : '') + (t.winner ? ' · ' + t.winner : ' agg') : 'scheduled') + '</div></div>').join('') : '';
+    const europaRows = elKo && elKo.history.length ? elKo.history.map(t =>
+      '<div class="fix"><div class="fix-date">' + t.round + '</div><div class="cmp cmp-EL">EL</div><div>' + t.a + ' vs ' + t.b + '</div><div style="text-align:right; font-weight:500; color:var(--color-text-secondary);">' +
+      t.aGoals + '-' + t.bGoals + (t.note ? ' ' + t.note : '') + ' · ' + t.winner + '</div></div>').join('') : '';
     return '<div class="grid2">' +
       '<div class="pnl"><div class="pnl-t">Premier League</div>' +
         '<div class="table-row head"><span>#</span><span>Team</span><span>P</span><span>W</span><span>D</span><span>L</span><span>GD</span><span>Pts</span></div>' +
-        pl.map((t,i) => '<div class="table-row ' + (t.name==='Man Utd'?'mun':i<5?'cl-spot':'') + '"><span>' + (i+1) + '</span><span>' + t.name + '</span><span>' + t.P + '</span><span>' + t.W + '</span><span>' + t.D + '</span><span>' + t.L + '</span><span>' + (t.GD>0?'+':'') + t.GD + '</span><span>' + t.Pts + '</span></div>').join('') +
+        pl.map((t,i) => '<div class="table-row ' + (t.name==='Man Utd'?'mun':i<4?'cl-spot':'') + '"><span>' + (i+1) + '</span><span>' + t.name + (i<4?' <span style="font-size:9px; color:var(--color-text-success);">CL</span>':i===4?' <span style="font-size:9px; color:var(--color-text-warning);">5th route</span>':'') + '</span><span>' + t.P + '</span><span>' + t.W + '</span><span>' + t.D + '</span><span>' + t.L + '</span><span>' + (t.GD>0?'+':'') + t.GD + '</span><span>' + t.Pts + '</span></div>').join('') +
       '</div>' +
       '<div>' +
-        '<div class="pnl"><div class="pnl-t">Champions League · league phase</div>' +
+        '<div class="pnl"><div class="pnl-t">Champions League · 32-team league phase</div>' +
           '<div class="table-row head"><span>#</span><span>Team</span><span>P</span><span>W</span><span>D</span><span>L</span><span>GD</span><span>Pts</span></div>' +
-          cl.slice(0,8).map((t,i) => '<div class="table-row ' + (t.name==='Man Utd'?'mun':'') + '"><span>' + (i+1) + '</span><span>' + t.name + '</span><span>' + t.P + '</span><span>' + t.W + '</span><span>' + t.D + '</span><span>' + t.L + '</span><span>' + (t.GD>0?'+':'') + t.GD + '</span><span>' + t.Pts + '</span></div>').join('') +
+          cl.slice(0,32).map((t,i) => '<div class="table-row ' + (t.name==='Man Utd'?'mun':i<24?'cl-spot':'') + '"><span>' + (i+1) + '</span><span>' + t.name + (i<8?' <span style="font-size:9px; color:var(--color-text-success);">R16</span>':i<24?' <span style="font-size:9px; color:var(--color-text-warning);">PO</span>':'') + '</span><span>' + t.P + '</span><span>' + t.W + '</span><span>' + t.D + '</span><span>' + t.L + '</span><span>' + (t.GD>0?'+':'') + t.GD + '</span><span>' + t.Pts + '</span></div>').join('') +
+        '</div>' +
+        '<div class="pnl"><div class="pnl-t">Champions League playoff path</div>' +
+          (ko && ko.champion ? '<div class="trophy">European champion: ' + ko.champion + '</div>' : '') +
+          (bracketRows || '<div style="padding:6px; color:var(--color-text-secondary);">Top 8 go straight to the R16. 9th-24th play one-leg playoffs for the other R16 spots.</div>') +
+        '</div>' +
+        '<div class="pnl"><div class="pnl-t">Europa League · top 16 league phase</div>' +
+          '<div class="table-row head"><span>#</span><span>Team</span><span>P</span><span>W</span><span>D</span><span>L</span><span>GD</span><span>Pts</span></div>' +
+          el.slice(0,16).map((t,i) => '<div class="table-row cl-spot"><span>' + (i+1) + '</span><span>' + t.name + '</span><span>' + t.P + '</span><span>' + t.W + '</span><span>' + t.D + '</span><span>' + t.L + '</span><span>' + (t.GD>0?'+':'') + t.GD + '</span><span>' + t.Pts + '</span></div>').join('') +
+        '</div>' +
+        '<div class="pnl"><div class="pnl-t">Europa League playoff</div>' +
+          (elKo && elKo.champion ? '<div class="trophy">Europa League champion: ' + elKo.champion + '</div>' : '') +
+          (europaRows || '<div style="padding:6px; color:var(--color-text-secondary);">Europa League playoff not generated yet.</div>') +
         '</div>' +
         '<div class="pnl"><div class="pnl-t">FA Cup run</div>' +
           (G.cupRounds.FA.length ? G.cupRounds.FA.map(r => '<div class="fix"><div class="fix-date">' + r.round + '</div><div></div><div>vs ' + r.opp + '</div><div style="text-align:right; font-weight:500; color:' + (r.won?'var(--color-text-success)':'var(--color-text-danger)') + ';">' + r.score + '</div></div>').join('') : '<div style="padding:6px; color:var(--color-text-secondary);">Not entered yet.</div>') +
@@ -990,11 +1880,18 @@
   }
 
   function renderTraining() {
+    const stadiumCost = 45 + G.stadiumLevel * 35;
     return '<div class="pnl"><div class="pnl-t">Training focus</div>' +
       '<p style="font-size:12px; color:var(--color-text-secondary); margin:0 0 8px;">Tilt end-of-season rating updates.</p>' +
       '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
         [['youth','Youth development'],['balanced','Balanced'],['fitness','Fitness']].map(t => '<button class="btn ' + (G.training===t[0]?'pri':'') + '" onclick="setTraining(\'' + t[0] + '\')">' + t[1] + '</button>').join('') +
       '</div></div>' +
+      '<div class="pnl"><div class="pnl-t">Stadium upgrades</div>' +
+        '<div style="display:grid; grid-template-columns: 1fr 92px 86px; gap:8px; align-items:center; font-size:12px;">' +
+          '<div><strong>Level ' + G.stadiumLevel + '</strong><div style="font-size:11px; color:var(--color-text-secondary); margin-top:3px;">Better facilities and atmosphere give a small boost when convincing players to join.</div></div>' +
+          '<span>£' + (G.stadiumLevel >= 5 ? 'max' : stadiumCost + 'm') + '</span>' +
+          '<button class="btn sm ' + (G.budget >= stadiumCost && G.stadiumLevel < 5 ? 'pri' : '') + '" onclick="upgradeStadium()" ' + (G.budget < stadiumCost || G.stadiumLevel >= 5 ? 'disabled' : '') + '>Upgrade</button>' +
+        '</div></div>' +
       '<div class="pnl"><div class="pnl-t">Top performers · current season</div>' +
       G.squad.filter(p => !p.sold && p.matchRatings.length > 0).sort((a,b) => {
         const aA = a.matchRatings.reduce((s,r)=>s+r,0)/a.matchRatings.length;
@@ -1004,11 +1901,88 @@
         const avg = p.matchRatings.reduce((s,r)=>s+r,0)/p.matchRatings.length;
         const bigAvg = p.bigGameRatings.length ? p.bigGameRatings.reduce((s,r)=>s+r,0)/p.bigGameRatings.length : null;
         return '<div style="display:grid; grid-template-columns: 32px 1fr 32px 60px 80px 80px; gap:6px; padding:5px 6px; font-size:11px; align-items:center; border-bottom: 0.5px solid var(--color-border-tertiary);">' +
-          '<span><span class="pos pos-' + p.pos + '">' + p.pos + '</span></span><span>' + p.name + '</span><span>' + p.age + '</span>' +
+          '<span>' + roleBadge(p) + '</span><span>' + p.name + '</span><span>' + p.age + '</span>' +
           '<span><span class="ovr ' + tierOf(p.ovr) + '">' + p.ovr + '</span></span>' +
           '<span style="color:var(--color-text-secondary);">avg ' + avg.toFixed(2) + '</span>' +
           '<span style="color:var(--color-text-secondary);">' + (bigAvg ? 'big ' + bigAvg.toFixed(2) : '—') + '</span></div>';
       }).join('') + '</div>';
+  }
+
+  function renderAcademy() {
+    const academyRow = (p, team) => '<div class="academy-row">' +
+      '<span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + p.name + '<span style="display:block; font-size:10px; color:var(--color-text-tertiary);">' + p.apps + ' youth apps · ' + p.goals + 'G ' + p.assists + 'A</span></span>' +
+      '<span>' + p.age + '</span><span>' + roleBadge(p) + '</span>' +
+      '<span><span class="ovr ' + tierOf(p.ovr) + '">' + p.ovr + '</span></span>' +
+      '<span style="color:var(--color-text-secondary);">' + p.pot + ' pot</span>' +
+      '<span><button class="btn sm pri" onclick="promoteYouth(\'' + team + '\',' + p.id + ')">Promote</button></span>' +
+    '</div>';
+    const teamPanel = (team, label) => '<div class="pnl" style="padding:6px 8px;"><div class="pnl-t">' + label + ' · ' + academyPlayers(team).length + '/5</div>' +
+      '<div class="academy-row head"><span>Player</span><span>Age</span><span>Pos</span><span>OVR</span><span>Ceiling</span><span></span></div>' +
+      academyPlayers(team).map(p => academyRow(p, team)).join('') +
+    '</div>';
+    const u21Seniors = G.squad.filter(p => !p.sold && p.academyTeam === 'U21');
+    const seniorOptions = G.squad.filter(p => !p.sold && !p.academyTeam && !G.starters.includes(p.id) && p.age <= 24).sort((a,b) => a.age - b.age || a.ovr - b.ovr).slice(0,10);
+    return '<div class="toast">Academy players develop quickly until the mid/high 70s. After that, promote them for senior minutes if you want them to keep climbing.</div>' +
+      '<div class="grid2">' + teamPanel('u21','U21 squad') + teamPanel('u18','U18 squad') + '</div>' +
+      '<div class="pnl" style="padding:6px 8px;"><div class="pnl-t">Senior players in U21 games</div>' +
+        (u21Seniors.length ? u21Seniors.map(p => '<div class="academy-row" style="grid-template-columns:1fr 34px 34px 40px 54px 118px;"><span>' + p.name + '</span><span>' + p.age + '</span><span>' + roleBadge(p) + '</span><span><span class="ovr ' + tierOf(p.ovr) + '">' + p.ovr + '</span></span><span>sharpness</span><span><button class="btn sm" onclick="recallSenior(' + p.id + ')">Recall</button></span></div>').join('') : '<div style="font-size:12px; color:var(--color-text-secondary); padding:6px;">No senior players assigned to U21.</div>') +
+      '</div>' +
+      '<div class="pnl" style="padding:6px 8px;"><div class="pnl-t">Send young senior players down</div>' +
+        (seniorOptions.length ? seniorOptions.map(p => '<div class="academy-row" style="grid-template-columns:1fr 34px 34px 40px 54px 118px;"><span>' + p.name + '</span><span>' + p.age + '</span><span>' + roleBadge(p) + '</span><span><span class="ovr ' + tierOf(p.ovr) + '">' + p.ovr + '</span></span><span>' + p.pot + ' pot</span><span><button class="btn sm" onclick="sendSeniorToU21(' + p.id + ')">Send U21</button></span></div>').join('') : '<div style="font-size:12px; color:var(--color-text-secondary); padding:6px;">No eligible young bench players right now.</div>') +
+      '</div>';
+  }
+
+  function renderStats() {
+    const players = G.squad.filter(p => !p.sold).sort((a,b) => {
+      const aGA = a.goals + a.assists;
+      const bGA = b.goals + b.assists;
+      return bGA - aGA || b.goals - a.goals || b.assists - a.assists || b.appearances - a.appearances || b.ovr - a.ovr;
+    });
+    const totalGoals = players.reduce((sum,p) => sum + p.goals, 0);
+    const totalAssists = players.reduce((sum,p) => sum + p.assists, 0);
+    const topScorer = players.find(p => p.goals > 0);
+    const topCreator = [...players].sort((a,b) => b.assists - a.assists || b.goals - a.goals)[0];
+    const empty = totalGoals === 0 && totalAssists === 0;
+    const statBox = (label, value, sub) => '<div class="pnl" style="margin-bottom:0;"><div class="pnl-t">' + label + '</div><div style="font-size:24px; font-weight:600; line-height:1;">' + value + '</div><div style="font-size:11px; color:var(--color-text-secondary); margin-top:5px;">' + sub + '</div></div>';
+    const history = G.seasonHistory.slice().reverse();
+    const historyHtml = '<div class="pnl" style="padding:6px 8px;"><div class="pnl-t">Completed season archive</div>' +
+      (history.length ? history.map(s => '<div style="border-bottom:0.5px solid var(--color-border-tertiary); padding:8px 0;">' +
+        '<div style="display:grid; grid-template-columns: 72px 1fr 70px 84px; gap:8px; align-items:center; font-size:12px;">' +
+          '<strong>' + s.label + '</strong>' +
+          '<span>' + s.stats.played + ' played · ' + s.stats.won + 'W ' + s.stats.drawn + 'D ' + s.stats.lost + 'L · GF ' + s.stats.gf + ' GA ' + s.stats.ga + '</span>' +
+          '<span>' + ordinal(s.leaguePos) + ' PL</span>' +
+          '<span style="text-align:right;">' + s.trophies.length + ' trophies</span>' +
+        '</div>' +
+        '<div style="font-size:11px; color:var(--color-text-secondary); margin-top:5px;">Top scorer: ' + (s.topScorer && s.topScorer.goals > 0 ? s.topScorer.name + ' (' + s.topScorer.goals + ')' : 'none') + ' · Top assists: ' + (s.topCreator && s.topCreator.assists > 0 ? s.topCreator.name + ' (' + s.topCreator.assists + ')' : 'none') + '</div>' +
+        (s.trophies.length ? '<div style="margin-top:6px;">' + s.trophies.map(t=>'<span class="trophy">' + t + '</span>').join('') + '</div>' : '') +
+        '<div class="lineup-row lineup-head" style="grid-template-columns: 24px 1fr 34px 36px 36px 40px 48px; background:transparent; padding:7px 0 2px;">' +
+          '<span>#</span><span>Player</span><span>Pos</span><span>G</span><span>A</span><span>G+A</span><span>Apps</span>' +
+        '</div>' +
+        s.players.slice(0,12).map((p,i) => '<div class="lineup-row" style="grid-template-columns: 24px 1fr 34px 36px 36px 40px 48px; padding:4px 0;">' +
+          '<span style="color:var(--color-text-tertiary);">' + (i+1) + '</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + p.name + '</span>' +
+          '<span><span class="pos pos-' + p.role + '">' + p.role + '</span></span><span>' + p.goals + '</span><span>' + p.assists + '</span><span>' + p.ga + '</span><span style="color:var(--color-text-secondary);">' + p.apps + '</span>' +
+        '</div>').join('') +
+      '</div>').join('') : '<div style="padding:6px; color:var(--color-text-secondary); font-size:12px;">Finish a season to archive its stats here.</div>') +
+    '</div>';
+    return '<div class="grid2" style="margin-bottom:10px;">' +
+        statBox('Team goals', totalGoals, topScorer ? 'Leader: ' + topScorer.name + ' (' + topScorer.goals + ')' : 'No goals yet') +
+        statBox('Team assists', totalAssists, topCreator && topCreator.assists > 0 ? 'Leader: ' + topCreator.name + ' (' + topCreator.assists + ')' : 'No assists yet') +
+      '</div>' +
+      (empty ? '<div class="toast">Play matches to start filling the season stats table.</div>' : '') +
+      '<div class="pnl" style="padding:6px 8px;"><div class="pnl-t">Player stats · current season</div>' +
+        '<div class="lineup-row lineup-head" style="grid-template-columns: 24px 1fr 34px 44px 44px 44px 54px; background:transparent; padding:2px 6px;">' +
+          '<span>#</span><span>Player</span><span>Pos</span><span>G</span><span>A</span><span>G+A</span><span>Apps</span>' +
+        '</div>' +
+        players.map((p,i) => '<div class="lineup-row" style="grid-template-columns: 24px 1fr 34px 44px 44px 44px 54px;">' +
+          '<span style="color:var(--color-text-tertiary);">' + (i+1) + '</span>' +
+          '<span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + p.name + '</span>' +
+          '<span>' + roleBadge(p) + '</span>' +
+          '<span style="font-weight:500;">' + p.goals + '</span>' +
+          '<span style="font-weight:500;">' + p.assists + '</span>' +
+          '<span>' + (p.goals + p.assists) + '</span>' +
+          '<span style="color:var(--color-text-secondary);">' + p.appearances + '</span>' +
+        '</div>').join('') +
+      '</div>' + historyHtml;
   }
 
   function renderSeasonEnd() {
