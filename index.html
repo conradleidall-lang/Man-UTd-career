@@ -643,10 +643,12 @@
     const age = team === 'u18' ? 16 + Math.floor(Math.random()*2) : 18 + Math.floor(Math.random()*3);
     const ovr = team === 'u18' ? 51 + Math.floor(Math.random()*10) : 58 + Math.floor(Math.random()*10);
     const pot = Math.min(94, ovr + 18 + Math.floor(Math.random()*15));
-    return { id:G.nextYouthId++, name:youthName(), pos:slotGroup(role), role, age, ovr, pot, growth:0, apps:0, goals:0, assists:0, team, academy:true, aiGen:true };
+    const devCeiling = Math.random() < 0.35 ? pot : Math.max(ovr + 3, pot - Math.floor(5 + Math.random() * 11));
+    return { id:G.nextYouthId++, name:youthName(), pos:slotGroup(role), role, age, ovr, pot, devCeiling, growth:0, apps:0, goals:0, assists:0, team, academy:true, aiGen:true };
   }
   function seedYouth(name, role, age, ovr, pot, team) {
-    return { id: G.nextYouthId++, name, pos: slotGroup(role), role, age, ovr, pot, growth: 0, apps: 0, goals: 0, assists: 0, team, academy: true };
+    const devCeiling = Math.random() < 0.35 ? pot : Math.max(ovr + 3, pot - Math.floor(5 + Math.random() * 11));
+    return { id: G.nextYouthId++, name, pos: slotGroup(role), role, age, ovr, pot, devCeiling, growth: 0, apps: 0, goals: 0, assists: 0, team, academy: true };
   }
   function generateAcademy() {
     G.academy.u21 = [
@@ -681,7 +683,8 @@
           if (['ST','LW','RW','CAM'].includes(roleOf(p)) && Math.random() < 0.35) p.goals++;
           if (['CM','CAM','RW','LW','RM','LM'].includes(roleOf(p)) && Math.random() < 0.33) p.assists++;
         }
-        while (p.growth >= 17 && p.ovr < p.pot) { p.growth -= 17; p.ovr++; }
+        const potCap = Math.min(cap, p.devCeiling != null ? p.devCeiling : p.pot);
+        while (p.growth >= 17 && p.ovr < potCap) { p.growth -= 17; p.ovr++; }
       });
     });
     G.squad.filter(p => p.academyTeam === 'U21' && !p.sold).forEach(p => {
@@ -1132,7 +1135,8 @@
         }
       }
       if (delta > 0) {
-        delta = Math.min(delta, p.pot - p.ovr);
+        const effPot = p.devCeiling != null ? Math.min(p.devCeiling, p.pot) : p.pot;
+        delta = Math.min(delta, effPot - p.ovr);
         if (Math.random() < (G.stadiumLevel - 1) * 0.15) delta = Math.min(p.pot - p.ovr, delta + 1);
       }
       if (seasonEnd) {
