@@ -644,7 +644,7 @@
     const age = team === 'u18' ? 16 + Math.floor(Math.random()*2) : 18 + Math.floor(Math.random()*3);
     const ovr = team === 'u18' ? 51 + Math.floor(Math.random()*10) : 58 + Math.floor(Math.random()*10);
     const pot = Math.min(94, ovr + 18 + Math.floor(Math.random()*15));
-    return { id:G.nextYouthId++, name:youthName(), pos:slotGroup(role), role, age, ovr, pot, growth:0, apps:0, goals:0, assists:0, team, academy:true };
+    return { id:G.nextYouthId++, name:youthName(), pos:slotGroup(role), role, age, ovr, pot, growth:0, apps:0, goals:0, assists:0, team, academy:true, aiGen:true };
   }
   function seedYouth(name, role, age, ovr, pot, team) {
     return { id: G.nextYouthId++, name, pos: slotGroup(role), role, age, ovr, pot, growth: 0, apps: 0, goals: 0, assists: 0, team, academy: true };
@@ -672,7 +672,7 @@
     if (!G.academy) return;
     ['u21','u18'].forEach(team => {
       academyPlayers(team).forEach(p => {
-        const cap = team === 'u18' ? 76 : 78;
+        const cap = p.aiGen ? 73 : (team === 'u18' ? 76 : 78);
         const fast = p.ovr < cap ? 1.4 : 0.28;
         const train = getCultureMods().bastionAcademy ? 0.55 : 0.25;
         p.growth += days * (fast + train) * (Math.max(0, p.pot - p.ovr) / 22);
