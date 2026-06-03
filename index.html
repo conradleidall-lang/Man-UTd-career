@@ -681,7 +681,7 @@
           if (['ST','LW','RW','CAM'].includes(roleOf(p)) && Math.random() < 0.35) p.goals++;
           if (['CM','CAM','RW','LW','RM','LM'].includes(roleOf(p)) && Math.random() < 0.33) p.assists++;
         }
-        while (p.growth >= 12 && p.ovr < p.pot) { p.growth -= 12; p.ovr++; }
+        while (p.growth >= 17 && p.ovr < p.pot) { p.growth -= 17; p.ovr++; }
       });
     });
     G.squad.filter(p => p.academyTeam === 'U21' && !p.sold).forEach(p => {
@@ -871,7 +871,7 @@
   }
   function updateActiveDuos() {
     const played = G.seasonStats.played;
-    G.activeDuos = [];
+    const candidates = [];
     Object.entries(G.pairStats || {}).forEach(([key, stats]) => {
       const [id1, id2] = key.split('_').map(Number);
       const p1 = G.squad.find(p => p.id === id1 && !p.sold);
@@ -880,12 +880,22 @@
       const atk = (pl) => pl.pos === 'FWD' || pl.pos === 'MID';
       const atkFresh = stats.lastAtkActive && (played - stats.lastAtkActive) <= 10;
       const defFresh = stats.lastDefActive && (played - stats.lastDefActive) <= 12;
-      if (stats.goalAssists >= 3 && atkFresh && atk(p1) && atk(p2)) {
-        G.activeDuos.push({ p1Id: id1, p2Id: id2, type: 'attack', count: stats.goalAssists });
-      } else if (stats.cleanSheets >= 8 && defFresh && roleOf(p1) === 'CB' && roleOf(p2) === 'CB') {
-        G.activeDuos.push({ p1Id: id1, p2Id: id2, type: 'defense', count: stats.cleanSheets });
+      if (stats.goalAssists >= 5 && atkFresh && atk(p1) && atk(p2)) {
+        candidates.push({ p1Id: id1, p2Id: id2, type: 'attack', count: stats.goalAssists });
+      } else if (stats.cleanSheets >= 12 && defFresh && roleOf(p1) === 'CB' && roleOf(p2) === 'CB') {
+        candidates.push({ p1Id: id1, p2Id: id2, type: 'defense', count: stats.cleanSheets });
       }
     });
+    // Strongest duo first; each player can only belong to one duo
+    candidates.sort((a, b) => b.count - a.count);
+    const claimed = new Set();
+    G.activeDuos = [];
+    for (const d of candidates) {
+      if (claimed.has(d.p1Id) || claimed.has(d.p2Id)) continue;
+      G.activeDuos.push(d);
+      claimed.add(d.p1Id);
+      claimed.add(d.p2Id);
+    }
   }
   function resolveLoanReturn(p) {
     const roll = Math.random();
