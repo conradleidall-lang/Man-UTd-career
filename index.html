@@ -1031,26 +1031,27 @@
     const base = pg === sg ? -4 : ((adjacent[pg] || []).includes(sg) ? -7 : -10);
     return Math.round(base * oopMult);
   }
-  function slotScore(slot, p, fresh) {
+  function slotScore(slot, p, fresh, bench) {
+    if (bench) return slotCompatibility(slot, p) * 100 - (p.mins || 0);
     return effectiveRating(p) + slotCompatibility(slot, p) * 3 + (fresh ? p.fitness / 5 : 0);
   }
-  function pickForSlot(pool, slot, fresh) {
+  function pickForSlot(pool, slot, fresh, bench) {
     const sg = slotGroup(slot);
     const isGK = sg === 'GK';
     const inGroup   = pool.filter(p => isGK ? roleOf(p) === 'GK' : (p.pos === sg && roleOf(p) !== 'GK'));
     const crossGroup = pool.filter(p => !isGK && roleOf(p) !== 'GK' && p.pos !== sg);
-    const sorted = (arr) => arr.sort((a,b) => slotScore(slot,b,fresh) - slotScore(slot,a,fresh));
+    const sorted = (arr) => arr.sort((a,b) => slotScore(slot,b,fresh,bench) - slotScore(slot,a,fresh,bench));
     return sorted(inGroup)[0] || sorted(crossGroup)[0] || null;
   }
-  function assignFormationPlayers(f, pool, fresh) {
+  function assignFormationPlayers(f, pool, fresh, bench) {
     const selected = [];
     getFormationShape(f).flat().forEach(slot => {
       const remaining = pool.filter(p => !selected.includes(p.id));
-      const pick = pickForSlot(remaining, slot, fresh);
+      const pick = pickForSlot(remaining, slot, fresh, bench);
       if (pick) selected.push(pick.id);
     });
     if (selected.length < 11) {
-      pool.filter(p => !selected.includes(p.id)).sort((a,b) => (fresh ? b.fitness - a.fitness : effectiveRating(b) - effectiveRating(a))).slice(0, 11 - selected.length).forEach(p => selected.push(p.id));
+      pool.filter(p => !selected.includes(p.id)).sort((a,b) => bench ? (a.mins||0) - (b.mins||0) : fresh ? b.fitness - a.fitness : effectiveRating(b) - effectiveRating(a)).slice(0, 11 - selected.length).forEach(p => selected.push(p.id));
     }
     return selected.slice(0,11);
   }
@@ -1171,6 +1172,12 @@
     G.slotMap = null;
     const avail = G.squad.filter(isAvailable);
     G.starters = assignFormationPlayers(G.formation, avail, true);
+    render();
+  }
+  function setBenchXI() {
+    G.slotMap = null;
+    const avail = G.squad.filter(isAvailable);
+    G.starters = assignFormationPlayers(G.formation, avail, false, true);
     render();
   }
   function getXI() { return G.starters.map(id => G.squad.find(p => p.id === id)).filter(Boolean); }
@@ -2210,6 +2217,7 @@
       '<div style="display:flex; gap:6px; margin-top:8px;">' +
         '<button class="btn pri" onclick="autoPickXIAndRender()">Best XI</button>' +
         '<button class="btn" onclick="setFreshestXI()">Freshest XI</button>' +
+        '<button class="btn" onclick="setBenchXI()">Bench XI</button>' +
       '</div><div style="font-size:11px; color:var(--color-text-secondary); margin-top:8px;">Shape: ' + shapeSummary + '</div></div>' +
       '<div class="formation-board">' +
         '<div class="pnl" style="padding: 6px;"><div class="pnl-t">' + G.formation + ' tactical board · drag tiles to swap positions</div><div class="pitch">' + slotRows + '</div>' +
