@@ -536,7 +536,10 @@
   function tierOf(ovr) { if (ovr >= 92) return 'super'; if (ovr >= 88) return 'star'; if (ovr >= 82) return 'solid'; return 'depth'; }
   function awardTrophy(name) { if (!G.trophies.includes(name)) G.trophies.push(name); }
   function seasonLabel() { return G.year + '-' + (G.year+1).toString().slice(2); }
-  function playerValue(p) { return Math.max(2, Math.round((p.ovr - 60) * 4 + (p.pot - p.ovr) * 3)); }
+  function playerValue(p) {
+    const raw = Math.max(2, Math.round((p.ovr - 60) * 4 + (p.pot - p.ovr) * 3));
+    return p.ovr <= 84 ? Math.min(50, raw) : raw;
+  }
   function saleBudgetReturn(price) { return Math.round(price * 0.75); }
   function inferRole(name, pos) {
     if (ROLE_MAP[name]) return ROLE_MAP[name];
