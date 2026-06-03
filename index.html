@@ -1906,6 +1906,7 @@
       body = '<div class="pnl" style="border:1px solid var(--color-border-info);"><div class="pnl-t">Render issue</div><div style="font-size:12px; color:var(--color-text-secondary);">The game recovered from a display error. Try another tab or reload if it continues.</div></div>';
     }
     root.innerHTML = header + tabBar + body;
+    try { localStorage.setItem('manUtdCareer', JSON.stringify(G)); } catch(e) {}
   }
 
   function renderDash() {
@@ -2449,7 +2450,18 @@
   function setFormation(f) { G.formation = f; autoPickXI(); render(); }
   function autoPickXIAndRender() { autoPickXI(); render(); }
 
-  newGame();
+  const isReload = (performance.getEntriesByType('navigation')[0] || {}).type === 'reload';
+  if (isReload) {
+    localStorage.removeItem('manUtdCareer');
+    newGame();
+  } else {
+    const saved = localStorage.getItem('manUtdCareer');
+    if (saved) {
+      try { G = JSON.parse(saved); render(); } catch(e) { newGame(); }
+    } else {
+      newGame();
+    }
+  }
 </script>
 </body>
 </html>
