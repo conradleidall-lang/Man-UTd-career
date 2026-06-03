@@ -1554,9 +1554,11 @@
     G.lastSeasonTrophyValue = 0;
     const stadiumRevenue = 15 + G.stadiumLevel * 6;
     const fanbaseRevenue = Math.floor(Math.max(0, G.fanbase - 70) * 0.9);
-    G.budget += stadiumRevenue + fanbaseRevenue;
+    const plPrizeMoney = Math.max(5, Math.round(45 - (munPos - 1) * 2.1));
+    G.budget += stadiumRevenue + fanbaseRevenue + plPrizeMoney;
     const fanLabel = fanbaseLabel(G.fanbase);
-    G.transferMessages.push('Stadium (Level ' + G.stadiumLevel + ') generated £' + stadiumRevenue + 'm. Global fanbase (' + fanLabel + ') added £' + fanbaseRevenue + 'm in commercial revenue.');
+    G.transferMessages.push('Stadium (Level ' + G.stadiumLevel + ') generated £' + stadiumRevenue + 'm. Fanbase (' + fanLabel + ') added £' + fanbaseRevenue + 'm.');
+    G.transferMessages.push('Premier League prize money · ' + ordinal(munPos) + ' place · £' + plPrizeMoney + 'm added to budget.');
     G.pairStats = {}; G.activeDuos = [];
     G.windowOpen = true; G.incomingBids = []; G.aiTransfers = {}; G.aiTransferLog = [];
     G.view = 'season-end';
