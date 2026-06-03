@@ -697,12 +697,20 @@
     const p = list.find(x => x.id === id);
     if (!p) return;
     G.academy[team] = list.filter(x => x.id !== id);
-    const newId = Math.max(...G.squad.map(x=>x.id), 0) + 1;
-    G.squad.push({ id:newId, name:p.name, pos:p.pos, role:p.role, age:p.age, ovr:p.ovr, pot:p.pot,
-      mins:0, goals:0, assists:0, appearances:0, clubGoals:0, clubAssists:0, clubApps:0, matchRatings:[], bigGameRatings:[], lastUpdate:G.day,
-      fitness:100, morale:70, injuryWeeks:0, newSigning:false, sold:false, onLoan:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null });
-    G.transferMessages.push('Promoted ' + p.name + ' from ' + team.toUpperCase() + ' to the first team.');
-    autoPickXI(); render();
+    if (team === 'u18') {
+      p.team = 'u21';
+      G.academy.u21.push(p);
+      G.transferMessages.push(p.name + ' promoted from U18 to U21. Develop them further before calling them up to the first team.');
+      render();
+    } else {
+      const newId = Math.max(...G.squad.map(x=>x.id), 0) + 1;
+      G.squad.push({ id:newId, name:p.name, pos:p.pos, role:p.role, age:p.age, ovr:p.ovr, pot:p.pot,
+        devCeiling: p.devCeiling != null ? p.devCeiling : undefined,
+        mins:0, goals:0, assists:0, appearances:0, clubGoals:0, clubAssists:0, clubApps:0, matchRatings:[], bigGameRatings:[], lastUpdate:G.day,
+        fitness:100, morale:70, injuryWeeks:0, newSigning:false, sold:false, onLoan:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null });
+      G.transferMessages.push(p.name + ' promoted from U21 to the first team.');
+      autoPickXI(); render();
+    }
   }
   function sendSeniorToU21(id) {
     const p = G.squad.find(x => x.id === id);
@@ -2436,7 +2444,7 @@
       '<span>' + p.age + '</span><span>' + roleBadge(p) + '</span>' +
       '<span><span class="ovr ' + tierOf(p.ovr) + '">' + p.ovr + '</span></span>' +
       '<span style="color:var(--color-text-secondary);">' + p.pot + ' pot</span>' +
-      '<span><button class="btn sm pri" onclick="promoteYouth(\'' + team + '\',' + p.id + ')">Promote</button></span>' +
+      '<span><button class="btn sm pri" onclick="promoteYouth(\'' + team + '\',' + p.id + ')">' + (team === 'u18' ? '→ U21' : '→ 1st Team') + '</button></span>' +
     '</div>';
     const teamPanel = (team, label) => '<div class="pnl" style="padding:6px 8px;"><div class="pnl-t">' + label + ' · ' + academyPlayers(team).length + ' players</div>' +
       '<div class="academy-row head"><span>Player</span><span>Age</span><span>Pos</span><span>OVR</span><span>Ceiling</span><span></span></div>' +
@@ -2444,7 +2452,7 @@
     '</div>';
     const u21Seniors = G.squad.filter(p => !p.sold && p.academyTeam === 'U21');
     const seniorOptions = G.squad.filter(p => !p.sold && !p.academyTeam && !G.starters.includes(p.id) && p.age <= 24).sort((a,b) => a.age - b.age || a.ovr - b.ovr).slice(0,10);
-    return '<div class="toast">Academy players develop quickly until the mid/high 70s. After that, promote them for senior minutes if you want them to keep climbing.</div>' +
+    return '<div class="toast">Pathway: U18 → U21 → First Team. Players must step through each level — no skipping straight from U18 to the senior squad.</div>' +
       '<div class="grid2">' + teamPanel('u21','U21 squad') + teamPanel('u18','U18 squad') + '</div>' +
       '<div class="pnl" style="padding:6px 8px;"><div class="pnl-t">Senior players in U21 games</div>' +
         (u21Seniors.length ? u21Seniors.map(p => '<div class="academy-row" style="grid-template-columns:1fr 34px 34px 40px 54px 118px;"><span>' + p.name + '</span><span>' + p.age + '</span><span>' + roleBadge(p) + '</span><span><span class="ovr ' + tierOf(p.ovr) + '">' + p.ovr + '</span></span><span>sharpness</span><span><button class="btn sm" onclick="recallSenior(' + p.id + ')">Recall</button></span></div>').join('') : '<div style="font-size:12px; color:var(--color-text-secondary); padding:6px;">No senior players assigned to U21.</div>') +
