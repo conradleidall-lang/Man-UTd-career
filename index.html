@@ -267,7 +267,7 @@
     ['Fulham','FUL',76,['Iwobi','Smith Rowe','Muniz']],
     ['Everton','EVE',75,['Beto','Calvert-Lewin','Pickford','Tarkowski']],
     ['West Ham','WHU',75,['Bowen','Paquetá','Soucek']],
-    ['Wolves','WOL',73,['Larsen','Bellegarde','Strand Larsen']],
+    ['Wolves','WOL',73,['Strand Larsen','Bellegarde']],
     ['Leeds','LEE',73,['Bamford','Rutter','Piroe']],
     ['Burnley','BUR',72,['Foster','Berge','Cullen']],
     ['Sunderland','SUN',71,['J. Bellingham','Mayenda','Diarra']]
@@ -322,7 +322,8 @@
     'Saka':'Bukayo Saka','Ødegaard':'Martin Ødegaard','Saliba':'William Saliba','Rice':'Declan Rice','Gyökeres':'Viktor Gyökeres','Eze':'Eberechi Eze',
     'Haaland':'Erling Haaland','Foden':'Phil Foden','Doku':'Jérémy Doku','Cherki':'Rayan Cherki','Marmoush':'Omar Marmoush','Joao Pedro':'João Pedro',
     'Palmer':'Cole Palmer','Caicedo':'Moisés Caicedo','Garnacho':'Alejandro Garnacho','Isak':'Alexander Isak','Gordon':'Anthony Gordon',
-    'Son':'Heung-min Son','Maddison':'James Maddison','Kudus':'Mohammed Kudus','Tel':'Mathys Tel','Watkins':'Ollie Watkins','McGinn':'John McGinn'
+    'Son':'Heung-min Son','Maddison':'James Maddison','Kudus':'Mohammed Kudus','Tel':'Mathys Tel','Watkins':'Ollie Watkins','McGinn':'John McGinn',
+    'Strand Larsen':'Jørgen Strand Larsen','Dorgu':'Patrick Dorgu'
   };
 
   const TRANSFER_POOL = [
@@ -412,7 +413,7 @@
     ['Aaron Wan-Bissaka','DEF',28,78,79,'West Ham',20],['Rayan Aït-Nouri','DEF',25,80,84,'Wolves',35],
     ['Miguel Gutierrez','DEF',24,80,85,'Girona',36],['Vanderson','DEF',24,79,84,'Monaco',32],
     ['Arnau Martinez','DEF',23,78,84,'Girona',26],['Quilindschy Hartman','DEF',24,78,84,'Feyenoord',24],
-    ['Patrick Dorgu','DEF',21,77,86,'Lecce',32],['Tyrick Mitchell','DEF',26,78,80,'Crystal Palace',22],
+    ['Tyrick Mitchell','DEF',26,78,80,'Crystal Palace',22],
     ['Valentino Livramento','DEF',23,80,86,'Newcastle',42],['Lewis Hall','DEF',21,78,86,'Newcastle',34],
     ['Eduardo Camavinga','MID',23,85,90,'Real Madrid',90],['Aurelien Tchouameni','MID',26,85,88,'Real Madrid',85],
     ['Frenkie de Jong','MID',28,86,87,'Barcelona',80],['Xavi Simons','MID',23,84,89,'RB Leipzig',70],
@@ -479,10 +480,6 @@
   function initClubRosters() {
     if (G.clubRosters && Object.keys(G.clubRosters).length) {
       G.clubRosters['Man Utd'] = G.squad.filter(p => !p.sold).map(p => p.name);
-      [...PL_TEAMS, ...EURO_TEAMS, ...EUROPA_TEAMS, ...CL_EXTRA_TEAMS].forEach(t => {
-        if (!G.clubRosters[t[0]]) G.clubRosters[t[0]] = [...(CLUB_ROSTER_SEEDS[t[0]] || [])].map(n => PLAYER_ALIASES[n] || n);
-        else G.clubRosters[t[0]] = [...new Set([...(G.clubRosters[t[0]] || []), ...(CLUB_ROSTER_SEEDS[t[0]] || [])].map(n => PLAYER_ALIASES[n] || n))];
-      });
       enforceRosterUniqueness();
       return;
     }
@@ -524,9 +521,11 @@
   }
   function enforceRosterUniqueness() {
     const holder = {};
-    Object.keys(G.clubRosters).forEach(club => {
+    const clubs = ['Man Utd', ...Object.keys(G.clubRosters).filter(c => c !== 'Man Utd')];
+    clubs.forEach(club => {
+      if (!G.clubRosters[club]) return;
       const clean = [];
-      (G.clubRosters[club] || []).forEach(name => {
+      G.clubRosters[club].forEach(name => {
         if (!name || holder[name]) return;
         holder[name] = club; clean.push(name);
       });
