@@ -392,6 +392,7 @@
     const seenMarket = new Set();
     G = {
       view: 'dash', season: 1, year: 2025, day: 198, clQualified: true, nextCLQualified: true,
+      managerName: 'Erik ten Hag', reputation: 84, boardConfidence: 74, pressure: 42, publicSupport: 79, mediaSentiment: 'Positive',
       squad: STARTING_SQUAD.map((p,i) => ({
         id: i, name: p[0], pos: p[1], role: p[5] || inferRole(p[0], p[1]), age: p[2], ovr: p[3], pot: p[4],
         mins: 0, goals: 0, assists: 0, appearances: 0, clubGoals: 0, clubAssists: 0, clubApps: 0,
@@ -699,6 +700,33 @@
     if (p.age <= 22) return 'Prospect';
     return 'Bench';
   }
+  function adjustManagerReputation(delta) {
+    G.reputation = Math.max(66, Math.min(94, G.reputation + delta));
+    G.boardConfidence = Math.max(35, Math.min(92, G.boardConfidence + delta * 0.9));
+    const pos = leagueSorted().findIndex(t => t.name === 'Man Utd') + 1;
+    const formImpact = G.seasonStats.won - G.seasonStats.lost;
+    G.pressure = Math.max(20, Math.min(85, 52 + (pos - 4) * 3 - formImpact * 1.2));
+    G.publicSupport = Math.max(55, Math.min(94, 70 + (G.reputation - 80) * 0.5 - (pos - 4) * 1.1));
+    G.mediaSentiment = G.reputation >= 86 ? 'Positive' : G.reputation >= 80 ? 'Cautious' : G.reputation >= 74 ? 'Uneasy' : 'Critical';
+  }
+  function updateManagerReputation(result, fx) {
+    let delta = 0;
+    if (result === 'W') delta = 1 + (isBigGame(fx) ? 0.6 : 0);
+    else if (result === 'D') delta = 0.2;
+    else delta = -1.2 - (isBigGame(fx) ? 0.4 : 0);
+    if (fx.comp === 'PL' && G.seasonStats.played > 10) {
+      delta += (4 - (leagueSorted().findIndex(t => t.name === 'Man Utd') + 1)) * 0.08;
+    }
+    if (fx.comp === 'CL' && fx.round === 'Final' && result === 'W') delta += 2;
+    adjustManagerReputation(delta);
+  }
+  function managerMoodLabel() {
+    const pos = leagueSorted().findIndex(t => t.name === 'Man Utd') + 1;
+    if (G.reputation >= 86 && pos <= 4) return 'High trust';
+    if (G.reputation >= 80 && pos <= 6) return 'Confident';
+    if (pos <= 8) return 'Under pressure';
+    return 'On the edge';
+  }
   function isBigGame(fx) { return matchWeight(fx) >= 1.8; }
   function effectiveRating(p) {
     let r = p.ovr;
@@ -938,10 +966,14 @@
       const a = fmAssignments.find(x => x.player && x.player.id === p.id);
       return s + effectiveRating(p) + (a ? outOfPositionPenalty(a.slot, p) : 0);
     }, 0) / Math.max(1, xi.length);
+    const repBoost = (G.reputation - 80) * 0.08;
+    const stress = (G.pressure - 50) * -0.03;
+    const coachEdge = Math.max(-2, Math.min(3, repBoost + stress));
     const tAtk = {attack:5,balanced:0,defensive:-3}[G.tactic];
     const tDef = {attack:-4,balanced:0,defensive:5}[G.tactic];
     const hAdv = fx.home ? 2 : -1;
-    const munAtk = munStr + tAtk + hAdv, munDef = munStr + tDef + hAdv;
+    const munAtk = munStr + tAtk + hAdv + coachEdge;
+    const munDef = munStr + tDef + hAdv + coachEdge * 0.65;
     const oppAtk = fx.oppStr, oppDef = fx.oppStr;
     const attackers = xi.filter(p => p.pos==='FWD' || p.pos==='MID');
     const oppRoster = getClubRoster(fx.opp);
@@ -1038,6 +1070,7 @@
       else p.morale = Math.max(0, p.morale - 4);
       if (perf.goals > 0) p.morale = Math.min(100, p.morale + 5);
     });
+    updateManagerReputation(result, fx);
     G.squad.forEach(p => {
       if (p.sold || G.starters.includes(p.id) || p.injuryWeeks > 0) return;
       p.fitness = Math.min(100, p.fitness + 22);
@@ -1464,8 +1497,9 @@
     if (!target || target.status !== 'available') return;
     if (!G.windowOpen) { G.transferMessages.push('Transfer window closed — you can only buy in June, July, August, or January.'); render(); return; }
     if (G.budget < target.price) { G.transferMessages.push('Bid for ' + target.name + ' rejected — over budget.'); render(); return; }
-    const reputationBoost = Math.min(0.12, (G.stadiumLevel - 1) * 0.03);
-    const chance = Math.min(0.95, (target.ovr >= 88 ? 0.45 : target.ovr >= 85 ? 0.65 : 0.85) + reputationBoost);
+    const reputationBoost = Math.min(0.18, Math.max(0, (G.reputation - 78) * 0.014) + (G.stadiumLevel - 1) * 0.03);
+    const eliteTax = target.ovr >= 89 && G.reputation < 84 ? -0.12 : 0;
+    const chance = Math.min(0.95, (target.ovr >= 88 ? 0.45 : target.ovr >= 85 ? 0.65 : 0.85) + reputationBoost + eliteTax);
     if (Math.random() < chance) {
       G.budget -= target.price;
       target.status = 'signed';
@@ -1532,7 +1566,8 @@
     const clubs = [...PL_TEAMS.map(t => t[0]), ...EURO_TEAMS.map(t => t[0])].filter(c => c !== 'Man Utd');
     const base = playerValue(pick);
     const premium = G.starters.includes(pick.id) ? 1.18 : 1.02;
-    const price = Math.round(base * premium * (0.88 + Math.random() * 0.34));
+    const repBonus = 1 + Math.max(0, (G.reputation - 78) * 0.006);
+    const price = Math.round(base * premium * repBonus * (0.88 + Math.random() * 0.34));
     const bidder = PICK(clubs);
     G.incomingBids.push({ id:G.nextBidId++, playerId:pick.id, playerName:pick.name, club:bidder, price, day:G.day });
     G.transferMessages.push(bidder + ' submitted a £' + price + 'm bid for ' + pick.name + '.');
@@ -1670,7 +1705,14 @@
     const injuries = G.squad.filter(p => p.injuryWeeks > 0 && !p.sold);
     const inForm = G.squad.filter(p => isInForm(p) && !p.sold);
     const next = nextFixture();
-    return msgs.map(m => '<div class="toast">' + m + '</div>').join('') +
+    const managerPanel = '<div class="pnl"><div class="pnl-t">Manager control room</div>' +
+      '<div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; font-size:12px;">' +
+        '<div><strong>' + G.managerName + '</strong><div style="color:var(--color-text-secondary);">Press: ' + G.mediaSentiment + '</div></div>' +
+        '<div><strong>Reputation</strong><div style="color:var(--color-text-secondary);">' + G.reputation + '/94</div></div>' +
+        '<div><strong>Board</strong><div style="color:var(--color-text-secondary);">' + G.boardConfidence + '% confidence</div></div>' +
+      '</div>' +
+      '<div style="margin-top:8px; color:var(--color-text-secondary);">Public support: ' + G.publicSupport + '% · Mood: ' + managerMoodLabel() + '</div></div>';
+    return managerPanel + msgs.map(m => '<div class="toast">' + m + '</div>').join('') +
       (bids.length ? '<div class="pnl"><div class="pnl-t">Incoming transfer bids</div>' + bids.map(b => {
         const p = G.squad.find(x => x.id === b.playerId);
         return '<div style="display:grid; grid-template-columns: 1fr 72px 132px; gap:8px; align-items:center; padding:7px 0; border-bottom:0.5px solid var(--color-border-tertiary); font-size:12px;">' +
