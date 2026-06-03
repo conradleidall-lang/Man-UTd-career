@@ -1678,6 +1678,27 @@
       if (p) p.injuryWeeks = wks;
     });
     ['u21','u18'].forEach(team => academyPlayers(team).forEach(p => p.age++));
+
+    // Auto-sell U21 players who turn 23
+    const agedOutU21 = G.academy.u21.filter(p => p.age >= 23);
+    G.academy.u21 = G.academy.u21.filter(p => p.age < 23);
+    agedOutU21.forEach(p => {
+      const fee = Math.max(0, Math.round((p.ovr - 58) * 0.4));
+      if (fee > 0) G.budget += fee;
+      G.transferMessages.push('Academy — ' + p.name + ' (' + p.age + 'yo, OVR ' + p.ovr + ') has aged out of the U21s and moved on.' + (fee > 0 ? ' £' + fee + 'm received.' : ''));
+    });
+
+    // Promote U18 players who turn 18 to U21, then backfill U18
+    const readyForU21 = G.academy.u18.filter(p => p.age >= 18);
+    G.academy.u18 = G.academy.u18.filter(p => p.age < 18);
+    readyForU21.forEach(p => {
+      p.team = 'u21';
+      G.academy.u21.push(p);
+      G.transferMessages.push('Academy — ' + p.name + ' (' + p.age + 'yo, OVR ' + p.ovr + ') steps up from U18 to U21.');
+    });
+    // Backfill U18 to 5 players
+    while (G.academy.u18.length < 5) G.academy.u18.push(makeYouth('u18', G.academy.u18.length));
+
     G.season++; G.year++;
     G.clQualified = G.nextCLQualified;
     G.day = 198 + (G.season-1)*365;
