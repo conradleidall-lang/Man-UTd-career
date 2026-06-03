@@ -646,11 +646,26 @@
     const pot = Math.min(94, ovr + 18 + Math.floor(Math.random()*15));
     return { id:G.nextYouthId++, name:youthName(), pos:slotGroup(role), role, age, ovr, pot, growth:0, apps:0, goals:0, assists:0, team, academy:true };
   }
+  function seedYouth(name, role, age, ovr, pot, team) {
+    return { id: G.nextYouthId++, name, pos: slotGroup(role), role, age, ovr, pot, growth: 0, apps: 0, goals: 0, assists: 0, team, academy: true };
+  }
   function generateAcademy() {
-    G.academy.u21 = [];
-    G.academy.u18 = [];
-    for (let i=0; i<5; i++) G.academy.u21.push(makeYouth('u21', i));
-    for (let i=0; i<5; i++) G.academy.u18.push(makeYouth('u18', i));
+    G.academy.u21 = [
+      seedYouth('Shea Lacey',    'RW',  19, 70, 87, 'u21'),
+      seedYouth('Chido Obi',     'ST',  18, 68, 85, 'u21'),
+      seedYouth('Jack Fletcher', 'CM',  19, 69, 86, 'u21'),
+      seedYouth('Harry Amass',   'LB',  19, 72, 87, 'u21'),
+      seedYouth('Sekou Kone',    'CDM', 20, 65, 84, 'u21'),
+    ];
+    G.academy.u18 = [
+      seedYouth('Daniel Armer',        'CB',  18, 62, 88, 'u18'),
+      seedYouth('JJ Gabriel',          'CAM', 15, 70, 93, 'u18'),
+      seedYouth('Godwill Kukonki',     'LB',  18, 64, 86, 'u18'),
+      seedYouth('Jim Thwaites',        'CM',  18, 68, 89, 'u18'),
+      seedYouth('Amir Ibargimov',      'CAM', 18, 64, 87, 'u18'),
+      seedYouth('Cameron Byrne-Hughes','GK',  18, 65, 87, 'u18'),
+      seedYouth('Noah Ajayi',          'LM',  17, 67, 88, 'u18'),
+    ];
   }
   function academyPlayers(team) { return (G.academy && G.academy[team]) || []; }
   function simulateAcademyDays(days) {
@@ -2390,7 +2405,7 @@
       '<span style="color:var(--color-text-secondary);">' + p.pot + ' pot</span>' +
       '<span><button class="btn sm pri" onclick="promoteYouth(\'' + team + '\',' + p.id + ')">Promote</button></span>' +
     '</div>';
-    const teamPanel = (team, label) => '<div class="pnl" style="padding:6px 8px;"><div class="pnl-t">' + label + ' · ' + academyPlayers(team).length + '/5</div>' +
+    const teamPanel = (team, label) => '<div class="pnl" style="padding:6px 8px;"><div class="pnl-t">' + label + ' · ' + academyPlayers(team).length + ' players</div>' +
       '<div class="academy-row head"><span>Player</span><span>Age</span><span>Pos</span><span>OVR</span><span>Ceiling</span><span></span></div>' +
       academyPlayers(team).map(p => academyRow(p, team)).join('') +
     '</div>';
