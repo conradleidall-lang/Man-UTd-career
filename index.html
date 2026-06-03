@@ -160,18 +160,18 @@
   const POSITION_ORDER = ['GK','RB','CB','LB','CDM','CM','CAM','RM','LM','RW','LW','ST'];
   const WINDOW_MONTHS = [0,5,6,7];
   const SIMILAR_ROLES = {
-    GK: ['GK'],
-    RB: ['RB','CB','LB','RM'],
-    CB: ['CB','RB','LB','CDM'],
-    LB: ['LB','CB','RB','LM'],
-    CDM: ['CDM','CM','CB'],
-    CM: ['CM','CDM','CAM','RM','LM'],
-    CAM: ['CAM','CM','RW','LW','ST'],
-    RM: ['RM','RW','CM','RB','LM'],
-    LM: ['LM','LW','CM','LB','RM'],
-    RW: ['RW','RM','LW','ST','CAM'],
-    LW: ['LW','LM','RW','ST','CAM'],
-    ST: ['ST','LW','RW','CAM']
+    GK:  ['GK'],
+    RB:  ['RB','CB','LB'],
+    CB:  ['CB','RB','LB'],
+    LB:  ['LB','CB','RB'],
+    CDM: ['CDM','CM','CAM','RM','LM'],
+    CM:  ['CM','CDM','CAM','RM','LM'],
+    CAM: ['CAM','CM','CDM','RM','LM'],
+    RM:  ['RM','CM','CDM','CAM','LM'],
+    LM:  ['LM','CM','CDM','CAM','RM'],
+    RW:  ['RW','LW','ST'],
+    LW:  ['LW','RW','ST'],
+    ST:  ['ST','LW','RW']
   };
   const ROLE_MAP = {
     'Onana':'GK','Bayindir':'GK','Heaton':'GK','De Ligt':'CB','Maguire':'CB','Martinez':'CB','Yoro':'CB','Dalot':'RB','Mazraoui':'RB','Shaw':'LB','Heaven':'CB','Malacia':'LB',
@@ -723,7 +723,8 @@
     const fatigueRisk = Math.max(0, 100 - p.fitness) * 0.00004;
     const trainingRisk = G.training === 'fitness' ? -0.0004 : 0;
     const historyRisk = (p.majorInjuries || 0) * 0.00035;
-    const base = Math.max(0.0009, 0.0025 + fatigueRisk + trainingRisk + historyRisk);
+    const ageRisk = p.age >= 28 ? (p.age - 27) * 0.00018 : 0;
+    const base = Math.max(0.0009, 0.0025 + fatigueRisk + trainingRisk + historyRisk + ageRisk);
     return roleOf(p) === 'GK' ? base * 0.22 : base;
   }
   function recordInjury(p, weeks) {
@@ -767,6 +768,15 @@
     if ((related[slot] || []).includes(r)) return 4;
     if (p.pos === slotGroup(slot)) return 1;
     return -5;
+  }
+  function outOfPositionPenalty(slot, p) {
+    const r = roleOf(p);
+    if (r === slot) return 0;
+    const pg = p.pos, sg = slotGroup(slot);
+    if (pg === sg) return -4;
+    if (pg === 'GK' || sg === 'GK') return -10;
+    const adjacent = { DEF: ['MID'], MID: ['DEF','FWD'], FWD: ['MID'] };
+    return (adjacent[pg] || []).includes(sg) ? -7 : -10;
   }
   function slotScore(slot, p, fresh) {
     return effectiveRating(p) + slotCompatibility(slot, p) * 3 + (fresh ? p.fitness / 5 : 0);
@@ -923,7 +933,11 @@
     G.currentMatch = { fx, home:0, away:0, comm:[], playing:true, done:false, scorers: [], assists: [], injured: [], sentOff: [], oppReds:0, injuryThisMatch: false, perPlayerGoals: {}, perPlayerAssists: {} };
     G.view = 'match';
     const xi = getXI();
-    const munStr = xi.reduce((s,p)=>s+effectiveRating(p),0) / Math.max(1,xi.length);
+    const fmAssignments = getFormationAssignments().flat();
+    const munStr = xi.reduce((s,p) => {
+      const a = fmAssignments.find(x => x.player && x.player.id === p.id);
+      return s + effectiveRating(p) + (a ? outOfPositionPenalty(a.slot, p) : 0);
+    }, 0) / Math.max(1, xi.length);
     const tAtk = {attack:5,balanced:0,defensive:-3}[G.tactic];
     const tDef = {attack:-4,balanced:0,defensive:5}[G.tactic];
     const hAdv = fx.home ? 2 : -1;
@@ -988,7 +1002,9 @@
         const ch = Math.max(0.07, (oppAtk - munDef)/85 + 0.30 + redSwing);
         if (Math.random() < ch) {
           cm.away++;
-          cm.comm.push({m, text: fx.opp + ' score. ' + PICK(oppNames) + ' beats Onana from close range. (' + cm.home + '-' + cm.away + ')', t:'go'});
+          const gk = xiNow.find(p => roleOf(p) === 'GK') || xiNow[0];
+          const gkName = gk ? gk.name.split(' ').pop() : 'the keeper';
+          cm.comm.push({m, text: fx.opp + ' score. ' + PICK(oppNames) + ' beats ' + gkName + ' from close range. (' + cm.home + '-' + cm.away + ')', t:'go'});
         } else {
           cm.comm.push({m, text: PICK([PICK(oppNames) + ' threatens, smothered.', fx.opp + ' push forward, blocked.']), t:'co'});
         }
@@ -1408,6 +1424,14 @@
     });
   }
 
+  function lineupIsValid() {
+    const assignments = getFormationAssignments().flat();
+    const gkSlot = assignments.find(a => a.slot === 'GK');
+    const gkInGoal = gkSlot && gkSlot.player && roleOf(gkSlot.player) === 'GK';
+    const gkOutfield = assignments.some(a => a.slot !== 'GK' && a.player && roleOf(a.player) === 'GK');
+    return { ok: gkInGoal && !gkOutfield, gkOutfield, noGK: !gkInGoal };
+  }
+
   function advance() {
     const fx = nextFixture();
     if (!fx) { endSeason(); return; }
@@ -1421,6 +1445,11 @@
     refreshTransferWindow();
     const stillValid = G.starters.map(id => G.squad.find(p => p.id === id)).filter(p => p && isAvailable(p));
     if (stillValid.length < 11) autoPickXI();
+    const check = lineupIsValid();
+    if (!check.ok) {
+      G.transferMessages.push(check.gkOutfield ? 'Invalid lineup — a goalkeeper is selected in an outfield position. Fix the squad tab before playing.' : 'Invalid lineup — no goalkeeper in goal. Fix the squad tab before playing.');
+      G.view = 'dash'; render(); return;
+    }
     playFixture(fx);
   }
 
@@ -1612,7 +1641,7 @@
     '</div>';
     const tabList = [['dash','Dashboard'],['squad','Squad'],['academy','Academy'],['stats','Stats'],['transfers','Transfers'],['scouting','Scouting'],['tables','Tables'],['training','Training']];
     const tabs = tabList.map(t => '<button class="tab ' + (G.view===t[0]?'active':'') + '" onclick="setView(\'' + t[0] + '\')">' + t[1] + '</button>').join('');
-    const tabBar = G.view === 'match' || G.view === 'season-end' ? '' : '<div class="tabs">' + tabs + '</div>';
+    const tabBar = G.view === 'match' || G.view === 'season-end' || G.view === 'offseason' ? '' : '<div class="tabs">' + tabs + '</div>';
     let body = '';
     try {
       if (G.view === 'dash') body = renderDash();
@@ -1625,6 +1654,7 @@
       else if (G.view === 'tables') body = renderTables();
       else if (G.view === 'training') body = renderTraining();
       else if (G.view === 'season-end') body = renderSeasonEnd();
+      else if (G.view === 'offseason') body = renderOffseasonEvents();
     } catch (err) {
       console.error(err);
       body = '<div class="pnl" style="border:1px solid var(--color-border-info);"><div class="pnl-t">Render issue</div><div style="font-size:12px; color:var(--color-text-secondary);">The game recovered from a display error. Try another tab or reload if it continues.</div></div>';
@@ -1666,7 +1696,16 @@
       '<div class="grid2"><div class="pnl"><div class="pnl-t">Injury list (' + injuries.length + ')</div>' + (injuries.length ? injuries.map(p => '<div style="display:flex; justify-content:space-between; padding:4px 0; font-size:12px;"><span>' + p.name + ' (' + roleOf(p) + ')</span><span style="color:var(--color-text-danger);">' + Math.ceil(p.injuryWeeks) + 'w</span></div>').join('') : '<div style="color:var(--color-text-secondary); font-size:12px;">Everyone fit.</div>') + '</div>' +
       '<div class="pnl"><div class="pnl-t">Elite form (' + inForm.length + ')</div>' + (inForm.length ? inForm.map(p => '<div style="display:flex; justify-content:space-between; padding:4px 0; font-size:12px;"><span>' + p.name + ' (' + roleOf(p) + ')</span><span style="color:var(--color-text-success);">avg ' + (p.matchRatings.slice(-5).reduce((a,b)=>a+b,0)/Math.min(5,p.matchRatings.length)).toFixed(1) + '</span></div>').join('') : '<div style="color:var(--color-text-secondary); font-size:12px;">No one hot.</div>') + '</div></div>' +
       (G.trophies.length ? '<div class="pnl"><div class="pnl-t">Trophy cabinet</div>' + G.trophies.map(t=>'<span class="trophy">' + t + '</span>').join('') + '</div>' : '') +
-      '<button class="play-btn" onclick="advance()">' + (next ? 'Advance to ' + fmtDate(next.day) + ' · ' + next.comp + (next.round?' '+next.round:'') + ' ' + (next.home?'vs':'at') + ' ' + next.opp : 'End season') + '</button>';
+      (() => {
+        const check = lineupIsValid();
+        const label = next ? 'Advance to ' + fmtDate(next.day) + ' · ' + next.comp + (next.round?' '+next.round:'') + ' ' + (next.home?'vs':'at') + ' ' + next.opp : 'End season';
+        if (!check.ok && next) {
+          const msg = check.gkOutfield ? 'A goalkeeper is in an outfield position — fix your lineup before playing.' : 'No goalkeeper in goal — fix your lineup before playing.';
+          return '<div style="padding:10px 12px; background:var(--color-background-danger); color:var(--color-text-danger); border-radius:var(--border-radius-md); font-size:12px; margin-bottom:8px;">⚠ ' + msg + '</div>' +
+            '<button class="play-btn" disabled>' + label + '</button>';
+        }
+        return '<button class="play-btn" onclick="advance()">' + label + '</button>';
+      })();
   }
 
   function renderMatch() {
@@ -1996,7 +2035,93 @@
     '</div>';
   }
 
-  function startNextSeason() { G.view = 'dash'; render(); }
+  function deadwoodPlayers() {
+    return G.squad.filter(p => {
+      if (p.sold || p.onLoan) return false;
+      const isDeadwood = p.ovr <= 83 || p.age >= 32;
+      if (!isDeadwood) return false;
+      const othersAtPos = G.squad.filter(x => !x.sold && x.id !== p.id && x.pos === p.pos);
+      return othersAtPos.length > 0;
+    });
+  }
+
+  function processOffseasonEvents() {
+    const log = [];
+    G.squad.filter(p => !p.sold && p.age >= 18 && p.age <= 23).forEach(p => {
+      if (Math.random() >= 0.10) return;
+      const boom = Math.random() < 0.5;
+      if (boom) {
+        const gain = 5 + Math.floor(Math.random() * 6);
+        const before = p.ovr;
+        p.ovr = Math.min(p.pot, Math.min(99, p.ovr + gain));
+        const actual = p.ovr - before;
+        if (actual > 0) log.push({ name: p.name, role: roleOf(p), type: 'boom', delta: actual, ovr: p.ovr });
+      } else {
+        const loss = 3 + Math.floor(Math.random() * 4);
+        p.ovr = Math.max(50, p.ovr - loss);
+        log.push({ name: p.name, role: roleOf(p), type: 'bust', delta: loss, ovr: p.ovr });
+      }
+    });
+    G.offseasonLog = log;
+  }
+
+  function sellAllDeadwood() {
+    deadwoodPlayers().forEach(p => {
+      const price = playerValue(p);
+      const kept = saleBudgetReturn(price);
+      p.sold = true;
+      G.budget += kept;
+      G.starters = G.starters.filter(sid => sid !== p.id);
+      G.incomingBids = G.incomingBids.filter(b => b.playerId !== p.id);
+      G.transferMessages.push('Released ' + p.name + ' — £' + kept + 'm added to budget.');
+    });
+    autoPickXI();
+    render();
+  }
+
+  function renderOffseasonEvents() {
+    const log = G.offseasonLog || [];
+    const deadwood = deadwoodPlayers();
+    const totalReturn = deadwood.reduce((s, p) => s + saleBudgetReturn(playerValue(p)), 0);
+
+    const youthHtml = '<div class="pnl"><div class="pnl-t">Youth breakthroughs & busts · ages 18–23</div>' +
+      (log.length ? log.map(e => '<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--color-border-tertiary); font-size:12px;">' +
+        '<span><strong>' + e.name + '</strong> <span style="color:var(--color-text-secondary);">' + e.role + '</span></span>' +
+        '<span style="color:' + (e.type === 'boom' ? 'var(--color-text-success)' : 'var(--color-text-danger)') + '; font-weight:600;">' +
+          (e.type === 'boom' ? '▲ +' + e.delta : '▼ −' + e.delta) + ' → OVR ' + e.ovr +
+        '</span></div>').join('')
+      : '<div style="font-size:12px; color:var(--color-text-secondary); padding:4px 0;">No dramatic changes this offseason — all young players progressed normally.</div>') +
+    '</div>';
+
+    const deadwoodHtml = '<div class="pnl"><div class="pnl-t">Squad clearance · ' + deadwood.length + ' players flagged</div>' +
+      '<p style="font-size:12px; color:var(--color-text-secondary); margin:0 0 8px;">Rated ≤83 or aged 32+ and not the only player at their position.</p>' +
+      (deadwood.length
+        ? deadwood.sort((a,b) => b.age - a.age || a.ovr - b.ovr).map(p => {
+            const price = playerValue(p);
+            const kept = saleBudgetReturn(price);
+            return '<div style="display:grid; grid-template-columns:1fr 52px 60px 60px; gap:8px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--color-border-tertiary); font-size:11px;">' +
+              '<span>' + roleBadge(p) + ' <strong>' + p.name + '</strong> <span style="color:var(--color-text-secondary);">' + p.age + 'yo · OVR ' + p.ovr + '</span></span>' +
+              '<span class="ovr ' + tierOf(p.ovr) + '">' + p.ovr + '</span>' +
+              '<span style="color:var(--color-text-success);">+£' + kept + 'm</span>' +
+              '<button class="btn sm pri" onclick="sellPlayer(' + p.id + ')">Sell</button>' +
+            '</div>';
+          }).join('') +
+          '<div style="margin-top:10px; display:flex; gap:8px;">' +
+            '<button class="btn pri" onclick="sellAllDeadwood()">Sell all · +£' + totalReturn + 'm</button>' +
+          '</div>'
+        : '<div style="font-size:12px; color:var(--color-text-secondary);">Squad is clean — no players flagged for clearance.</div>') +
+    '</div>';
+
+    return '<div style="text-align:center; padding:0.5rem 0 1rem;">' +
+        '<h2 style="margin:0 0 4px;">Offseason</h2>' +
+        '<p style="color:var(--color-text-secondary); margin:0;">' + G.year + '/' + (G.year+1).toString().slice(2) + ' · Pre-season preparation</p>' +
+      '</div>' +
+      youthHtml + deadwoodHtml +
+      '<button class="play-btn" style="margin-top:4px;" onclick="startPreseason()">Begin pre-season →</button>';
+  }
+
+  function startPreseason() { G.view = 'dash'; render(); }
+  function startNextSeason() { processOffseasonEvents(); G.view = 'offseason'; render(); }
   function ordinal(n) { if (!n || n < 1) return '—'; const s=['th','st','nd','rd'], v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
   function setView(v) { G.view = v; render(); }
   function setTactic(t) { G.tactic = t; render(); }
