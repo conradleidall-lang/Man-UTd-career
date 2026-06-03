@@ -431,7 +431,7 @@
     const allTransfers = [...TRANSFER_POOL, ...EXTRA_TRANSFER_POOL];
     const seenMarket = new Set();
     G = {
-      view: 'dash', season: 1, year: 2025, day: 198, clQualified: true, nextCLQualified: true,
+      view: 'dash', season: 1, year: 2025, day: 198, clQualified: true, nextCLQualified: true, slotMap: null,
       managerName: 'Michael Carrick', reputation: 84, boardConfidence: 74, pressure: 42, publicSupport: 79, mediaSentiment: 'Positive',
       fanbase: 70, lastSeasonTrophyValue: 0,
       squad: STARTING_SQUAD.map((p,i) => ({
@@ -1035,12 +1035,24 @@
   }
   function getFormationAssignments() {
     const xi = getXI();
+    const shape = getFormationShape(G.formation);
+    const slotMap = G.slotMap;
+    const flatLen = shape.flat().length;
+    let idx = 0;
+    if (slotMap && slotMap.length === flatLen) {
+      return shape.map(row => row.map(slot => {
+        const i = idx++;
+        const player = slotMap[i] != null ? (xi.find(p => p.id === slotMap[i]) || null) : null;
+        return { slot, player, slotIndex: i };
+      }));
+    }
     const used = [];
-    return getFormationShape(G.formation).map(row => row.map(slot => {
+    return shape.map(row => row.map(slot => {
+      const i = idx++;
       const remaining = xi.filter(p => !used.includes(p.id));
       const player = pickForSlot(remaining, slot, false);
       if (player) used.push(player.id);
-      return { slot, player };
+      return { slot, player, slotIndex: i };
     }));
   }
 
@@ -1129,10 +1141,12 @@
   }
 
   function autoPickXI() {
+    G.slotMap = null;
     const avail = G.squad.filter(isAvailable).sort((a,b) => effectiveRating(b) - effectiveRating(a));
     G.starters = assignFormationPlayers(G.formation, avail, false);
   }
   function setFreshestXI() {
+    G.slotMap = null;
     const avail = G.squad.filter(isAvailable);
     G.starters = assignFormationPlayers(G.formation, avail, true);
     render();
@@ -2142,9 +2156,13 @@
     const assignments = getFormationAssignments();
     const slotCard = (a) => {
       const p = a.player;
-      if (!p) return '<div class="slot-card"><div class="slot-pos">' + a.slot + '</div><div class="slot-name">Open</div></div>';
+      const idx = a.slotIndex;
+      if (!p) return '<div class="slot-card" style="border:1px dashed var(--color-border-secondary); opacity:0.6;" ondragover="onSlotDragOver(event)" ondrop="onSlotDrop(event,' + idx + ')">' +
+        '<div class="slot-pos">' + a.slot + '</div><div class="slot-name" style="color:var(--color-text-secondary);">Open</div></div>';
       const offRole = roleOf(p) !== a.slot ? '<div class="slot-offrole">natural ' + roleOf(p) + '</div>' : '';
-      return '<div class="slot-card" title="' + p.name + ' · ' + roleOf(p) + ' · OVR ' + ROUND(effectiveRating(p)) + '">' +
+      return '<div class="slot-card" draggable="true" title="Drag to swap · ' + p.name + ' · OVR ' + ROUND(effectiveRating(p)) + '" style="cursor:grab;" ' +
+        'ondragstart="onSlotDragStart(event,' + idx + ',' + p.id + ')" ondragend="onSlotDragEnd(event)" ' +
+        'ondragover="onSlotDragOver(event)" ondrop="onSlotDrop(event,' + idx + ')">' +
         '<div class="slot-pos">' + a.slot + '</div><div class="slot-name">' + p.name.split(' ').pop().slice(0,10) + '</div>' +
         '<div class="slot-meta"><span>' + ROUND(effectiveRating(p)) + '</span>' + (isInForm(p)?'<span>★</span>':'') + '</div>' + offRole + '</div>';
     };
@@ -2172,7 +2190,9 @@
         '<button class="btn" onclick="setFreshestXI()">Freshest XI</button>' +
       '</div><div style="font-size:11px; color:var(--color-text-secondary); margin-top:8px;">Shape: ' + shapeSummary + '</div></div>' +
       '<div class="formation-board">' +
-        '<div class="pnl" style="padding: 6px;"><div class="pnl-t">' + G.formation + ' tactical board</div><div class="pitch">' + slotRows + '</div></div>' +
+        '<div class="pnl" style="padding: 6px;"><div class="pnl-t">' + G.formation + ' tactical board · drag tiles to swap positions</div><div class="pitch">' + slotRows + '</div>' +
+          '<div style="margin-top:6px; padding:8px; border:1.5px dashed var(--color-border-secondary); border-radius:6px; text-align:center; font-size:11px; color:var(--color-text-secondary); transition:background 0.15s;" ondragover="onBenchDragOver(event)" ondragleave="onBenchDragLeave(event)" ondrop="onBenchDrop(event)">Drop here to sub out → next man up at that position takes their place</div>' +
+        '</div>' +
         '<div class="pnl" style="padding: 6px;"><div class="pnl-t">Formation slots</div>' +
           '<div class="slot-list-row lineup-head" style="background:transparent;"><span>Pos</span><span>Player</span><span>Eff</span><span>Band</span></div>' + slotList + '</div>' +
       '</div>' +
@@ -2591,8 +2611,50 @@
   function ordinal(n) { if (!n || n < 1) return '—'; const s=['th','st','nd','rd'], v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
   function setView(v) { G.view = v; render(); }
   function setTactic(t) { G.tactic = t; render(); }
-  function setFormation(f) { G.formation = f; autoPickXI(); render(); }
+  function setFormation(f) { G.formation = f; G.slotMap = null; autoPickXI(); render(); }
   function autoPickXIAndRender() { autoPickXI(); render(); }
+
+  let _dragSlot = null;
+  function initSlotMap() {
+    const flatSlots = getFormationShape(G.formation).flat();
+    if (!G.slotMap || G.slotMap.length !== flatSlots.length) {
+      G.slotMap = getFormationAssignments().flat().map(a => a.player ? a.player.id : null);
+    }
+  }
+  function onSlotDragStart(e, slotIdx, playerId) {
+    _dragSlot = { slotIdx, playerId };
+    e.dataTransfer.effectAllowed = 'move';
+    e.currentTarget.style.opacity = '0.45';
+  }
+  function onSlotDragEnd(e) { e.currentTarget.style.opacity = '1'; }
+  function onSlotDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+  function onSlotDrop(e, targetIdx) {
+    e.preventDefault();
+    if (!_dragSlot || _dragSlot.slotIdx === targetIdx) { _dragSlot = null; return; }
+    initSlotMap();
+    const tmp = G.slotMap[_dragSlot.slotIdx];
+    G.slotMap[_dragSlot.slotIdx] = G.slotMap[targetIdx];
+    G.slotMap[targetIdx] = tmp;
+    _dragSlot = null;
+    render();
+  }
+  function onBenchDragOver(e) { e.preventDefault(); e.currentTarget.style.background = 'rgba(218,41,28,0.08)'; }
+  function onBenchDragLeave(e) { e.currentTarget.style.background = ''; }
+  function onBenchDrop(e) {
+    e.preventDefault();
+    e.currentTarget.style.background = '';
+    if (!_dragSlot) return;
+    const { slotIdx, playerId } = _dragSlot;
+    _dragSlot = null;
+    initSlotMap();
+    G.starters = G.starters.filter(id => id !== playerId);
+    G.slotMap[slotIdx] = null;
+    const slot = getFormationShape(G.formation).flat()[slotIdx];
+    const avail = G.squad.filter(p => isAvailable(p) && !G.starters.includes(p.id));
+    const replacement = pickForSlot(avail, slot, false);
+    if (replacement) { G.starters = [...G.starters, replacement.id]; G.slotMap[slotIdx] = replacement.id; }
+    render();
+  }
 
   const isReload = (performance.getEntriesByType('navigation')[0] || {}).type === 'reload';
   if (isReload) {
