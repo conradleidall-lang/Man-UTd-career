@@ -1062,7 +1062,7 @@
   }
 
   function playFixture(fx) {
-    G.currentMatch = { fx, home:0, away:0, comm:[], playing:true, done:false, scorers: [], assists: [], injured: [], sentOff: [], oppReds:0, injuryThisMatch: false, perPlayerGoals: {}, perPlayerAssists: {} };
+    G.currentMatch = { fx, home:0, away:0, comm:[], playing:true, done:false, scorers: [], assists: [], injured: [], sentOff: [], oppReds:0, injuryThisMatch: false, fightThisMatch: false, perPlayerGoals: {}, perPlayerAssists: {} };
     G.view = 'match';
     const xi = getXI();
     const fmAssignments = getFormationAssignments().flat();
@@ -1111,6 +1111,24 @@
         } else {
           cm.oppReds++;
           cm.comm.push({m, text:'Red card — ' + fx.opp + ' go down to ten men.', t:'rc'});
+        }
+      }
+      if (!cm.fightThisMatch && ['Liverpool','Man City'].includes(fx.opp) && Math.random() < 0.08) {
+        cm.fightThisMatch = true;
+        const ourDefs = xiNow.filter(p => p.pos === 'DEF' && !cm.sentOff.includes(p.id) && !cm.injured.includes(p.id));
+        if (ourDefs.length) {
+          const ourPlayer = PICK(ourDefs);
+          const theirPlayer = PICK(oppNames);
+          const ourWins = Math.random() < 0.5;
+          const injWeeks = 4 + Math.floor(Math.random() * 5);
+          cm.sentOff.push(ourPlayer.id); ourPlayer.suspended = 1;
+          cm.oppReds++;
+          if (ourWins) {
+            cm.comm.push({m, text:'RIVALRY BRAWL — ' + ourPlayer.name + ' and ' + theirPlayer + ' clash violently after a late challenge. ' + ourPlayer.name.split(' ').pop() + ' gets the upper hand and ' + theirPlayer + ' hits the deck hard. Both shown straight reds. ' + theirPlayer + ' is carried off on a stretcher — reported out for ' + injWeeks + ' weeks.', t:'rc'});
+          } else {
+            cm.injured.push(ourPlayer.id); ourPlayer.injuryWeeks = injWeeks; recordInjury(ourPlayer, injWeeks); cm.injuryThisMatch = true;
+            cm.comm.push({m, text:'RIVALRY BRAWL — ' + ourPlayer.name + ' and ' + theirPlayer + ' come to blows in an ugly scene. ' + theirPlayer + ' lands the telling blow and ' + ourPlayer.name.split(' ').pop() + ' crumples to the ground. Referee shows both straight reds. ' + ourPlayer.name.split(' ').pop() + ' is stretchered off and faces ' + injWeeks + ' weeks on the sidelines.', t:'rc'});
+          }
         }
       }
       const r = Math.random();
