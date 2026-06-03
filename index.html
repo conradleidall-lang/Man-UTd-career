@@ -982,7 +982,7 @@
     const coachEdge = Math.max(-2, Math.min(3, repBoost + stress));
     const tAtk = {attack:5,balanced:0,defensive:-3}[G.tactic];
     const tDef = {attack:-4,balanced:0,defensive:5}[G.tactic];
-    const hAdv = fx.home ? 2 : -1;
+    const hAdv = fx.home ? 1 + G.stadiumLevel * 0.25 : -1;
     const munAtk = munStr + tAtk + hAdv + coachEdge;
     const munDef = munStr + tDef + hAdv + coachEdge * 0.65;
     const oppAtk = fx.oppStr, oppDef = fx.oppStr;
@@ -1411,7 +1411,8 @@
       p.age++;
       p.mins = 0; p.goals = 0; p.assists = 0; p.appearances = 0;
       p.matchRatings = []; p.bigGameRatings = [];
-      p.fitness = 100; p.morale = Math.max(60, p.morale);
+      const stadiumMoraleBoost = (G.stadiumLevel - 1) * 2;
+      p.fitness = 100; p.morale = Math.min(100, Math.max(60, p.morale) + stadiumMoraleBoost);
       p.injuryWeeks = 0; p.onLoan = null; p.suspended = 0; p.academyTeam = null;
       if (p.age >= 38 && p.ovr < 65) p.sold = true;
     });
@@ -1421,7 +1422,10 @@
     G.day = 198 + (G.season-1)*365;
     G.seasonStats = { played:0, won:0, drawn:0, lost:0, gf:0, ga:0 };
     G.results = []; G.fixtures = []; G.cupRounds = { FA: [], EFL: [] };
-    G.budget += 25; G.windowOpen = true; G.incomingBids = []; G.aiTransfers = {}; G.aiTransferLog = [];
+    const stadiumRevenue = 15 + G.stadiumLevel * 6;
+    G.budget += stadiumRevenue;
+    G.transferMessages.push('Stadium (Level ' + G.stadiumLevel + ') generated £' + stadiumRevenue + 'm in matchday & commercial revenue.');
+    G.windowOpen = true; G.incomingBids = []; G.aiTransfers = {}; G.aiTransferLog = [];
     G.view = 'season-end';
     refreshTransferWindow(); initTables(); buildFixtures(); autoPickXI(); render();
   }
@@ -1979,12 +1983,25 @@
       '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
         [['youth','Youth development'],['balanced','Balanced'],['fitness','Fitness']].map(t => '<button class="btn ' + (G.training===t[0]?'pri':'') + '" onclick="setTraining(\'' + t[0] + '\')">' + t[1] + '</button>').join('') +
       '</div></div>' +
-      '<div class="pnl"><div class="pnl-t">Stadium upgrades</div>' +
-        '<div style="display:grid; grid-template-columns: 1fr 92px 86px; gap:8px; align-items:center; font-size:12px;">' +
-          '<div><strong>Level ' + G.stadiumLevel + '</strong><div style="font-size:11px; color:var(--color-text-secondary); margin-top:3px;">Better facilities and atmosphere give a small boost when convincing players to join.</div></div>' +
-          '<span>£' + (G.stadiumLevel >= 5 ? 'max' : stadiumCost + 'm') + '</span>' +
-          '<button class="btn sm ' + (G.budget >= stadiumCost && G.stadiumLevel < 5 ? 'pri' : '') + '" onclick="upgradeStadium()" ' + (G.budget < stadiumCost || G.stadiumLevel >= 5 ? 'disabled' : '') + '>Upgrade</button>' +
-        '</div></div>' +
+      (() => {
+        const lvl = G.stadiumLevel;
+        const capacity = [74000, 78000, 82000, 87000, 92000][lvl - 1];
+        const revenue = 15 + lvl * 6;
+        const nextRevenue = lvl < 5 ? 15 + (lvl + 1) * 6 : null;
+        const nextCapacity = lvl < 5 ? [74000, 78000, 82000, 87000, 92000][lvl] : null;
+        const moraleBoost = (lvl - 1) * 2;
+        return '<div class="pnl"><div class="pnl-t">Stadium · Level ' + lvl + ' / 5</div>' +
+          '<div style="display:grid; grid-template-columns: repeat(3,1fr); gap:10px; font-size:12px; margin-bottom:10px;">' +
+            '<div><strong>' + capacity.toLocaleString() + '</strong><div style="color:var(--color-text-secondary); font-size:10px;">Capacity</div></div>' +
+            '<div><strong>£' + revenue + 'm</strong><div style="color:var(--color-text-secondary); font-size:10px;">Annual revenue</div></div>' +
+            '<div><strong>+' + moraleBoost + '</strong><div style="color:var(--color-text-secondary); font-size:10px;">Morale bonus</div></div>' +
+          '</div>' +
+          '<div style="display:grid; grid-template-columns: 1fr 92px 86px; gap:8px; align-items:center; font-size:12px;">' +
+            '<div style="color:var(--color-text-secondary); font-size:11px;">' + (lvl < 5 ? 'Next: ' + nextCapacity.toLocaleString() + ' seats · £' + nextRevenue + 'm/yr · +'  + ((lvl) * 2) + ' morale' : 'Maximum level reached') + '</div>' +
+            '<span>' + (lvl >= 5 ? '—' : '£' + stadiumCost + 'm') + '</span>' +
+            '<button class="btn sm ' + (G.budget >= stadiumCost && lvl < 5 ? 'pri' : '') + '" onclick="upgradeStadium()" ' + (G.budget < stadiumCost || lvl >= 5 ? 'disabled' : '') + '>Upgrade</button>' +
+          '</div></div>';
+      })() +
       '<div class="pnl"><div class="pnl-t">Top performers · current season</div>' +
       G.squad.filter(p => !p.sold && p.matchRatings.length > 0).sort((a,b) => {
         const aA = a.matchRatings.reduce((s,r)=>s+r,0)/a.matchRatings.length;
