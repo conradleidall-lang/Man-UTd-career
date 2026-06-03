@@ -864,9 +864,9 @@
       const atk = (pl) => pl.pos === 'FWD' || pl.pos === 'MID';
       const atkFresh = stats.lastAtkActive && (played - stats.lastAtkActive) <= 10;
       const defFresh = stats.lastDefActive && (played - stats.lastDefActive) <= 12;
-      if (stats.goalAssists >= 5 && atkFresh && atk(p1) && atk(p2)) {
+      if (stats.goalAssists >= 3 && atkFresh && atk(p1) && atk(p2)) {
         G.activeDuos.push({ p1Id: id1, p2Id: id2, type: 'attack', count: stats.goalAssists });
-      } else if (stats.cleanSheets >= 13 && defFresh && roleOf(p1) === 'CB' && roleOf(p2) === 'CB') {
+      } else if (stats.cleanSheets >= 8 && defFresh && roleOf(p1) === 'CB' && roleOf(p2) === 'CB') {
         G.activeDuos.push({ p1Id: id1, p2Id: id2, type: 'defense', count: stats.cleanSheets });
       }
     });
