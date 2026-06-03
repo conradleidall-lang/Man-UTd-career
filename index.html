@@ -401,7 +401,7 @@
         fitness: 100, morale: 75, injuryWeeks: 0, newSigning: false,
         sold: false, onLoan: null, suspended: 0, majorInjuries: 0, devPenalty: 0, academyTeam: null
       })),
-      starters: [], tactic: 'balanced', formation: '4-3-3', training: 'balanced',
+      starters: [], tactic: 'balanced', formation: '4-3-3',
       budget: 80, stadiumLevel: 1, records: {}, tables: {}, clStandings: {}, elStandings: {}, cupRounds: { FA: [], EFL: [] }, clKnockout: null, elKnockout: null,
       fixtures: [], results: [], trophies: [], seasonHistory: [], currentMatch: null, loanReturnLog: [],
       pairStats: {}, activeDuos: [],
@@ -619,7 +619,7 @@
       academyPlayers(team).forEach(p => {
         const cap = team === 'u18' ? 76 : 78;
         const fast = p.ovr < cap ? 1.4 : 0.28;
-        const train = G.training === 'youth' ? 0.55 : 0.25;
+        const train = 0.25;
         p.growth += days * (fast + train) * (Math.max(0, p.pot - p.ovr) / 22);
         if (Math.random() < days / 12) {
           p.apps++;
@@ -840,7 +840,7 @@
   }
   function injuryChance(p) {
     const fatigueRisk = Math.max(0, 100 - p.fitness) * 0.00004;
-    const trainingRisk = G.training === 'fitness' ? -0.0004 : 0;
+    const trainingRisk = 0;
     const historyRisk = (p.majorInjuries || 0) * 0.00035;
     const ageRisk = p.age >= 28 ? (p.age - 27) * 0.00018 : 0;
     const base = Math.max(0.0009, 0.0025 + fatigueRisk + trainingRisk + historyRisk + ageRisk);
@@ -2137,11 +2137,7 @@
 
   function renderTraining() {
     const stadiumCost = 45 + G.stadiumLevel * 35;
-    return '<div class="pnl"><div class="pnl-t">Training focus</div>' +
-      '<p style="font-size:12px; color:var(--color-text-secondary); margin:0 0 8px;">Tilt end-of-season rating updates.</p>' +
-      '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
-        [['youth','Youth development'],['balanced','Balanced'],['fitness','Fitness']].map(t => '<button class="btn ' + (G.training===t[0]?'pri':'') + '" onclick="setTraining(\'' + t[0] + '\')">' + t[1] + '</button>').join('') +
-      '</div></div>' +
+    return
       (() => {
         const lvl = G.stadiumLevel;
         const capacity = [74000, 78000, 82000, 87000, 92000][lvl - 1];
@@ -2373,7 +2369,6 @@
   function setView(v) { G.view = v; render(); }
   function setTactic(t) { G.tactic = t; render(); }
   function setFormation(f) { G.formation = f; autoPickXI(); render(); }
-  function setTraining(t) { G.training = t; render(); }
   function autoPickXIAndRender() { autoPickXI(); render(); }
 
   newGame();
