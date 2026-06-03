@@ -788,20 +788,23 @@
   function pairKey(a, b) { return Math.min(a,b) + '_' + Math.max(a,b); }
   function trackPairGoalAssist(scorerId, assistId) {
     const key = pairKey(scorerId, assistId);
-    if (!G.pairStats[key]) G.pairStats[key] = { goalAssists: 0, cleanSheets: 0 };
+    if (!G.pairStats[key]) G.pairStats[key] = { goalAssists: 0, cleanSheets: 0, lastAtkActive: 0, lastDefActive: 0 };
     G.pairStats[key].goalAssists++;
+    G.pairStats[key].lastAtkActive = G.seasonStats.played;
   }
   function trackDefPairCleanSheet(xi) {
-    const defs = xi.filter(p => p.pos === 'DEF');
-    for (let i = 0; i < defs.length; i++) {
-      for (let j = i + 1; j < defs.length; j++) {
-        const key = pairKey(defs[i].id, defs[j].id);
-        if (!G.pairStats[key]) G.pairStats[key] = { goalAssists: 0, cleanSheets: 0 };
+    const cbs = xi.filter(p => roleOf(p) === 'CB');
+    for (let i = 0; i < cbs.length; i++) {
+      for (let j = i + 1; j < cbs.length; j++) {
+        const key = pairKey(cbs[i].id, cbs[j].id);
+        if (!G.pairStats[key]) G.pairStats[key] = { goalAssists: 0, cleanSheets: 0, lastAtkActive: 0, lastDefActive: 0 };
         G.pairStats[key].cleanSheets++;
+        G.pairStats[key].lastDefActive = G.seasonStats.played;
       }
     }
   }
   function updateActiveDuos() {
+    const played = G.seasonStats.played;
     G.activeDuos = [];
     Object.entries(G.pairStats || {}).forEach(([key, stats]) => {
       const [id1, id2] = key.split('_').map(Number);
@@ -809,9 +812,11 @@
       const p2 = G.squad.find(p => p.id === id2 && !p.sold);
       if (!p1 || !p2) return;
       const atk = (pl) => pl.pos === 'FWD' || pl.pos === 'MID';
-      if (stats.goalAssists >= 5 && atk(p1) && atk(p2)) {
+      const atkFresh = stats.lastAtkActive && (played - stats.lastAtkActive) <= 10;
+      const defFresh = stats.lastDefActive && (played - stats.lastDefActive) <= 12;
+      if (stats.goalAssists >= 5 && atkFresh && atk(p1) && atk(p2)) {
         G.activeDuos.push({ p1Id: id1, p2Id: id2, type: 'attack', count: stats.goalAssists });
-      } else if (stats.cleanSheets >= 7 && p1.pos === 'DEF' && p2.pos === 'DEF') {
+      } else if (stats.cleanSheets >= 13 && defFresh && roleOf(p1) === 'CB' && roleOf(p2) === 'CB') {
         G.activeDuos.push({ p1Id: id1, p2Id: id2, type: 'defense', count: stats.cleanSheets });
       }
     });
