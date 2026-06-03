@@ -393,6 +393,7 @@
     G = {
       view: 'dash', season: 1, year: 2025, day: 198, clQualified: true, nextCLQualified: true,
       managerName: 'Michael Carrick', reputation: 84, boardConfidence: 74, pressure: 42, publicSupport: 79, mediaSentiment: 'Positive',
+      fanbase: 70, lastSeasonTrophyValue: 0,
       squad: STARTING_SQUAD.map((p,i) => ({
         id: i, name: p[0], pos: p[1], role: p[5] || inferRole(p[0], p[1]), age: p[2], ovr: p[3], pot: p[4],
         mins: 0, goals: 0, assists: 0, appearances: 0, clubGoals: 0, clubAssists: 0, clubApps: 0,
@@ -536,7 +537,12 @@
 
   function nextFixture() { return G.fixtures.find(f => !f.played); }
   function tierOf(ovr) { if (ovr >= 92) return 'super'; if (ovr >= 88) return 'star'; if (ovr >= 82) return 'solid'; return 'depth'; }
-  function awardTrophy(name) { if (!G.trophies.includes(name)) G.trophies.push(name); }
+  function awardTrophy(name) {
+    if (G.trophies.includes(name)) return;
+    G.trophies.push(name);
+    const val = name.includes('Champions League') ? 3 : name.includes('Premier League') ? 2 : name.includes('FA Cup') ? 1.5 : name.includes('EFL Cup') ? 1 : 0.5;
+    G.lastSeasonTrophyValue = (G.lastSeasonTrophyValue || 0) + val;
+  }
   function seasonLabel() { return G.year + '-' + (G.year+1).toString().slice(2); }
   function playerValue(p) {
     if (p.ovr >= 80 && p.ovr <= 84 && p.age >= 20 && p.age <= 29) {
@@ -737,6 +743,14 @@
     if (G.reputation >= 80 && pos <= 6) return 'Confident';
     if (pos <= 8) return 'Under pressure';
     return 'On the edge';
+  }
+  function fanbaseLabel(fb) {
+    if (fb >= 95) return 'Iconic';
+    if (fb >= 88) return 'Global force';
+    if (fb >= 82) return 'Popular';
+    if (fb >= 76) return 'Established';
+    if (fb >= 71) return 'Growing';
+    return 'Rebuilding';
   }
   function isBigGame(fx) { return matchWeight(fx) >= 1.8; }
   function effectiveRating(p) {
@@ -1412,7 +1426,8 @@
       p.mins = 0; p.goals = 0; p.assists = 0; p.appearances = 0;
       p.matchRatings = []; p.bigGameRatings = [];
       const stadiumMoraleBoost = (G.stadiumLevel - 1) * 2;
-      p.fitness = 100; p.morale = Math.min(100, Math.max(60, p.morale) + stadiumMoraleBoost);
+      const fanbaseMoraleBoost = Math.floor(Math.max(0, G.fanbase - 70) * 0.15);
+      p.fitness = 100; p.morale = Math.min(100, Math.max(60, p.morale) + stadiumMoraleBoost + fanbaseMoraleBoost);
       p.injuryWeeks = 0; p.onLoan = null; p.suspended = 0; p.academyTeam = null;
       if (p.age >= 38 && p.ovr < 65) p.sold = true;
     });
@@ -1422,9 +1437,14 @@
     G.day = 198 + (G.season-1)*365;
     G.seasonStats = { played:0, won:0, drawn:0, lost:0, gf:0, ga:0 };
     G.results = []; G.fixtures = []; G.cupRounds = { FA: [], EFL: [] };
+    const fanbaseGain = G.lastSeasonTrophyValue > 0 ? G.lastSeasonTrophyValue : -0.5;
+    G.fanbase = Math.max(65, Math.min(100, (G.fanbase || 70) + fanbaseGain));
+    G.lastSeasonTrophyValue = 0;
     const stadiumRevenue = 15 + G.stadiumLevel * 6;
-    G.budget += stadiumRevenue;
-    G.transferMessages.push('Stadium (Level ' + G.stadiumLevel + ') generated £' + stadiumRevenue + 'm in matchday & commercial revenue.');
+    const fanbaseRevenue = Math.floor(Math.max(0, G.fanbase - 70) * 0.9);
+    G.budget += stadiumRevenue + fanbaseRevenue;
+    const fanLabel = fanbaseLabel(G.fanbase);
+    G.transferMessages.push('Stadium (Level ' + G.stadiumLevel + ') generated £' + stadiumRevenue + 'm. Global fanbase (' + fanLabel + ') added £' + fanbaseRevenue + 'm in commercial revenue.');
     G.windowOpen = true; G.incomingBids = []; G.aiTransfers = {}; G.aiTransferLog = [];
     G.view = 'season-end';
     refreshTransferWindow(); initTables(); buildFixtures(); autoPickXI(); render();
@@ -1727,7 +1747,8 @@
         '<div><strong>Reputation</strong><div style="color:var(--color-text-secondary);">' + G.reputation + '/94</div></div>' +
         '<div><strong>Board</strong><div style="color:var(--color-text-secondary);">' + G.boardConfidence + '% confidence</div></div>' +
       '</div>' +
-      '<div style="margin-top:8px; color:var(--color-text-secondary);">Public support: ' + G.publicSupport + '% · Mood: ' + managerMoodLabel() + '</div></div>';
+      '<div style="margin-top:8px; color:var(--color-text-secondary);">Public support: ' + G.publicSupport + '% · Mood: ' + managerMoodLabel() + '</div>' +
+      '<div style="margin-top:6px; color:var(--color-text-secondary);">Global fanbase: <strong style="color:var(--color-text-primary);">' + fanbaseLabel(G.fanbase || 70) + '</strong> (' + Math.round(G.fanbase || 70) + '/100) · Commercial revenue: <strong style="color:var(--color-text-primary);">£' + Math.floor(Math.max(0, (G.fanbase||70) - 70) * 0.9) + 'm/yr</strong></div></div>';
     return managerPanel + msgs.map(m => '<div class="toast">' + m + '</div>').join('') +
       (bids.length ? '<div class="pnl"><div class="pnl-t">Incoming transfer bids</div>' + bids.map(b => {
         const p = G.squad.find(x => x.id === b.playerId);
