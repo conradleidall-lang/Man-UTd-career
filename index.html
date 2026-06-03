@@ -446,6 +446,7 @@
       pairStats: {}, activeDuos: [],
       seasonStats: { played:0, won:0, drawn:0, lost:0, gf:0, ga:0 },
       transferMessages: [], injuryHistory: [], incomingBids: [], nextBidId: 1, aiTransfers: {}, aiTransferLog: [], clubRosters: {},
+      trashTalks: [], lastTrashTalkDay: 0,
       academy: { u21: [], u18: [], log: [] }, nextYouthId: 1000,
       market: allTransfers.filter(p => { if (seenMarket.has(p[0])) return false; seenMarket.add(p[0]); return true; }).map((p,i) => {
         const isPL = PL_TEAMS.some(t => t[0] === p[5]) || ['Rangers','Celtic'].includes(p[5]);
@@ -707,26 +708,33 @@
     G.transferMessages.push('Stadium upgraded to level ' + G.stadiumLevel + '. Reputation boost will help future transfer pitches.');
     render();
   }
+  function redemptionMult(p) {
+    const cm = G.currentMatch;
+    if (!cm || cm.redemptionPlayerId !== p.id) return 1;
+    return cm.redemptionElite ? 3.5 : 0.15;
+  }
   function scorerWeight(p) {
     const r = roleOf(p);
-    if (r === 'ST') return 10;
-    if (r === 'LW' || r === 'RW') return 8;
-    if (r === 'CAM') return 5;
-    if (r === 'LM' || r === 'RM') return 4;
-    if (r === 'CM') return 2.4;
-    if (r === 'CDM') return 1.5;
-    if (r === 'LB' || r === 'RB') return 0.8;
-    if (r === 'CB') return 0.55;
-    return 0.05;
+    let w = 0.05;
+    if (r === 'ST') w = 10;
+    else if (r === 'LW' || r === 'RW') w = 8;
+    else if (r === 'CAM') w = 5;
+    else if (r === 'LM' || r === 'RM') w = 4;
+    else if (r === 'CM') w = 2.4;
+    else if (r === 'CDM') w = 1.5;
+    else if (r === 'LB' || r === 'RB') w = 0.8;
+    else if (r === 'CB') w = 0.55;
+    return w * redemptionMult(p);
   }
   function assisterWeight(p) {
     const r = roleOf(p);
-    if (['CAM','RW','LW','RM','LM'].includes(r)) return 7;
-    if (r === 'CM') return 4;
-    if (r === 'ST') return 3.5;
-    if (r === 'CDM' || r === 'RB' || r === 'LB') return 2;
-    if (r === 'CB') return 0.6;
-    return 0.1;
+    let w = 0.1;
+    if (['CAM','RW','LW','RM','LM'].includes(r)) w = 7;
+    else if (r === 'CM') w = 4;
+    else if (r === 'ST') w = 3.5;
+    else if (r === 'CDM' || r === 'RB' || r === 'LB') w = 2;
+    else if (r === 'CB') w = 0.6;
+    return w * redemptionMult(p);
   }
   function matchWeight(fx) {
     if (fx.round === 'Final' || fx.round === 'SF') return 2.5;
@@ -784,6 +792,32 @@
     if (G.reputation >= 80 && pos <= 6) return 'Confident';
     if (pos <= 8) return 'Under pressure';
     return 'On the edge';
+  }
+  const TRASH_TALK_QUOTES = [
+    '{p} fires a shot: "{club} won\'t know what hit them when we face them. There\'s a massive gap in quality."',
+    '{p} stirs the pot: "I\'ve seen {club} play — I\'ll be surprised if they can handle me on the day."',
+    '{p} draws a line: "The next time I see {club}, I\'m making a statement. I guarantee it."',
+    '{p} calls them out: "People keep talking about {club}. Come face us and let\'s see how brave they are."',
+    '{p} goes public: "{club} have had it easy this season. When we play them, I\'ll show them exactly what quality looks like."',
+    '{p} sends a warning: "I don\'t respect what {club} are doing right now. I\'ll show them why on the pitch."',
+    '{p} turns up the heat: "{club} think they\'re something special. They haven\'t played against me yet."',
+  ];
+  function maybeGenerateTrashTalk() {
+    if (G.day - (G.lastTrashTalkDay || 0) < 30) return;
+    if (Math.random() > 0.38) return;
+    const candidates = G.squad.filter(p => !p.sold && !p.onLoan && !p.injuryWeeks && p.appearances >= 2);
+    if (!candidates.length) return;
+    const player = PICK(candidates);
+    const upcoming = G.fixtures.filter(f => !f.played && f.opp !== 'Man Utd').map(f => f.opp);
+    const clubs = [...new Set([...upcoming, ...PL_TEAMS.map(t => t[0])])].filter(c => c !== 'Man Utd' && !c.includes('United'));
+    const club = PICK(clubs);
+    if (!club) return;
+    const expiresDay = G.day + 180;
+    const quote = PICK(TRASH_TALK_QUOTES).replace('{p}', player.name).replace('{club}', club);
+    G.trashTalks = (G.trashTalks || []).filter(t => t.expiresDay > G.day);
+    G.trashTalks.push({ playerId: player.id, playerName: player.name, club, day: G.day, expiresDay });
+    G.transferMessages.push('🗣 TRASH TALK — ' + quote + ' (' + club + ' rivalry active for 6 months)');
+    G.lastTrashTalkDay = G.day;
   }
   function pairKey(a, b) { return Math.min(a,b) + '_' + Math.max(a,b); }
   function trackPairGoalAssist(scorerId, assistId) {
@@ -1109,7 +1143,13 @@
   }
 
   function playFixture(fx) {
-    G.currentMatch = { fx, home:0, away:0, comm:[], playing:true, done:false, scorers: [], assists: [], injured: [], sentOff: [], oppReds:0, injuryThisMatch: false, fightThisMatch: false, brawlBoost: 0, perPlayerGoals: {}, perPlayerAssists: {} };
+    const activeTT = (G.trashTalks || []).find(t => t.club === fx.opp && t.expiresDay > G.day && G.starters.includes(t.playerId));
+    const redemptionElite = Math.random() < 0.5;
+    G.currentMatch = { fx, home:0, away:0, comm:[], playing:true, done:false, scorers: [], assists: [], injured: [], sentOff: [], oppReds:0, injuryThisMatch: false, fightThisMatch: false, brawlBoost: 0, redemptionPlayerId: activeTT ? activeTT.playerId : null, redemptionElite, perPlayerGoals: {}, perPlayerAssists: {} };
+    if (activeTT) {
+      const rp = G.squad.find(p => p.id === activeTT.playerId);
+      G.currentMatch.comm.push({m:0, text:'🗣 REDEMPTION MATCH — ' + (rp ? rp.name : activeTT.playerName) + ' called out ' + fx.opp + '. All eyes on him today. Will he deliver or crumble under the pressure?', t:'n'});
+    }
     G.view = 'match';
     const xi = getXI();
     const fmAssignments = getFormationAssignments().flat();
@@ -1272,6 +1312,20 @@
     if (fx.comp === 'CL' && fx.round === 'League') { updateCLTable(fx, cm.home, cm.away); simOtherCLWeek(fx); if (!G.fixtures.some(f => f.comp === 'CL' && f.round === 'League' && !f.played)) scheduleCLKnockouts(); }
     if (fx.comp === 'CL' && fx.round !== 'League') handleCLKnockout(fx, cm.home, cm.away);
     if (fx.comp === 'FA' || fx.comp === 'EFL') handleCupRound(fx, cm.home, cm.away);
+    if (cm.redemptionPlayerId) {
+      const rp = xi.find(p => p.id === cm.redemptionPlayerId);
+      if (rp && cm.matchRatings[rp.id] != null) {
+        if (cm.redemptionElite) {
+          cm.matchRatings[rp.id] = Math.min(10, cm.matchRatings[rp.id] + 2.5);
+          rp.matchRatings[rp.matchRatings.length - 1] = cm.matchRatings[rp.id];
+          cm.comm.push({m:'FT', text:'⭐ REDEMPTION DELIVERED — ' + rp.name + ' put in an elite performance and backed up every word. ' + fx.opp + ' have no answer.', t:'gm'});
+        } else {
+          cm.matchRatings[rp.id] = Math.max(4, cm.matchRatings[rp.id] - 2.5);
+          rp.matchRatings[rp.matchRatings.length - 1] = cm.matchRatings[rp.id];
+          cm.comm.push({m:'FT', text:'💀 TALK IS CHEAP — ' + rp.name + ' bottled it when it mattered most. ' + fx.opp + ' will be loving this.', t:'go'});
+        }
+      }
+    }
     if (cleanSheet) trackDefPairCleanSheet(xi);
     updateActiveDuos();
     if (G.seasonStats.played % 4 === 0) updatePlayerRatings(false);
@@ -1687,6 +1741,8 @@
       if (p.injuryWeeks > 0) p.injuryWeeks = Math.max(0, p.injuryWeeks - daysBetween/7);
     });
     G.day = fx.day;
+    G.trashTalks = (G.trashTalks || []).filter(t => t.expiresDay > G.day);
+    maybeGenerateTrashTalk();
     refreshTransferWindow();
     const stillValid = G.starters.map(id => G.squad.find(p => p.id === id)).filter(p => p && isAvailable(p));
     if (stillValid.length < 11) autoPickXI();
@@ -1958,14 +2014,33 @@
       '<div class="pnl"><div class="pnl-t">Elite form (' + inForm.length + ')</div>' + (inForm.length ? inForm.map(p => '<div style="display:flex; justify-content:space-between; padding:4px 0; font-size:12px;"><span>' + p.name + ' (' + roleOf(p) + ')</span><span style="color:var(--color-text-success);">avg ' + (p.matchRatings.slice(-5).reduce((a,b)=>a+b,0)/Math.min(5,p.matchRatings.length)).toFixed(1) + '</span></div>').join('') : '<div style="color:var(--color-text-secondary); font-size:12px;">No one hot.</div>') + '</div></div>' +
       (G.trophies.length ? '<div class="pnl"><div class="pnl-t">Trophy cabinet</div>' + G.trophies.map(t=>'<span class="trophy">' + t + '</span>').join('') + '</div>' : '') +
       (() => {
+        const talks = (G.trashTalks || []).filter(t => t.expiresDay > G.day);
+        if (!talks.length) return '';
+        return '<div class="pnl"><div class="pnl-t">🗣 Active rivalries</div>' +
+          talks.map(t => {
+            const p = G.squad.find(x => x.id === t.playerId);
+            const notStarting = !G.starters.includes(t.playerId);
+            const daysLeft = Math.ceil((t.expiresDay - G.day) / 30);
+            const nextGame = G.fixtures.find(f => !f.played && f.opp === t.club);
+            return '<div style="font-size:12px; padding:6px 0; border-bottom:0.5px solid var(--color-border-tertiary);">' +
+              '<strong>' + t.playerName + '</strong> vs <strong>' + t.club + '</strong>' +
+              ' <span style="color:var(--color-text-secondary);">· ' + daysLeft + ' month' + (daysLeft !== 1 ? 's' : '') + ' left</span>' +
+              (nextGame ? '<div style="color:var(--color-text-secondary); font-size:10px; margin-top:2px;">Next face-off: ' + fmtDate(nextGame.day) + (notStarting && p ? ' · <span style="color:var(--color-text-warning);">⚠ ' + p.name.split(' ').pop() + ' must start — REDEMPTION</span>' : '') + '</div>' : '') +
+            '</div>';
+          }).join('') +
+        '</div>';
+      })() +
+      (() => {
         const check = lineupIsValid();
         const label = next ? 'Advance to ' + fmtDate(next.day) + ' · ' + next.comp + (next.round?' '+next.round:'') + ' ' + (next.home?'vs':'at') + ' ' + next.opp : 'End season';
+        const tt = next && (G.trashTalks || []).find(t => t.club === next.opp && t.expiresDay > G.day && !G.starters.includes(t.playerId));
         if (!check.ok && next) {
           const msg = check.gkOutfield ? 'A goalkeeper is in an outfield position — fix your lineup before playing.' : 'No goalkeeper in goal — fix your lineup before playing.';
           return '<div style="padding:10px 12px; background:var(--color-background-danger); color:var(--color-text-danger); border-radius:var(--border-radius-md); font-size:12px; margin-bottom:8px;">⚠ ' + msg + '</div>' +
             '<button class="play-btn" disabled>' + label + '</button>';
         }
-        return '<button class="play-btn" onclick="advance()">' + label + '</button>';
+        const ttWarn = tt ? '<div style="padding:8px 12px; background:rgba(250,199,117,0.12); color:var(--color-text-warning); border-radius:var(--border-radius-md); font-size:12px; margin-bottom:8px;">⚠ REDEMPTION — ' + tt.playerName + ' must start vs ' + next.opp + ' or miss his chance to back up his words.</div>' : '';
+        return ttWarn + '<button class="play-btn" onclick="advance()">' + label + '</button>';
       })();
   }
 
