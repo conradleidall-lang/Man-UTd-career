@@ -802,21 +802,37 @@
     '{p} sends a warning: "I don\'t respect what {club} are doing right now. I\'ll show them why on the pitch."',
     '{p} turns up the heat: "{club} think they\'re something special. They haven\'t played against me yet."',
   ];
+  const OPP_TRASH_TALK_QUOTES = [
+    '{player} ({club}) goes public: "Man United aren\'t the force they used to be. We\'ll prove it when we face them."',
+    '{player} ({club}) fires back: "I\'ve seen more threat from a Sunday league side than United this season."',
+    '{player} ({club}) stirs it: "Man United can talk all they want — we\'ll embarrass them on the pitch."',
+    '{player} ({club}) calls it: "Whoever plays for Man United, it doesn\'t matter. We\'re on a different level right now."',
+    '{player} ({club}) goes personal: "I feel sorry for United fans — their team is nowhere near where it used to be."',
+    '{player} ({club}) dismisses them: "Man United? They\'re just another mid-table side with a famous shirt."',
+    '{player} ({club}) twists the knife: "All that history and look at them now. We don\'t fear Man United one bit."',
+  ];
   function maybeGenerateTrashTalk() {
-    if (G.day - (G.lastTrashTalkDay || 0) < 30) return;
-    if (Math.random() > 0.38) return;
-    const candidates = G.squad.filter(p => !p.sold && !p.onLoan && !p.injuryWeeks && p.appearances >= 2);
-    if (!candidates.length) return;
-    const player = PICK(candidates);
-    const upcoming = G.fixtures.filter(f => !f.played && f.opp !== 'Man Utd').map(f => f.opp);
-    const clubs = [...new Set([...upcoming, ...PL_TEAMS.map(t => t[0])])].filter(c => c !== 'Man Utd' && !c.includes('United'));
+    if (G.day - (G.lastTrashTalkDay || 0) < 75) return;
+    if (Math.random() > 0.55) return;
+    G.trashTalks = (G.trashTalks || []).filter(t => t.expiresDay > G.day);
+    const expiresDay = G.day + 180;
+    const clubs = [...new Set([...G.fixtures.filter(f => !f.played).map(f => f.opp), ...PL_TEAMS.map(t => t[0])])].filter(c => c !== 'Man Utd' && !c.includes('United'));
     const club = PICK(clubs);
     if (!club) return;
-    const expiresDay = G.day + 180;
-    const quote = PICK(TRASH_TALK_QUOTES).replace('{p}', player.name).replace('{club}', club);
-    G.trashTalks = (G.trashTalks || []).filter(t => t.expiresDay > G.day);
-    G.trashTalks.push({ playerId: player.id, playerName: player.name, club, day: G.day, expiresDay });
-    G.transferMessages.push('🗣 TRASH TALK — ' + quote + ' (' + club + ' rivalry active for 6 months)');
+    if (Math.random() < 0.55) {
+      const candidates = G.squad.filter(p => !p.sold && !p.onLoan && !p.injuryWeeks && p.appearances >= 2);
+      if (!candidates.length) return;
+      const player = PICK(candidates);
+      const quote = PICK(TRASH_TALK_QUOTES).replace('{p}', player.name).replace('{club}', club);
+      G.trashTalks.push({ type: 'own', playerId: player.id, playerName: player.name, club, day: G.day, expiresDay });
+      G.transferMessages.push('🗣 TRASH TALK — ' + quote + ' (' + club + ' rivalry active for 6 months)');
+    } else {
+      const roster = getClubRoster(club);
+      const oppPlayer = roster.length ? PICK(roster) : club + ' player';
+      const quote = PICK(OPP_TRASH_TALK_QUOTES).replace('{player}', oppPlayer).replace('{club}', club);
+      G.trashTalks.push({ type: 'opp', oppPlayer, club, day: G.day, expiresDay });
+      G.transferMessages.push('🔥 CALLED OUT — ' + quote + ' (Man United rivalry active for 6 months)');
+    }
     G.lastTrashTalkDay = G.day;
   }
   function pairKey(a, b) { return Math.min(a,b) + '_' + Math.max(a,b); }
@@ -1143,12 +1159,16 @@
   }
 
   function playFixture(fx) {
-    const activeTT = (G.trashTalks || []).find(t => t.club === fx.opp && t.expiresDay > G.day && G.starters.includes(t.playerId));
+    const activeTT = (G.trashTalks || []).find(t => t.club === fx.opp && t.expiresDay > G.day && t.type === 'own' && G.starters.includes(t.playerId));
+    const oppTT = (G.trashTalks || []).find(t => t.club === fx.opp && t.expiresDay > G.day && t.type === 'opp');
     const redemptionElite = Math.random() < 0.5;
-    G.currentMatch = { fx, home:0, away:0, comm:[], playing:true, done:false, scorers: [], assists: [], injured: [], sentOff: [], oppReds:0, injuryThisMatch: false, fightThisMatch: false, brawlBoost: 0, redemptionPlayerId: activeTT ? activeTT.playerId : null, redemptionElite, perPlayerGoals: {}, perPlayerAssists: {} };
+    G.currentMatch = { fx, home:0, away:0, comm:[], playing:true, done:false, scorers: [], assists: [], injured: [], sentOff: [], oppReds:0, injuryThisMatch: false, fightThisMatch: false, brawlBoost: 0, redemptionPlayerId: activeTT ? activeTT.playerId : null, redemptionElite, calledOutBoost: oppTT ? 3 : 0, perPlayerGoals: {}, perPlayerAssists: {} };
     if (activeTT) {
       const rp = G.squad.find(p => p.id === activeTT.playerId);
-      G.currentMatch.comm.push({m:0, text:'🗣 REDEMPTION MATCH — ' + (rp ? rp.name : activeTT.playerName) + ' called out ' + fx.opp + '. All eyes on him today. Will he deliver or crumble under the pressure?', t:'n'});
+      G.currentMatch.comm.push({m:0, text:'🗣 REDEMPTION MATCH — ' + (rp ? rp.name : activeTT.playerName) + ' called out ' + fx.opp + '. All eyes on him today. Will he deliver or crumble?', t:'n'});
+    }
+    if (oppTT) {
+      G.currentMatch.comm.push({m:0, text:'🔥 GRUDGE MATCH — ' + oppTT.oppPlayer + ' (' + fx.opp + ') called us out. The dressing room is furious. Man United have a point to prove today.', t:'gm'});
     }
     G.view = 'match';
     const xi = getXI();
@@ -1228,9 +1248,10 @@
       const r = Math.random();
       const brawlAtk = Math.max(0, cm.brawlBoost || 0);
       const brawlDef = Math.max(0, -(cm.brawlBoost || 0));
+      const calledOutBoost = cm.calledOutBoost || 0;
       if (r < 0.34) {
         const redSwing = cm.oppReds * 0.20 - cm.sentOff.length * 0.10;
-        const ch = Math.max(0.07, (munAtk + brawlAtk - oppDef)/85 + 0.32 + redSwing);
+        const ch = Math.max(0.07, (munAtk + brawlAtk + calledOutBoost - oppDef)/85 + 0.32 + redSwing);
         if (Math.random() < ch) {
           const pool = xi.filter(p => p.pos !== 'GK' && !cm.injured.includes(p.id) && !cm.sentOff.includes(p.id));
           const s = weightedPick(pool, scorerWeight) || PICK(attackers.length ? attackers : xi);
@@ -2018,12 +2039,19 @@
         if (!talks.length) return '';
         return '<div class="pnl"><div class="pnl-t">🗣 Active rivalries</div>' +
           talks.map(t => {
-            const p = G.squad.find(x => x.id === t.playerId);
-            const notStarting = !G.starters.includes(t.playerId);
             const daysLeft = Math.ceil((t.expiresDay - G.day) / 30);
             const nextGame = G.fixtures.find(f => !f.played && f.opp === t.club);
+            if (t.type === 'opp') {
+              return '<div style="font-size:12px; padding:6px 0; border-bottom:0.5px solid var(--color-border-tertiary);">' +
+                '🔥 <strong>' + t.oppPlayer + '</strong> <span style="color:var(--color-text-secondary);">(' + t.club + ') called us out</span>' +
+                ' <span style="color:var(--color-text-secondary);">· ' + daysLeft + ' month' + (daysLeft !== 1 ? 's' : '') + ' left</span>' +
+                (nextGame ? '<div style="color:var(--color-text-success); font-size:10px; margin-top:2px;">Next face-off: ' + fmtDate(nextGame.day) + ' · +3 ATK boost — dressing room is fired up</div>' : '') +
+              '</div>';
+            }
+            const p = G.squad.find(x => x.id === t.playerId);
+            const notStarting = !G.starters.includes(t.playerId);
             return '<div style="font-size:12px; padding:6px 0; border-bottom:0.5px solid var(--color-border-tertiary);">' +
-              '<strong>' + t.playerName + '</strong> vs <strong>' + t.club + '</strong>' +
+              '🗣 <strong>' + t.playerName + '</strong> vs <strong>' + t.club + '</strong>' +
               ' <span style="color:var(--color-text-secondary);">· ' + daysLeft + ' month' + (daysLeft !== 1 ? 's' : '') + ' left</span>' +
               (nextGame ? '<div style="color:var(--color-text-secondary); font-size:10px; margin-top:2px;">Next face-off: ' + fmtDate(nextGame.day) + (notStarting && p ? ' · <span style="color:var(--color-text-warning);">⚠ ' + p.name.split(' ').pop() + ' must start — REDEMPTION</span>' : '') + '</div>' : '') +
             '</div>';
@@ -2033,7 +2061,7 @@
       (() => {
         const check = lineupIsValid();
         const label = next ? 'Advance to ' + fmtDate(next.day) + ' · ' + next.comp + (next.round?' '+next.round:'') + ' ' + (next.home?'vs':'at') + ' ' + next.opp : 'End season';
-        const tt = next && (G.trashTalks || []).find(t => t.club === next.opp && t.expiresDay > G.day && !G.starters.includes(t.playerId));
+        const tt = next && (G.trashTalks || []).find(t => t.type === 'own' && t.club === next.opp && t.expiresDay > G.day && !G.starters.includes(t.playerId));
         if (!check.ok && next) {
           const msg = check.gkOutfield ? 'A goalkeeper is in an outfield position — fix your lineup before playing.' : 'No goalkeeper in goal — fix your lineup before playing.';
           return '<div style="padding:10px 12px; background:var(--color-background-danger); color:var(--color-text-danger); border-radius:var(--border-radius-md); font-size:12px; margin-bottom:8px;">⚠ ' + msg + '</div>' +
