@@ -675,7 +675,8 @@
         const cap = p.aiGen ? 73 : (team === 'u18' ? 76 : 78);
         const fast = p.ovr < cap ? 1.4 : 0.28;
         const train = getCultureMods().bastionAcademy ? 0.55 : 0.25;
-        p.growth += days * (fast + train) * (Math.max(0, p.pot - p.ovr) / 22);
+        const facilityBonus = 1 + (G.stadiumLevel - 1) * 0.10;
+        p.growth += days * (fast + train) * (Math.max(0, p.pot - p.ovr) / 22) * facilityBonus;
         if (Math.random() < days / 12) {
           p.apps++;
           if (['ST','LW','RW','CAM'].includes(roleOf(p)) && Math.random() < 0.35) p.goals++;
@@ -716,11 +717,12 @@
     G.transferMessages.push(p.name + ' recalled to the senior squad.');
     render();
   }
+  function stadiumUpgradeCost() { return [150, 220, 300, 390][G.stadiumLevel - 1] || 999; }
   function upgradeStadium() {
-    const cost = 45 + G.stadiumLevel * 35;
+    const cost = stadiumUpgradeCost();
     if (G.budget < cost || G.stadiumLevel >= 5) return;
     G.budget -= cost; G.stadiumLevel++;
-    G.transferMessages.push('Stadium upgraded to level ' + G.stadiumLevel + '. Reputation boost will help future transfer pitches.');
+    G.transferMessages.push('Stadium & facilities upgraded to Level ' + G.stadiumLevel + '. Better grounds will accelerate player development and help attract talent.');
     render();
   }
   function redemptionMult(p) {
@@ -1113,7 +1115,10 @@
           if (samePosStar >= 2 && e.composite < 7.6) delta = Math.min(delta, 87 - p.ovr);
         }
       }
-      if (delta > 0) delta = Math.min(delta, p.pot - p.ovr);
+      if (delta > 0) {
+        delta = Math.min(delta, p.pot - p.ovr);
+        if (Math.random() < (G.stadiumLevel - 1) * 0.15) delta = Math.min(p.pot - p.ovr, delta + 1);
+      }
       if (seasonEnd) {
         if (p.age >= 31) {
           let loss = 0;
@@ -2357,7 +2362,7 @@
   }
 
   function renderCulture() {
-    const stadiumCost = 45 + G.stadiumLevel * 35;
+    const stadiumCost = stadiumUpgradeCost();
     const lvl = G.stadiumLevel;
     const capacity = [74000, 78000, 82000, 87000, 92000][lvl - 1];
     const revenue = 15 + lvl * 6;
