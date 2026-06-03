@@ -403,7 +403,7 @@
       })),
       starters: [], tactic: 'balanced', formation: '4-3-3', training: 'balanced',
       budget: 80, stadiumLevel: 1, records: {}, tables: {}, clStandings: {}, elStandings: {}, cupRounds: { FA: [], EFL: [] }, clKnockout: null, elKnockout: null,
-      fixtures: [], results: [], trophies: [], seasonHistory: [], currentMatch: null,
+      fixtures: [], results: [], trophies: [], seasonHistory: [], currentMatch: null, loanReturnLog: [],
       seasonStats: { played:0, won:0, drawn:0, lost:0, gf:0, ga:0 },
       transferMessages: [], injuryHistory: [], incomingBids: [], nextBidId: 1, aiTransfers: {}, aiTransferLog: [], clubRosters: {},
       academy: { u21: [], u18: [], log: [] }, nextYouthId: 1000,
@@ -743,6 +743,40 @@
     if (G.reputation >= 80 && pos <= 6) return 'Confident';
     if (pos <= 8) return 'Under pressure';
     return 'On the edge';
+  }
+  function resolveLoanReturn(p) {
+    const roll = Math.random();
+    const club = p.onLoan;
+    if (roll < 0.70) {
+      if (p.age < 24) {
+        const potGain = 4 + Math.floor(Math.random() * 6);
+        const ovrGain = 1 + Math.floor(Math.random() * 3);
+        p.pot = Math.min(99, p.pot + potGain);
+        p.ovr = Math.min(p.pot, Math.min(99, p.ovr + ovrGain));
+        p.morale = Math.min(100, p.morale + 12);
+        return { name: p.name, role: roleOf(p), club, outcome: 'boom', ovr: p.ovr, pot: p.pot, ovrDelta: ovrGain, potDelta: potGain };
+      } else if (p.age <= 29) {
+        const ovrGain = 2 + Math.floor(Math.random() * 4);
+        p.ovr = Math.min(p.pot, Math.min(99, p.ovr + ovrGain));
+        p.morale = Math.min(100, p.morale + 8);
+        return { name: p.name, role: roleOf(p), club, outcome: 'boom', ovr: p.ovr, pot: p.pot, ovrDelta: ovrGain, potDelta: 0 };
+      } else {
+        p.morale = Math.min(100, p.morale + 5);
+        return { name: p.name, role: roleOf(p), club, outcome: 'boom', ovr: p.ovr, pot: p.pot, ovrDelta: 0, potDelta: 0 };
+      }
+    } else if (roll < 0.90) {
+      const potLoss = 1 + Math.floor(Math.random() * 2);
+      p.pot = Math.max(p.ovr, p.pot - potLoss);
+      p.morale = Math.max(40, p.morale - 5);
+      return { name: p.name, role: roleOf(p), club, outcome: 'stag', ovr: p.ovr, pot: p.pot, ovrDelta: 0, potDelta: -potLoss };
+    } else {
+      const ovrLoss = 1 + Math.floor(Math.random() * 2);
+      p.ovr = Math.max(50, p.ovr - ovrLoss);
+      p.pot = Math.max(p.ovr, p.pot - 1);
+      p.majorInjuries = (p.majorInjuries || 0) + 1;
+      p.morale = Math.max(30, p.morale - 12);
+      return { name: p.name, role: roleOf(p), club, outcome: 'injury', ovr: p.ovr, pot: p.pot, ovrDelta: -ovrLoss, potDelta: -1, injuryWeeks: 2 + Math.floor(Math.random() * 4) };
+    }
   }
   function fanbaseLabel(fb) {
     if (fb >= 95) return 'Iconic';
@@ -1416,11 +1450,16 @@
     G.transferMessages.push(G.nextCLQualified ? 'Champions League qualification secured for next season.' : 'Missed Champions League qualification — finish top 4 next year to return.');
     saveSeasonHistory(munPos, trophiesBefore);
     updatePlayerRatings(true);
+    G.loanReturnLog = [];
+    const loanInjuries = {};
     G.squad.forEach(p => {
       if (p.sold) return;
-      if (p.onLoan && p.age <= 24 && p.ovr < p.pot) {
-        p.ovr = Math.min(p.pot, p.ovr + (Math.random() < 0.55 ? 2 : 1));
-        p.morale = Math.min(100, p.morale + 4);
+      if (p.onLoan) {
+        const entry = resolveLoanReturn(p);
+        if (entry) {
+          G.loanReturnLog.push(entry);
+          if (entry.injuryWeeks) loanInjuries[p.id] = entry.injuryWeeks;
+        }
       }
       p.age++;
       p.mins = 0; p.goals = 0; p.assists = 0; p.appearances = 0;
@@ -1430,6 +1469,10 @@
       p.fitness = 100; p.morale = Math.min(100, Math.max(60, p.morale) + stadiumMoraleBoost + fanbaseMoraleBoost);
       p.injuryWeeks = 0; p.onLoan = null; p.suspended = 0; p.academyTeam = null;
       if (p.age >= 38 && p.ovr < 65) p.sold = true;
+    });
+    Object.entries(loanInjuries).forEach(([id, wks]) => {
+      const p = G.squad.find(x => x.id === +id);
+      if (p) p.injuryWeeks = wks;
     });
     ['u21','u18'].forEach(team => academyPlayers(team).forEach(p => p.age++));
     G.season++; G.year++;
@@ -1649,13 +1692,15 @@
     const p = G.squad.find(x=>x.id===id);
     if (!p || p.sold || p.onLoan || G.starters.includes(id) || p.injuryWeeks > 0) return;
     if (!G.windowOpen) { G.transferMessages.push('Transfer window closed — loans can only be arranged in June, July, August, or January.'); render(); return; }
-    const clubs = [...PL_TEAMS.map(t => t[0]), ...EUROPA_TEAMS.map(t => t[0])].filter(c => c !== 'Man Utd');
-    const loanClub = PICK(clubs);
+    const smallerClubs = [...PL_TEAMS.filter(t => t[2] <= 78).map(t => t[0]), ...EUROPA_TEAMS.map(t => t[0])].filter(c => c !== 'Man Utd');
+    const allClubs = [...PL_TEAMS.map(t => t[0]), ...EUROPA_TEAMS.map(t => t[0])].filter(c => c !== 'Man Utd');
+    const useSmaller = p.age < 24 || p.morale < 55;
+    const loanClub = PICK(useSmaller ? smallerClubs : allClubs);
     p.onLoan = loanClub;
     p.fitness = 100;
-    p.morale = Math.min(100, p.morale + 3);
+    p.morale = Math.min(100, p.morale + 5);
     G.starters = G.starters.filter(sid => sid !== id);
-    G.transferMessages.push('Loaned ' + p.name + ' to ' + loanClub + ' for the season.');
+    G.transferMessages.push('Loaned ' + p.name + ' to ' + loanClub + ' for the season. They will return at the end of the year.');
     autoPickXI(); render();
   }
   function toggleShortlist(id) {
@@ -2173,6 +2218,7 @@
 
   function renderOffseasonEvents() {
     const log = G.offseasonLog || [];
+    const loanLog = G.loanReturnLog || [];
     const deadwood = deadwoodPlayers();
     const totalReturn = deadwood.reduce((s, p) => s + saleBudgetReturn(playerValue(p)), 0);
 
@@ -2204,11 +2250,27 @@
         : '<div style="font-size:12px; color:var(--color-text-secondary);">Squad is clean — no players flagged for clearance.</div>') +
     '</div>';
 
+    const loanHtml = loanLog.length ? '<div class="pnl"><div class="pnl-t">Loan returns · ' + loanLog.length + ' player' + (loanLog.length > 1 ? 's' : '') + ' back</div>' +
+      loanLog.map(e => {
+        const outcomeColor = e.outcome === 'boom' ? 'var(--color-text-success)' : e.outcome === 'injury' ? 'var(--color-text-danger)' : 'var(--color-text-secondary)';
+        const outcomeIcon = e.outcome === 'boom' ? '▲' : e.outcome === 'injury' ? '⚑' : '→';
+        const detail = e.outcome === 'boom'
+          ? (e.ovrDelta > 0 ? '+' + e.ovrDelta + ' OVR' : 'Stable') + (e.potDelta > 0 ? ' · POT +' + e.potDelta : '') + ' → OVR ' + e.ovr + ' / POT ' + e.pot
+          : e.outcome === 'stag'
+            ? 'No OVR gain · POT ' + e.potDelta + ' → OVR ' + e.ovr + ' / POT ' + e.pot
+            : e.ovrDelta + ' OVR · returning injured → OVR ' + e.ovr;
+        return '<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--color-border-tertiary); font-size:12px;">' +
+          '<span><strong>' + e.name + '</strong> <span style="color:var(--color-text-secondary);">' + e.role + ' · from ' + e.club + '</span></span>' +
+          '<span style="color:' + outcomeColor + '; font-weight:600;">' + outcomeIcon + ' ' + detail + '</span>' +
+        '</div>';
+      }).join('') +
+    '</div>' : '';
+
     return '<div style="text-align:center; padding:0.5rem 0 1rem;">' +
         '<h2 style="margin:0 0 4px;">Offseason</h2>' +
         '<p style="color:var(--color-text-secondary); margin:0;">' + G.year + '/' + (G.year+1).toString().slice(2) + ' · Pre-season preparation</p>' +
       '</div>' +
-      youthHtml + deadwoodHtml +
+      loanHtml + youthHtml + deadwoodHtml +
       '<button class="play-btn" style="margin-top:4px;" onclick="startPreseason()">Begin pre-season →</button>';
   }
 
