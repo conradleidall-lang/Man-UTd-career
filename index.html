@@ -1109,7 +1109,7 @@
   }
 
   function playFixture(fx) {
-    G.currentMatch = { fx, home:0, away:0, comm:[], playing:true, done:false, scorers: [], assists: [], injured: [], sentOff: [], oppReds:0, injuryThisMatch: false, fightThisMatch: false, perPlayerGoals: {}, perPlayerAssists: {} };
+    G.currentMatch = { fx, home:0, away:0, comm:[], playing:true, done:false, scorers: [], assists: [], injured: [], sentOff: [], oppReds:0, injuryThisMatch: false, fightThisMatch: false, brawlBoost: 0, perPlayerGoals: {}, perPlayerAssists: {} };
     G.view = 'match';
     const xi = getXI();
     const fmAssignments = getFormationAssignments().flat();
@@ -1174,17 +1174,23 @@
           cm.sentOff.push(ourPlayer.id); ourPlayer.suspended = 1;
           cm.oppReds++;
           if (ourWins) {
+            cm.brawlBoost = 6;
             cm.comm.push({m, text:'RIVALRY BRAWL — ' + ourPlayer.name + ' and ' + theirPlayer + ' clash violently after a late challenge. ' + ourPlayer.name.split(' ').pop() + ' gets the upper hand and ' + theirPlayer + ' hits the deck hard. Both shown straight reds. ' + theirPlayer + ' is carried off on a stretcher — reported out for ' + injWeeks + ' weeks.', t:'rc'});
+            cm.comm.push({m, text:'Man United are FIRED UP. The rest of the squad surge forward — this team smells blood.', t:'gm'});
           } else {
+            cm.brawlBoost = -6;
             cm.injured.push(ourPlayer.id); ourPlayer.injuryWeeks = injWeeks; recordInjury(ourPlayer, injWeeks); cm.injuryThisMatch = true;
             cm.comm.push({m, text:'RIVALRY BRAWL — ' + ourPlayer.name + ' and ' + theirPlayer + ' come to blows in an ugly scene. ' + theirPlayer + ' lands the telling blow and ' + ourPlayer.name.split(' ').pop() + ' crumples to the ground. Referee shows both straight reds. ' + ourPlayer.name.split(' ').pop() + ' is stretchered off and faces ' + injWeeks + ' weeks on the sidelines.', t:'rc'});
+            cm.comm.push({m, text:fx.opp + ' are galvanised. Their players are swarming all over us — the momentum has completely shifted.', t:'go'});
           }
         }
       }
       const r = Math.random();
+      const brawlAtk = Math.max(0, cm.brawlBoost || 0);
+      const brawlDef = Math.max(0, -(cm.brawlBoost || 0));
       if (r < 0.34) {
         const redSwing = cm.oppReds * 0.20 - cm.sentOff.length * 0.10;
-        const ch = Math.max(0.07, (munAtk - oppDef)/85 + 0.32 + redSwing);
+        const ch = Math.max(0.07, (munAtk + brawlAtk - oppDef)/85 + 0.32 + redSwing);
         if (Math.random() < ch) {
           const pool = xi.filter(p => p.pos !== 'GK' && !cm.injured.includes(p.id) && !cm.sentOff.includes(p.id));
           const s = weightedPick(pool, scorerWeight) || PICK(attackers.length ? attackers : xi);
@@ -1208,7 +1214,7 @@
       } else if (r < 0.62) {
         const redSwing = cm.sentOff.length * 0.10 - cm.oppReds * 0.16;
         const composedLead = cmods.composedLead && cm.home > cm.away ? 2 : 0;
-        const ch = Math.max(0.07, (oppAtk - (munDef + composedLead))/85 + 0.30 + redSwing);
+        const ch = Math.max(0.07, (oppAtk + brawlDef - (munDef + composedLead))/85 + 0.30 + redSwing);
         if (Math.random() < ch) {
           cm.away++;
           const gk = xiNow.find(p => roleOf(p) === 'GK') || xiNow[0];
