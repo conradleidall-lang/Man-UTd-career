@@ -537,6 +537,12 @@
   function awardTrophy(name) { if (!G.trophies.includes(name)) G.trophies.push(name); }
   function seasonLabel() { return G.year + '-' + (G.year+1).toString().slice(2); }
   function playerValue(p) {
+    if (p.ovr >= 80 && p.ovr <= 84 && p.age >= 20 && p.age <= 29) {
+      const ovrBase = 30 + (p.ovr - 80) * 3;   // 30m (OVR80) → 42m (OVR84)
+      const perfBonus = Math.min(11, (p.goals || 0) * 0.7 + (p.assists || 0) * 0.5 + ((p.appearances || 0) / 38) * 3.5);
+      const jitter = ((p.id * 7 + p.ovr * 3) % 7) - 2;   // deterministic per-player spread: -2 to +4
+      return Math.max(30, Math.min(55, Math.round(ovrBase + perfBonus + jitter)));
+    }
     const raw = Math.max(2, Math.round((p.ovr - 60) * 4 + (p.pot - p.ovr) * 3));
     return p.ovr <= 84 ? Math.min(50, raw) : raw;
   }
