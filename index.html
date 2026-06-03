@@ -404,6 +404,7 @@
       starters: [], tactic: 'balanced', formation: '4-3-3', training: 'balanced',
       budget: 80, stadiumLevel: 1, records: {}, tables: {}, clStandings: {}, elStandings: {}, cupRounds: { FA: [], EFL: [] }, clKnockout: null, elKnockout: null,
       fixtures: [], results: [], trophies: [], seasonHistory: [], currentMatch: null, loanReturnLog: [],
+      pairStats: {}, activeDuos: [],
       seasonStats: { played:0, won:0, drawn:0, lost:0, gf:0, ga:0 },
       transferMessages: [], injuryHistory: [], incomingBids: [], nextBidId: 1, aiTransfers: {}, aiTransferLog: [], clubRosters: {},
       academy: { u21: [], u18: [], log: [] }, nextYouthId: 1000,
@@ -744,6 +745,37 @@
     if (pos <= 8) return 'Under pressure';
     return 'On the edge';
   }
+  function pairKey(a, b) { return Math.min(a,b) + '_' + Math.max(a,b); }
+  function trackPairGoalAssist(scorerId, assistId) {
+    const key = pairKey(scorerId, assistId);
+    if (!G.pairStats[key]) G.pairStats[key] = { goalAssists: 0, cleanSheets: 0 };
+    G.pairStats[key].goalAssists++;
+  }
+  function trackDefPairCleanSheet(xi) {
+    const defs = xi.filter(p => p.pos === 'DEF');
+    for (let i = 0; i < defs.length; i++) {
+      for (let j = i + 1; j < defs.length; j++) {
+        const key = pairKey(defs[i].id, defs[j].id);
+        if (!G.pairStats[key]) G.pairStats[key] = { goalAssists: 0, cleanSheets: 0 };
+        G.pairStats[key].cleanSheets++;
+      }
+    }
+  }
+  function updateActiveDuos() {
+    G.activeDuos = [];
+    Object.entries(G.pairStats || {}).forEach(([key, stats]) => {
+      const [id1, id2] = key.split('_').map(Number);
+      const p1 = G.squad.find(p => p.id === id1 && !p.sold);
+      const p2 = G.squad.find(p => p.id === id2 && !p.sold);
+      if (!p1 || !p2) return;
+      const atk = (pl) => pl.pos === 'FWD' || pl.pos === 'MID';
+      if (stats.goalAssists >= 5 && atk(p1) && atk(p2)) {
+        G.activeDuos.push({ p1Id: id1, p2Id: id2, type: 'attack', count: stats.goalAssists });
+      } else if (stats.cleanSheets >= 7 && p1.pos === 'DEF' && p2.pos === 'DEF') {
+        G.activeDuos.push({ p1Id: id1, p2Id: id2, type: 'defense', count: stats.cleanSheets });
+      }
+    });
+  }
   function resolveLoanReturn(p) {
     const roll = Math.random();
     const club = p.onLoan;
@@ -1044,8 +1076,11 @@
     const tAtk = {attack:5,balanced:0,defensive:-3}[G.tactic];
     const tDef = {attack:-4,balanced:0,defensive:5}[G.tactic];
     const hAdv = fx.home ? 1 + G.stadiumLevel * 0.25 : -1;
-    const munAtk = munStr + tAtk + hAdv + coachEdge;
-    const munDef = munStr + tDef + hAdv + coachEdge * 0.65;
+    const xiIds = new Set(xi.map(p => p.id));
+    const atkDuoBonus = (G.activeDuos || []).filter(d => d.type === 'attack' && xiIds.has(d.p1Id) && xiIds.has(d.p2Id)).length * 1.8;
+    const defDuoBonus = (G.activeDuos || []).filter(d => d.type === 'defense' && xiIds.has(d.p1Id) && xiIds.has(d.p2Id)).length * 1.8;
+    const munAtk = munStr + tAtk + hAdv + coachEdge + atkDuoBonus;
+    const munDef = munStr + tDef + hAdv + coachEdge * 0.65 + defDuoBonus;
     const oppAtk = fx.oppStr, oppDef = fx.oppStr;
     const attackers = xi.filter(p => p.pos==='FWD' || p.pos==='MID');
     const oppRoster = getClubRoster(fx.opp);
@@ -1092,6 +1127,7 @@
             if (assisters.length) {
               const a = weightedPick(assisters, assisterWeight); a.assists++; a.clubAssists = (a.clubAssists || 0) + 1;
               cm.assists.push(a.id); cm.perPlayerAssists[a.id] = (cm.perPlayerAssists[a.id] || 0) + 1;
+              trackPairGoalAssist(s.id, a.id);
               cm.comm.push({m, text:'Goal! ' + s.name + ' finishes, assisted by ' + a.name + '. (' + cm.home + '-' + cm.away + ')', t:'gm'});
               return;
             }
@@ -1161,6 +1197,8 @@
     if (fx.comp === 'CL' && fx.round === 'League') { updateCLTable(fx, cm.home, cm.away); simOtherCLWeek(fx); if (!G.fixtures.some(f => f.comp === 'CL' && f.round === 'League' && !f.played)) scheduleCLKnockouts(); }
     if (fx.comp === 'CL' && fx.round !== 'League') handleCLKnockout(fx, cm.home, cm.away);
     if (fx.comp === 'FA' || fx.comp === 'EFL') handleCupRound(fx, cm.home, cm.away);
+    if (cleanSheet) trackDefPairCleanSheet(xi);
+    updateActiveDuos();
     if (G.seasonStats.played % 4 === 0) updatePlayerRatings(false);
     G.currentMatch = cm;
     render();
@@ -1501,6 +1539,7 @@
     G.budget += stadiumRevenue + fanbaseRevenue;
     const fanLabel = fanbaseLabel(G.fanbase);
     G.transferMessages.push('Stadium (Level ' + G.stadiumLevel + ') generated £' + stadiumRevenue + 'm. Global fanbase (' + fanLabel + ') added £' + fanbaseRevenue + 'm in commercial revenue.');
+    G.pairStats = {}; G.activeDuos = [];
     G.windowOpen = true; G.incomingBids = []; G.aiTransfers = {}; G.aiTransferLog = [];
     G.view = 'season-end';
     refreshTransferWindow(); initTables(); buildFixtures(); autoPickXI(); render();
@@ -1915,6 +1954,27 @@
           '<div class="slot-list-row lineup-head" style="background:transparent;"><span>Pos</span><span>Player</span><span>Eff</span><span>Band</span></div>' + slotList + '</div>' +
       '</div>' +
       '<div class="toast">Best XI now fills the specific formation positions first, then uses compatible players if a natural fit is unavailable.</div>' +
+      (() => {
+        const duos = G.activeDuos || [];
+        if (!duos.length) return '';
+        return '<div class="pnl"><div class="pnl-t">⚡ Dynamic Duos</div>' +
+          duos.map(d => {
+            const p1 = G.squad.find(p => p.id === d.p1Id);
+            const p2 = G.squad.find(p => p.id === d.p2Id);
+            if (!p1 || !p2) return '';
+            const both = G.starters.includes(d.p1Id) && G.starters.includes(d.p2Id);
+            const icon = d.type === 'attack' ? '⚡' : '🛡';
+            const label = d.type === 'attack' ? d.count + ' goal connections' : d.count + ' clean sheets together';
+            const bonus = both ? ' <span style="color:var(--color-text-success); font-size:10px;">ACTIVE +ATK</span>' : '';
+            const defBonus = d.type === 'defense' && both ? ' <span style="color:var(--color-text-success); font-size:10px;">ACTIVE +DEF</span>' : '';
+            return '<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--color-border-tertiary); font-size:12px;">' +
+              '<span>' + icon + ' <strong>' + p1.name.split(' ').pop() + ' & ' + p2.name.split(' ').pop() + '</strong>' +
+                (d.type === 'attack' ? bonus : defBonus) + '</span>' +
+              '<span style="color:var(--color-text-secondary);">' + label + '</span>' +
+            '</div>';
+          }).join('') +
+        '</div>';
+      })() +
       POSITION_ORDER.map(pos => {
         const players = G.squad.filter(p => !p.sold && !p.academyTeam && roleOf(p) === pos).sort((a,b) => effectiveRating(b) - effectiveRating(a));
         if (!players.length) return '';
