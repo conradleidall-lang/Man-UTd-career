@@ -871,9 +871,15 @@
   function assignFormationPlayers(f, pool, fresh) {
     const selected = [];
     getFormationShape(f).flat().forEach(slot => {
-      const candidates = pool.filter(p => !selected.includes(p.id)).sort((a,b) => slotScore(slot,b,fresh) - slotScore(slot,a,fresh));
-      const pick = candidates[0];
-      if (pick) selected.push(pick.id);
+      const isGKSlot = slot === 'GK';
+      const eligible = pool.filter(p => {
+        if (selected.includes(p.id)) return false;
+        if (isGKSlot) return roleOf(p) === 'GK';
+        return roleOf(p) !== 'GK';
+      });
+      const fallback = pool.filter(p => !selected.includes(p.id));
+      const candidates = (eligible.length ? eligible : fallback).sort((a,b) => slotScore(slot,b,fresh) - slotScore(slot,a,fresh));
+      if (candidates[0]) selected.push(candidates[0].id);
     });
     if (selected.length < 11) {
       pool.filter(p => !selected.includes(p.id)).sort((a,b) => (fresh ? b.fitness - a.fitness : effectiveRating(b) - effectiveRating(a))).slice(0, 11 - selected.length).forEach(p => selected.push(p.id));
@@ -884,7 +890,14 @@
     const xi = getXI();
     const used = [];
     return getFormationShape(G.formation).map(row => row.map(slot => {
-      const options = xi.filter(p => !used.includes(p.id)).sort((a,b) => slotScore(slot,b,false) - slotScore(slot,a,false));
+      const isGKSlot = slot === 'GK';
+      const eligible = xi.filter(p => {
+        if (used.includes(p.id)) return false;
+        if (isGKSlot) return roleOf(p) === 'GK';
+        return roleOf(p) !== 'GK';
+      });
+      const fallback = xi.filter(p => !used.includes(p.id));
+      const options = (eligible.length ? eligible : fallback).sort((a,b) => slotScore(slot,b,false) - slotScore(slot,a,false));
       const player = options[0] || null;
       if (player) used.push(player.id);
       return { slot, player };
