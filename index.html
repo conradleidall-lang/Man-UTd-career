@@ -229,6 +229,7 @@
     'Caoimhín Kelleher':'GK','Michael Kayode':'RB','Sepp van den Berg':'CB','Kristoffer Ajer':'CB','Ben Mee':'CB','Jayden Meghoma':'LB','Frank Onyeka':'CDM','Jordan Henderson':'CM','Fábio Carvalho':'CAM','Dango Ouattara':'LW','Keane Lewis-Potter':'LW','Reiss Nelson':'RW','Igor Thiago':'ST',
     'Ferdi Kadıoğlu':'LB','Jan Paul van Hecke':'CB','Adam Webster':'CB','Maxim De Cuyper':'LB','Mats Wieffer':'CDM','James Milner':'CM','Pascal Groß':'CM','Jack Hinshelwood':'CM','Solly March':'RM','Georginio Rutter':'ST','Charalambos Kostoulas':'ST','Danny Welbeck':'ST',
     'Martin Dúbravka':'GK','Max Weiß':'GK','Axel Tuanzebe':'CB','Lucas Pires':'LB','Lesley Ugochukwu':'CDM','James Ward-Prowse':'CM','Hannibal Mejbri':'CM','Zian Flemming':'CAM','Jaidon Anthony':'LW','Luca Koleosho':'LW','Lyle Foster':'ST','Armando Broja':'ST',
+    'Mike Penders':'GK','Josh Acheampong':'CB','Trevoh Chalobah':'CB','Wesley Fofana':'CB','Tosin Adarabioyo':'CB','Levi Colwill':'CB','Andrey Santos':'CDM','Carney Chukwuemeka':'CM','Jamie Gittens':'LW','Mykhailo Mudryk':'LW','Liam Delap':'ST',
     'Đorđe Petrović':'GK','Álex Jiménez':'RB','James Hill':'CB','Veljko Milosavljević':'CB','Marcos Senesi':'CB','Adrien Truffert':'LB','Julio Soler':'LB','Tyler Adams':'CDM','Lewis Cook':'CM','Alex Tóth':'CM','Alex Scott':'CAM','Ryan Christie':'CM','Marcus Tavernier':'LW','Amine Adli':'LW','Ben Doak':'RW','Rayan':'RW','Junior Kroupi':'ST','Enes Ünal':'ST',
     'Alex Iwobi':'RM','Emile Smith Rowe':'CAM','Rodrigo Muniz':'ST','Beto':'ST','Jordan Pickford':'GK','James Tarkowski':'CB','Jarrad Branthwaite':'CB','Jarrod Bowen':'RW','Lucas Paquetá':'CAM','Tomáš Souček':'CM',
     'Jørgen Strand Larsen':'ST','José Sá':'GK','Alisson Becker':'GK','Virgil van Dijk':'CB','David Raya':'GK','Jurrien Timber':'RB','Rúben Dias':'CB','Bernardo Silva':'RM','Roméo Lavia':'CDM','Pedro Neto':'LW',
@@ -261,7 +262,7 @@
     ['Liverpool','LIV',87,['Salah','Van Dijk','Mac Allister','Wirtz','Ekitike','Szoboszlai']],
     ['Arsenal','ARS',88,['Raya','Timber','Saliba','Magalhães','Rice','Ødegaard','Saka','Martinelli','Havertz','Zubimendi','Eze','Merino','Trossard','Mosquera','Nørgaard','Lewis-Skelly']],
     ['Man City','MCI',86,['Haaland','Foden','Rodri','Doku','Cherki','Marmoush']],
-    ['Chelsea','CHE',84,['Palmer','Caicedo','Garnacho','Joao Pedro','Estêvão']],
+    ['Chelsea','CHE',86,['Palmer','Caicedo','Enzo','Colwill','Cucurella','Reece James','Gittens','Neto','Jackson','Estêvão','Lavia','Gusto','Chalobah']],
     ['Newcastle','NEW',82,['Isak','Bruno G.','Tonali','Gordon','Elanga']],
     ['Tottenham','TOT',81,['Son','Maddison','Bentancur','Kudus','Tel']],
     ['Aston Villa','AVL',83,['Watkins','McGinn','Rogers','Bailey','Konsa','Amadou Onana','Tielemans','Sancho','Maatsen','Kamara','Buendía','Cash','Elliott','Barkley','Lindelöf']],
@@ -350,7 +351,11 @@
     'March':'Solly March','Rutter':'Georginio Rutter','Kostoulas':'Charalambos Kostoulas','Welbeck':'Danny Welbeck',
     'Dúbravka':'Martin Dúbravka','Tuanzebe':'Axel Tuanzebe','Pires':'Lucas Pires','Ugochukwu':'Lesley Ugochukwu',
     'Ward-Prowse':'James Ward-Prowse','Hannibal':'Hannibal Mejbri','Flemming':'Zian Flemming',
-    'Anthony':'Jaidon Anthony','Koleosho':'Luca Koleosho','Foster':'Lyle Foster','Broja':'Armando Broja'
+    'Anthony':'Jaidon Anthony','Koleosho':'Luca Koleosho','Foster':'Lyle Foster','Broja':'Armando Broja',
+    'Penders':'Mike Penders','Acheampong':'Josh Acheampong','Chalobah':'Trevoh Chalobah',
+    'Adarabioyo':'Tosin Adarabioyo','Colwill':'Levi Colwill','Santos':'Andrey Santos',
+    'Chukwuemeka':'Carney Chukwuemeka','Gittens':'Jamie Gittens','Mudryk':'Mykhailo Mudryk',
+    'Delap':'Liam Delap','Enzo':'Enzo Fernández','Neto':'Pedro Neto'
   };
 
   const TRANSFER_POOL = [
@@ -483,6 +488,12 @@
     ['Takefusa Kubo','FWD',25,82,86,'Real Sociedad',50],['Mikel Oyarzabal','FWD',28,83,84,'Real Sociedad',45],
     ['Edmond Tapsoba','DEF',27,82,84,'Leverkusen',40],['Jonathan Tah','DEF',30,83,83,'Bayern',35],
     ['Antonio Silva','DEF',22,80,88,'Benfica',48],['Giorgio Scalvini','DEF',22,80,88,'Atalanta',50],
+    ['Mike Penders','GK',20,73,86,'Chelsea',18],['Josh Acheampong','DEF',20,75,86,'Chelsea',28],
+    ['Trevoh Chalobah','DEF',26,80,83,'Chelsea',38],['Wesley Fofana','DEF',25,80,85,'Chelsea',42],
+    ['Tosin Adarabioyo','DEF',28,77,79,'Chelsea',18],['Levi Colwill','DEF',23,81,87,'Chelsea',58],
+    ['Andrey Santos','MID',22,79,85,'Chelsea',38],['Carney Chukwuemeka','MID',22,76,84,'Chelsea',26],
+    ['Jamie Gittens','FWD',21,77,85,'Chelsea',34],['Mykhailo Mudryk','FWD',25,74,85,'Chelsea',22],
+    ['Liam Delap','FWD',23,76,84,'Chelsea',28],
     ['Martin Dúbravka','GK',37,75,75,'Burnley',2],['Max Weiß','GK',22,70,78,'Burnley',4],
     ['Axel Tuanzebe','DEF',28,76,81,'Burnley',14],['Lucas Pires','DEF',25,74,78,'Burnley',10],
     ['Lesley Ugochukwu','MID',22,77,83,'Burnley',24],['James Ward-Prowse','MID',31,80,81,'Burnley',20],
