@@ -230,6 +230,7 @@
     'Ferdi Kadıoğlu':'LB','Jan Paul van Hecke':'CB','Adam Webster':'CB','Maxim De Cuyper':'LB','Mats Wieffer':'CDM','James Milner':'CM','Pascal Groß':'CM','Jack Hinshelwood':'CM','Solly March':'RM','Georginio Rutter':'ST','Charalambos Kostoulas':'ST','Danny Welbeck':'ST',
     'Martin Dúbravka':'GK','Max Weiß':'GK','Axel Tuanzebe':'CB','Lucas Pires':'LB','Lesley Ugochukwu':'CDM','James Ward-Prowse':'CM','Hannibal Mejbri':'CM','Zian Flemming':'CAM','Jaidon Anthony':'LW','Luca Koleosho':'LW','Lyle Foster':'ST','Armando Broja':'ST',
     'Mike Penders':'GK','Josh Acheampong':'CB','Trevoh Chalobah':'CB','Wesley Fofana':'CB','Tosin Adarabioyo':'CB','Levi Colwill':'CB','Andrey Santos':'CDM','Carney Chukwuemeka':'CM','Jamie Gittens':'LW','Mykhailo Mudryk':'LW','Liam Delap':'ST',
+    'Matt Turner':'GK','Nathaniel Clyne':'RB','Chris Richards':'CB','Maxence Lacroix':'CB','Jaydee Canvot':'CB','Jefferson Lerma':'CDM','Will Hughes':'CM','Christantus Uche':'CAM','Daichi Kamada':'CAM','Yéremy Pino':'RW','Edward Nketiah':'ST',
     'Đorđe Petrović':'GK','Álex Jiménez':'RB','James Hill':'CB','Veljko Milosavljević':'CB','Marcos Senesi':'CB','Adrien Truffert':'LB','Julio Soler':'LB','Tyler Adams':'CDM','Lewis Cook':'CM','Alex Tóth':'CM','Alex Scott':'CAM','Ryan Christie':'CM','Marcus Tavernier':'LW','Amine Adli':'LW','Ben Doak':'RW','Rayan':'RW','Junior Kroupi':'ST','Enes Ünal':'ST',
     'Alex Iwobi':'RM','Emile Smith Rowe':'CAM','Rodrigo Muniz':'ST','Beto':'ST','Jordan Pickford':'GK','James Tarkowski':'CB','Jarrad Branthwaite':'CB','Jarrod Bowen':'RW','Lucas Paquetá':'CAM','Tomáš Souček':'CM',
     'Jørgen Strand Larsen':'ST','José Sá':'GK','Alisson Becker':'GK','Virgil van Dijk':'CB','David Raya':'GK','Jurrien Timber':'RB','Rúben Dias':'CB','Bernardo Silva':'RM','Roméo Lavia':'CDM','Pedro Neto':'LW',
@@ -267,7 +268,7 @@
     ['Tottenham','TOT',81,['Son','Maddison','Bentancur','Kudus','Tel']],
     ['Aston Villa','AVL',83,['Watkins','McGinn','Rogers','Bailey','Konsa','Amadou Onana','Tielemans','Sancho','Maatsen','Kamara','Buendía','Cash','Elliott','Barkley','Lindelöf']],
     ['Nott Forest','NFO',79,['Wood','Gibbs-White','Anderson','Hudson-Odoi']],
-    ['Crystal Palace','CRY',79,['Mateta','Sarr','Guéhi','Wharton']],
+    ['Crystal Palace','CRY',80,['Mateta','Sarr','Wharton','Muñoz','Mitchell','Pino','Lacroix','Kamada','Uche','Nketiah','Henderson']],
     ['Brighton','BHA',80,['Mitoma','Verbruggen','Baleba','Minteh','Kadıoğlu','van Hecke','Dunk','Wieffer','Rutter','Welbeck','De Cuyper','Hinshelwood']],
     ['Bournemouth','BOU',79,['Semenyo','Petrović','Scott','Kluivert','Evanilson','Rayan','Kroupi','Adams','Tavernier','Doak','Senesi','Truffert','Cook','Adli']],
     ['Brentford','BRE',78,['Wissa','Schade','Thiago','Damsgaard','Kelleher','Kayode','Collins','Ouattara','Carvalho','Onyeka','Nelson']],
@@ -355,7 +356,10 @@
     'Penders':'Mike Penders','Acheampong':'Josh Acheampong','Chalobah':'Trevoh Chalobah',
     'Adarabioyo':'Tosin Adarabioyo','Colwill':'Levi Colwill','Santos':'Andrey Santos',
     'Chukwuemeka':'Carney Chukwuemeka','Gittens':'Jamie Gittens','Mudryk':'Mykhailo Mudryk',
-    'Delap':'Liam Delap','Enzo':'Enzo Fernández','Neto':'Pedro Neto'
+    'Delap':'Liam Delap','Enzo':'Enzo Fernández','Neto':'Pedro Neto',
+    'Turner':'Matt Turner','Clyne':'Nathaniel Clyne','Richards':'Chris Richards','Lacroix':'Maxence Lacroix',
+    'Canvot':'Jaydee Canvot','Lerma':'Jefferson Lerma','Hughes':'Will Hughes','Uche':'Christantus Uche',
+    'Kamada':'Daichi Kamada','Pino':'Yéremy Pino','Nketiah':'Edward Nketiah'
   };
 
   const TRANSFER_POOL = [
@@ -488,6 +492,12 @@
     ['Takefusa Kubo','FWD',25,82,86,'Real Sociedad',50],['Mikel Oyarzabal','FWD',28,83,84,'Real Sociedad',45],
     ['Edmond Tapsoba','DEF',27,82,84,'Leverkusen',40],['Jonathan Tah','DEF',30,83,83,'Bayern',35],
     ['Antonio Silva','DEF',22,80,88,'Benfica',48],['Giorgio Scalvini','DEF',22,80,88,'Atalanta',50],
+    ['Matt Turner','GK',31,72,74,'Crystal Palace',4],['Nathaniel Clyne','DEF',35,74,76,'Crystal Palace',2],
+    ['Chris Richards','DEF',26,79,82,'Crystal Palace',28],['Maxence Lacroix','DEF',26,81,83,'Crystal Palace',38],
+    ['Jaydee Canvot','DEF',19,72,82,'Crystal Palace',12],['Jefferson Lerma','MID',31,79,80,'Crystal Palace',14],
+    ['Will Hughes','MID',31,76,78,'Crystal Palace',8],['Christantus Uche','MID',23,80,83,'Crystal Palace',38],
+    ['Daichi Kamada','MID',29,80,83,'Crystal Palace',28],['Yéremy Pino','FWD',23,81,86,'Crystal Palace',55],
+    ['Edward Nketiah','FWD',27,79,82,'Crystal Palace',28],
     ['Mike Penders','GK',20,73,86,'Chelsea',18],['Josh Acheampong','DEF',20,75,86,'Chelsea',28],
     ['Trevoh Chalobah','DEF',26,80,83,'Chelsea',38],['Wesley Fofana','DEF',25,80,85,'Chelsea',42],
     ['Tosin Adarabioyo','DEF',28,77,79,'Chelsea',18],['Levi Colwill','DEF',23,81,87,'Chelsea',58],
