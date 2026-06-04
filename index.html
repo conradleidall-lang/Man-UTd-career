@@ -227,6 +227,7 @@
     'Chris Wood':'ST','Morgan Gibbs-White':'CAM','Elliot Anderson':'CM','Murillo':'CB','Jean-Philippe Mateta':'ST','Ismaïla Sarr':'RW','Marc Guéhi':'CB','Adam Wharton':'CM','Daniel Muñoz':'RB',
     'Kaoru Mitoma':'LW','Carlos Baleba':'CM','Bart Verbruggen':'GK','Lewis Dunk':'CB','Antoine Semenyo':'LW','Justin Kluivert':'LW','Evanilson':'ST','Yoane Wissa':'ST','Kevin Schade':'LW','Mikkel Damsgaard':'CM',
     'Caoimhín Kelleher':'GK','Michael Kayode':'RB','Sepp van den Berg':'CB','Kristoffer Ajer':'CB','Ben Mee':'CB','Jayden Meghoma':'LB','Frank Onyeka':'CDM','Jordan Henderson':'CM','Fábio Carvalho':'CAM','Dango Ouattara':'LW','Keane Lewis-Potter':'LW','Reiss Nelson':'RW','Igor Thiago':'ST',
+    'Ferdi Kadıoğlu':'LB','Jan Paul van Hecke':'CB','Adam Webster':'CB','Maxim De Cuyper':'LB','Mats Wieffer':'CDM','James Milner':'CM','Pascal Groß':'CM','Jack Hinshelwood':'CM','Solly March':'RM','Georginio Rutter':'ST','Charalambos Kostoulas':'ST','Danny Welbeck':'ST',
     'Đorđe Petrović':'GK','Álex Jiménez':'RB','James Hill':'CB','Veljko Milosavljević':'CB','Marcos Senesi':'CB','Adrien Truffert':'LB','Julio Soler':'LB','Tyler Adams':'CDM','Lewis Cook':'CM','Alex Tóth':'CM','Alex Scott':'CAM','Ryan Christie':'CM','Marcus Tavernier':'LW','Amine Adli':'LW','Ben Doak':'RW','Rayan':'RW','Junior Kroupi':'ST','Enes Ünal':'ST',
     'Alex Iwobi':'RM','Emile Smith Rowe':'CAM','Rodrigo Muniz':'ST','Beto':'ST','Jordan Pickford':'GK','James Tarkowski':'CB','Jarrad Branthwaite':'CB','Jarrod Bowen':'RW','Lucas Paquetá':'CAM','Tomáš Souček':'CM',
     'Jørgen Strand Larsen':'ST','José Sá':'GK','Alisson Becker':'GK','Virgil van Dijk':'CB','David Raya':'GK','Jurrien Timber':'RB','Rúben Dias':'CB','Bernardo Silva':'RM','Roméo Lavia':'CDM','Pedro Neto':'LW',
@@ -265,14 +266,14 @@
     ['Aston Villa','AVL',83,['Watkins','McGinn','Rogers','Bailey','Konsa','Amadou Onana','Tielemans','Sancho','Maatsen','Kamara','Buendía','Cash','Elliott','Barkley','Lindelöf']],
     ['Nott Forest','NFO',79,['Wood','Gibbs-White','Anderson','Hudson-Odoi']],
     ['Crystal Palace','CRY',79,['Mateta','Sarr','Guéhi','Wharton']],
-    ['Brighton','BHA',78,['Mitoma','Welbeck','Baleba','Verbruggen']],
+    ['Brighton','BHA',80,['Mitoma','Verbruggen','Baleba','Minteh','Kadıoğlu','van Hecke','Dunk','Wieffer','Rutter','Welbeck','De Cuyper','Hinshelwood']],
     ['Bournemouth','BOU',79,['Semenyo','Petrović','Scott','Kluivert','Evanilson','Rayan','Kroupi','Adams','Tavernier','Doak','Senesi','Truffert','Cook','Adli']],
     ['Brentford','BRE',78,['Wissa','Schade','Thiago','Damsgaard','Kelleher','Kayode','Collins','Ouattara','Carvalho','Onyeka','Nelson']],
     ['Fulham','FUL',76,['Iwobi','Smith Rowe','Muniz']],
     ['Everton','EVE',75,['Beto','Calvert-Lewin','Pickford','Tarkowski']],
     ['West Ham','WHU',75,['Bowen','Paquetá','Soucek']],
     ['Wolves','WOL',73,['Strand Larsen','Bellegarde']],
-    ['Leeds','LEE',73,['Bamford','Rutter','Piroe']],
+    ['Leeds','LEE',73,['Bamford','Piroe']],
     ['Burnley','BUR',72,['Foster','Berge','Cullen']],
     ['Sunderland','SUN',71,['J. Bellingham','Mayenda','Diarra']]
   ];
@@ -342,7 +343,10 @@
     'Kelleher':'Caoimhín Kelleher','Kayode':'Michael Kayode','Ajer':'Kristoffer Ajer','Mee':'Ben Mee',
     'Meghoma':'Jayden Meghoma','Onyeka':'Frank Onyeka','Henderson':'Jordan Henderson','Carvalho':'Fábio Carvalho',
     'Ouattara':'Dango Ouattara','Lewis-Potter':'Keane Lewis-Potter','Nelson':'Reiss Nelson','Thiago':'Igor Thiago',
-    'van den Berg':'Sepp van den Berg'
+    'van den Berg':'Sepp van den Berg',
+    'Kadıoğlu':'Ferdi Kadıoğlu','van Hecke':'Jan Paul van Hecke','Webster':'Adam Webster','De Cuyper':'Maxim De Cuyper',
+    'Wieffer':'Mats Wieffer','Milner':'James Milner','Groß':'Pascal Groß','Hinshelwood':'Jack Hinshelwood',
+    'March':'Solly March','Rutter':'Georginio Rutter','Kostoulas':'Charalambos Kostoulas','Welbeck':'Danny Welbeck'
   };
 
   const TRANSFER_POOL = [
@@ -385,6 +389,12 @@
     ['Daniel Muñoz','DEF',29,80,82,'Crystal Palace',25],
     ['Kaoru Mitoma','FWD',28,82,85,'Brighton',55],['Carlos Baleba','MID',21,80,89,'Brighton',60],
     ['Bart Verbruggen','GK',23,80,87,'Brighton',35],['Lewis Dunk','DEF',34,79,79,'Brighton',8],
+    ['Ferdi Kadıoğlu','DEF',26,82,85,'Brighton',55],['Jan Paul van Hecke','DEF',25,83,86,'Brighton',58],
+    ['Adam Webster','DEF',31,75,75,'Brighton',5],['Maxim De Cuyper','DEF',25,81,84,'Brighton',42],
+    ['Mats Wieffer','MID',26,80,83,'Brighton',36],['James Milner','MID',40,75,75,'Brighton',1],
+    ['Pascal Groß','MID',34,78,78,'Brighton',6],['Jack Hinshelwood','MID',21,78,85,'Brighton',35],
+    ['Solly March','FWD',31,76,76,'Brighton',8],['Georginio Rutter','FWD',24,79,85,'Brighton',38],
+    ['Charalambos Kostoulas','FWD',19,75,86,'Brighton',30],['Danny Welbeck','FWD',35,81,81,'Brighton',7],
     ['Antoine Semenyo','FWD',25,81,86,'Bournemouth',50],['Justin Kluivert','FWD',26,79,83,'Bournemouth',30],
     ['Evanilson','FWD',26,80,84,'Bournemouth',38],
     ['Đorđe Petrović','GK',26,81,84,'Bournemouth',36],['Álex Jiménez','DEF',21,77,84,'Bournemouth',28],
