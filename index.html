@@ -231,6 +231,7 @@
     'Martin Dúbravka':'GK','Max Weiß':'GK','Axel Tuanzebe':'CB','Lucas Pires':'LB','Lesley Ugochukwu':'CDM','James Ward-Prowse':'CM','Hannibal Mejbri':'CM','Zian Flemming':'CAM','Jaidon Anthony':'LW','Luca Koleosho':'LW','Lyle Foster':'ST','Armando Broja':'ST',
     'Mike Penders':'GK','Josh Acheampong':'CB','Trevoh Chalobah':'CB','Wesley Fofana':'CB','Tosin Adarabioyo':'CB','Levi Colwill':'CB','Andrey Santos':'CDM','Carney Chukwuemeka':'CM','Jamie Gittens':'LW','Mykhailo Mudryk':'LW','Liam Delap':'ST',
     'Matt Turner':'GK','Nathaniel Clyne':'RB','Chris Richards':'CB','Maxence Lacroix':'CB','Jaydee Canvot':'CB','Jefferson Lerma':'CDM','Will Hughes':'CM','Christantus Uche':'CAM','Daichi Kamada':'CAM','Yéremy Pino':'RW','Edward Nketiah':'ST',
+    'Mark Travers':'GK','Nathan Patterson':'RB','Seamus Coleman':'RB','Michael Keane':'CB','Vitalii Mykolenko':'LB','Adam Aznou':'LB','Idrissa Gueye':'CDM','James Garner':'CM','Kiernan Dewsbury-Hall':'CM','Carlos Alcaraz':'CAM','Dwight McNeil':'LW','Iliman Ndiaye':'LW','Evil Saka':'LW','Tyler Dibling':'RW','Jack Harrison':'RW','Thierno Barry':'ST',
     'Đorđe Petrović':'GK','Álex Jiménez':'RB','James Hill':'CB','Veljko Milosavljević':'CB','Marcos Senesi':'CB','Adrien Truffert':'LB','Julio Soler':'LB','Tyler Adams':'CDM','Lewis Cook':'CM','Alex Tóth':'CM','Alex Scott':'CAM','Ryan Christie':'CM','Marcus Tavernier':'LW','Amine Adli':'LW','Ben Doak':'RW','Rayan':'RW','Junior Kroupi':'ST','Enes Ünal':'ST',
     'Alex Iwobi':'RM','Emile Smith Rowe':'CAM','Rodrigo Muniz':'ST','Beto':'ST','Jordan Pickford':'GK','James Tarkowski':'CB','Jarrad Branthwaite':'CB','Jarrod Bowen':'RW','Lucas Paquetá':'CAM','Tomáš Souček':'CM',
     'Jørgen Strand Larsen':'ST','José Sá':'GK','Alisson Becker':'GK','Virgil van Dijk':'CB','David Raya':'GK','Jurrien Timber':'RB','Rúben Dias':'CB','Bernardo Silva':'RM','Roméo Lavia':'CDM','Pedro Neto':'LW',
@@ -273,7 +274,7 @@
     ['Bournemouth','BOU',79,['Semenyo','Petrović','Scott','Kluivert','Evanilson','Rayan','Kroupi','Adams','Tavernier','Doak','Senesi','Truffert','Cook','Adli']],
     ['Brentford','BRE',78,['Wissa','Schade','Thiago','Damsgaard','Kelleher','Kayode','Collins','Ouattara','Carvalho','Onyeka','Nelson']],
     ['Fulham','FUL',76,['Iwobi','Smith Rowe','Muniz']],
-    ['Everton','EVE',75,['Beto','Calvert-Lewin','Pickford','Tarkowski']],
+    ['Everton','EVE',77,['Pickford','Branthwaite','Tarkowski','Ndiaye','Garner','McNeil','Dibling','Beto','Mykolenko','Gueye','Dewsbury-Hall']],
     ['West Ham','WHU',75,['Bowen','Paquetá','Soucek']],
     ['Wolves','WOL',73,['Strand Larsen','Bellegarde']],
     ['Leeds','LEE',73,['Bamford','Piroe']],
@@ -359,7 +360,11 @@
     'Delap':'Liam Delap','Enzo':'Enzo Fernández','Neto':'Pedro Neto',
     'Turner':'Matt Turner','Clyne':'Nathaniel Clyne','Richards':'Chris Richards','Lacroix':'Maxence Lacroix',
     'Canvot':'Jaydee Canvot','Lerma':'Jefferson Lerma','Hughes':'Will Hughes','Uche':'Christantus Uche',
-    'Kamada':'Daichi Kamada','Pino':'Yéremy Pino','Nketiah':'Edward Nketiah'
+    'Kamada':'Daichi Kamada','Pino':'Yéremy Pino','Nketiah':'Edward Nketiah',
+    'Travers':'Mark Travers','Patterson':'Nathan Patterson','Coleman':'Seamus Coleman','Keane':'Michael Keane',
+    'Mykolenko':'Vitalii Mykolenko','Aznou':'Adam Aznou','Gueye':'Idrissa Gueye','Garner':'James Garner',
+    'Dewsbury-Hall':'Kiernan Dewsbury-Hall','Alcaraz':'Carlos Alcaraz','McNeil':'Dwight McNeil',
+    'Ndiaye':'Iliman Ndiaye','Dibling':'Tyler Dibling','Harrison':'Jack Harrison','Barry':'Thierno Barry'
   };
 
   const TRANSFER_POOL = [
@@ -492,6 +497,14 @@
     ['Takefusa Kubo','FWD',25,82,86,'Real Sociedad',50],['Mikel Oyarzabal','FWD',28,83,84,'Real Sociedad',45],
     ['Edmond Tapsoba','DEF',27,82,84,'Leverkusen',40],['Jonathan Tah','DEF',30,83,83,'Bayern',35],
     ['Antonio Silva','DEF',22,80,88,'Benfica',48],['Giorgio Scalvini','DEF',22,80,88,'Atalanta',50],
+    ['Mark Travers','GK',27,74,76,'Everton',8],['Nathan Patterson','DEF',24,75,80,'Everton',14],
+    ['Seamus Coleman','DEF',37,70,70,'Everton',1],['Michael Keane','DEF',33,75,77,'Everton',5],
+    ['Vitalii Mykolenko','DEF',27,79,80,'Everton',24],['Adam Aznou','DEF',20,73,80,'Everton',12],
+    ['Idrissa Gueye','MID',36,77,78,'Everton',3],['James Garner','MID',25,80,84,'Everton',35],
+    ['Kiernan Dewsbury-Hall','MID',27,78,79,'Everton',20],['Carlos Alcaraz','MID',23,78,83,'Everton',28],
+    ['Dwight McNeil','FWD',26,80,80,'Everton',30],['Iliman Ndiaye','FWD',26,82,86,'Everton',55],
+    ['Evil Saka','FWD',20,73,81,'Everton',12],['Tyler Dibling','FWD',20,77,87,'Everton',42],
+    ['Jack Harrison','FWD',29,77,78,'Everton',16],['Thierno Barry','FWD',23,78,84,'Everton',32],
     ['Matt Turner','GK',31,72,74,'Crystal Palace',4],['Nathaniel Clyne','DEF',35,74,76,'Crystal Palace',2],
     ['Chris Richards','DEF',26,79,82,'Crystal Palace',28],['Maxence Lacroix','DEF',26,81,83,'Crystal Palace',38],
     ['Jaydee Canvot','DEF',19,72,82,'Crystal Palace',12],['Jefferson Lerma','MID',31,79,80,'Crystal Palace',14],
