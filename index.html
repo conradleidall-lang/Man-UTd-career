@@ -217,6 +217,7 @@
     'Casemiro':'CDM','Mainoo':'CM','Ugarte':'CDM','B. Fernandes':'CAM','Mount':'CAM','Collyer':'CM','Dorgu':'LM','Cunha':'LW','Mbeumo':'RW','Sesko':'ST','Zirkzee':'ST','Diallo':'RW',
     'Mohamed Salah':'RW','Florian Wirtz':'CAM','Alexis Mac Allister':'CM','Hugo Ekitike':'ST','Ryan Gravenberch':'CM','Dominik Szoboszlai':'CAM','Trent Alexander-Arnold':'RB','Cody Gakpo':'LW','Ibrahima Konaté':'CB',
     'Bukayo Saka':'RW','Martin Ødegaard':'CAM','William Saliba':'CB','Declan Rice':'CDM','Viktor Gyökeres':'ST','Eberechi Eze':'CAM','Gabriel Magalhães':'CB','Riccardo Calafiori':'LB','Noni Madueke':'RW',
+    'Kepa Arrizabalaga':'GK','Cristhian Mosquera':'CB','Piero Hincapié':'CB','Myles Lewis-Skelly':'LB','Christian Nørgaard':'CDM','Martín Zubimendi':'CDM','Mikel Merino':'CM','Gabriel Martinelli':'LW','Leandro Trossard':'LW','Max Dowman':'RW','Kai Havertz':'ST',
     'Erling Haaland':'ST','Phil Foden':'CAM','Rodri':'CDM','Jérémy Doku':'LW','Rayan Cherki':'CAM','Omar Marmoush':'LW','Joško Gvardiol':'LB','Manuel Akanji':'CB','Tijjani Reijnders':'CM',
     'Cole Palmer':'CAM','Moisés Caicedo':'CDM','Enzo Fernández':'CM','João Pedro':'ST','Estêvão':'RW','Reece James':'RB','Nicolas Jackson':'ST','Marc Cucurella':'LB','Alejandro Garnacho':'LW','Robert Sánchez':'GK',
     'Alexander Isak':'ST','Bruno Guimarães':'CM','Sandro Tonali':'CDM','Anthony Gordon':'LW','Nick Pope':'GK','Anthony Elanga':'RW','Sven Botman':'CB',
@@ -253,7 +254,7 @@
 
   const PL_TEAMS = [
     ['Liverpool','LIV',87,['Salah','Van Dijk','Mac Allister','Wirtz','Ekitike','Szoboszlai']],
-    ['Arsenal','ARS',86,['Saka','Ødegaard','Saliba','Rice','Gyökeres','Eze']],
+    ['Arsenal','ARS',88,['Raya','Timber','Saliba','Magalhães','Rice','Ødegaard','Saka','Martinelli','Havertz','Zubimendi','Eze','Merino','Trossard','Mosquera','Nørgaard','Lewis-Skelly']],
     ['Man City','MCI',86,['Haaland','Foden','Rodri','Doku','Cherki','Marmoush']],
     ['Chelsea','CHE',84,['Palmer','Caicedo','Garnacho','Joao Pedro','Estêvão']],
     ['Newcastle','NEW',82,['Isak','Bruno G.','Tonali','Gordon','Elanga']],
@@ -323,7 +324,11 @@
     'Haaland':'Erling Haaland','Foden':'Phil Foden','Doku':'Jérémy Doku','Cherki':'Rayan Cherki','Marmoush':'Omar Marmoush','Joao Pedro':'João Pedro',
     'Palmer':'Cole Palmer','Caicedo':'Moisés Caicedo','Garnacho':'Alejandro Garnacho','Isak':'Alexander Isak','Gordon':'Anthony Gordon',
     'Son':'Heung-min Son','Maddison':'James Maddison','Kudus':'Mohammed Kudus','Tel':'Mathys Tel','Watkins':'Ollie Watkins','McGinn':'John McGinn',
-    'Strand Larsen':'Jørgen Strand Larsen','Dorgu':'Patrick Dorgu'
+    'Strand Larsen':'Jørgen Strand Larsen','Dorgu':'Patrick Dorgu',
+    'Martinelli':'Gabriel Martinelli','Havertz':'Kai Havertz','Merino':'Mikel Merino',
+    'Trossard':'Leandro Trossard','Zubimendi':'Martín Zubimendi','Nørgaard':'Christian Nørgaard',
+    'Lewis-Skelly':'Myles Lewis-Skelly','Mosquera':'Cristhian Mosquera','Kepa':'Kepa Arrizabalaga',
+    'Raya':'David Raya','Timber':'Jurrien Timber','Magalhães':'Gabriel Magalhães'
   };
 
   const TRANSFER_POOL = [
@@ -378,7 +383,13 @@
     ['Tomáš Souček','MID',30,79,79,'West Ham',18],
     ['Jørgen Strand Larsen','FWD',25,78,84,'Wolves',32],['José Sá','GK',32,79,79,'Wolves',12],
     ['Alisson Becker','GK',33,88,88,'Liverpool',55],['Virgil van Dijk','DEF',34,88,88,'Liverpool',45],
-    ['David Raya','GK',30,84,85,'Arsenal',45],['Jurrien Timber','DEF',24,83,87,'Arsenal',50],
+    ['David Raya','GK',30,88,89,'Arsenal',70],['Jurrien Timber','DEF',24,85,87,'Arsenal',72],
+    ['Kepa Arrizabalaga','GK',31,79,79,'Arsenal',14],['Cristhian Mosquera','DEF',21,80,84,'Arsenal',34],
+    ['Piero Hincapié','DEF',24,83,86,'Arsenal',55],['Myles Lewis-Skelly','DEF',19,79,86,'Arsenal',42],
+    ['Christian Nørgaard','MID',32,77,77,'Arsenal',8],['Martín Zubimendi','MID',27,84,85,'Arsenal',62],
+    ['Mikel Merino','MID',29,81,81,'Arsenal',26],['Gabriel Martinelli','FWD',24,84,86,'Arsenal',68],
+    ['Leandro Trossard','FWD',31,82,82,'Arsenal',30],['Max Dowman','FWD',16,73,90,'Arsenal',45],
+    ['Kai Havertz','FWD',26,83,84,'Arsenal',55],
     ['Rúben Dias','DEF',28,86,87,'Man City',70],['Bernardo Silva','MID',31,86,86,'Man City',55],
     ['Roméo Lavia','MID',22,79,86,'Chelsea',38],['Pedro Neto','FWD',25,81,84,'Chelsea',45],
     ['Tino Livramento','DEF',23,80,86,'Newcastle',42],['Harvey Barnes','FWD',28,80,82,'Newcastle',30],
