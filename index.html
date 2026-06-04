@@ -232,6 +232,7 @@
     'Mike Penders':'GK','Josh Acheampong':'CB','Trevoh Chalobah':'CB','Wesley Fofana':'CB','Tosin Adarabioyo':'CB','Levi Colwill':'CB','Andrey Santos':'CDM','Carney Chukwuemeka':'CM','Jamie Gittens':'LW','Mykhailo Mudryk':'LW','Liam Delap':'ST',
     'Matt Turner':'GK','Nathaniel Clyne':'RB','Chris Richards':'CB','Maxence Lacroix':'CB','Jaydee Canvot':'CB','Jefferson Lerma':'CDM','Will Hughes':'CM','Christantus Uche':'CAM','Daichi Kamada':'CAM','Yéremy Pino':'RW','Edward Nketiah':'ST',
     'Mark Travers':'GK','Nathan Patterson':'RB','Seamus Coleman':'RB','Michael Keane':'CB','Vitalii Mykolenko':'LB','Adam Aznou':'LB','Idrissa Gueye':'CDM','James Garner':'CM','Kiernan Dewsbury-Hall':'CM','Carlos Alcaraz':'CAM','Dwight McNeil':'LW','Iliman Ndiaye':'LW','Evil Saka':'LW','Tyler Dibling':'RW','Jack Harrison':'RW','Thierno Barry':'ST',
+    'Bernd Leno':'GK','Kenny Tete':'RB','Calvin Bassey':'CB','Joachim Andersen':'CB','Issa Diop':'CB','Sander Berge':'CDM','Josh King':'CM','Andreas Pereira':'CAM','Kevin':'LW','Adama Traoré':'RW','Harry Wilson':'RW','Samuel Chukwueze':'RW','Raúl Jiménez':'ST',
     'Đorđe Petrović':'GK','Álex Jiménez':'RB','James Hill':'CB','Veljko Milosavljević':'CB','Marcos Senesi':'CB','Adrien Truffert':'LB','Julio Soler':'LB','Tyler Adams':'CDM','Lewis Cook':'CM','Alex Tóth':'CM','Alex Scott':'CAM','Ryan Christie':'CM','Marcus Tavernier':'LW','Amine Adli':'LW','Ben Doak':'RW','Rayan':'RW','Junior Kroupi':'ST','Enes Ünal':'ST',
     'Alex Iwobi':'RM','Emile Smith Rowe':'CAM','Rodrigo Muniz':'ST','Beto':'ST','Jordan Pickford':'GK','James Tarkowski':'CB','Jarrad Branthwaite':'CB','Jarrod Bowen':'RW','Lucas Paquetá':'CAM','Tomáš Souček':'CM',
     'Jørgen Strand Larsen':'ST','José Sá':'GK','Alisson Becker':'GK','Virgil van Dijk':'CB','David Raya':'GK','Jurrien Timber':'RB','Rúben Dias':'CB','Bernardo Silva':'RM','Roméo Lavia':'CDM','Pedro Neto':'LW',
@@ -273,7 +274,7 @@
     ['Brighton','BHA',80,['Mitoma','Verbruggen','Baleba','Minteh','Kadıoğlu','van Hecke','Dunk','Wieffer','Rutter','Welbeck','De Cuyper','Hinshelwood']],
     ['Bournemouth','BOU',79,['Semenyo','Petrović','Scott','Kluivert','Evanilson','Rayan','Kroupi','Adams','Tavernier','Doak','Senesi','Truffert','Cook','Adli']],
     ['Brentford','BRE',78,['Wissa','Schade','Thiago','Damsgaard','Kelleher','Kayode','Collins','Ouattara','Carvalho','Onyeka','Nelson']],
-    ['Fulham','FUL',76,['Iwobi','Smith Rowe','Muniz']],
+    ['Fulham','FUL',78,['Robinson','Leno','Bassey','Andersen','Berge','Iwobi','Smith Rowe','Muniz','Kevin','Wilson','Pereira']],
     ['Everton','EVE',77,['Pickford','Branthwaite','Tarkowski','Ndiaye','Garner','McNeil','Dibling','Beto','Mykolenko','Gueye','Dewsbury-Hall']],
     ['West Ham','WHU',75,['Bowen','Paquetá','Soucek']],
     ['Wolves','WOL',73,['Strand Larsen','Bellegarde']],
@@ -364,7 +365,10 @@
     'Travers':'Mark Travers','Patterson':'Nathan Patterson','Coleman':'Seamus Coleman','Keane':'Michael Keane',
     'Mykolenko':'Vitalii Mykolenko','Aznou':'Adam Aznou','Gueye':'Idrissa Gueye','Garner':'James Garner',
     'Dewsbury-Hall':'Kiernan Dewsbury-Hall','Alcaraz':'Carlos Alcaraz','McNeil':'Dwight McNeil',
-    'Ndiaye':'Iliman Ndiaye','Dibling':'Tyler Dibling','Harrison':'Jack Harrison','Barry':'Thierno Barry'
+    'Ndiaye':'Iliman Ndiaye','Dibling':'Tyler Dibling','Harrison':'Jack Harrison','Barry':'Thierno Barry',
+    'Leno':'Bernd Leno','Tete':'Kenny Tete','Bassey':'Calvin Bassey','Andersen':'Joachim Andersen',
+    'Diop':'Issa Diop','Berge':'Sander Berge','Pereira':'Andreas Pereira','Wilson':'Harry Wilson',
+    'Robinson':'Antonee Robinson','Smith Rowe':'Emile Smith Rowe'
   };
 
   const TRANSFER_POOL = [
@@ -497,6 +501,13 @@
     ['Takefusa Kubo','FWD',25,82,86,'Real Sociedad',50],['Mikel Oyarzabal','FWD',28,83,84,'Real Sociedad',45],
     ['Edmond Tapsoba','DEF',27,82,84,'Leverkusen',40],['Jonathan Tah','DEF',30,83,83,'Bayern',35],
     ['Antonio Silva','DEF',22,80,88,'Benfica',48],['Giorgio Scalvini','DEF',22,80,88,'Atalanta',50],
+    ['Bernd Leno','GK',34,80,80,'Fulham',10],['Kenny Tete','DEF',30,77,77,'Fulham',10],
+    ['Calvin Bassey','DEF',26,81,82,'Fulham',36],['Joachim Andersen','DEF',30,80,80,'Fulham',20],
+    ['Issa Diop','DEF',29,76,77,'Fulham',10],['Sander Berge','MID',28,80,82,'Fulham',32],
+    ['Josh King','MID',19,70,83,'Fulham',12],['Andreas Pereira','MID',30,79,80,'Fulham',20],
+    ['Kevin','FWD',23,80,85,'Fulham',45],['Adama Traoré','FWD',30,78,79,'Fulham',14],
+    ['Harry Wilson','FWD',29,81,83,'Fulham',34],['Samuel Chukwueze','FWD',27,80,83,'Fulham',36],
+    ['Raúl Jiménez','FWD',35,78,78,'Fulham',4],
     ['Mark Travers','GK',27,74,76,'Everton',8],['Nathan Patterson','DEF',24,75,80,'Everton',14],
     ['Seamus Coleman','DEF',37,70,70,'Everton',1],['Michael Keane','DEF',33,75,77,'Everton',5],
     ['Vitalii Mykolenko','DEF',27,79,80,'Everton',24],['Adam Aznou','DEF',20,73,80,'Everton',12],
