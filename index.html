@@ -1389,6 +1389,108 @@
     G.squad.forEach(p => { if (p.newSigning && p.appearances >= 5) p.newSigning = false; });
   }
 
+  function updateMarketPlayerRatings() {
+    G.market.forEach(p => {
+      if (p.status === 'signed') return;
+      p.age++;
+      const potGap = Math.max(0, (p.pot || p.ovr) - p.ovr);
+      let delta = 0;
+      if (p.age <= 21 && potGap >= 5) {
+        delta = Math.random() < 0.60 ? (Math.random() < 0.35 ? 2 : 1) : 0;
+      } else if (p.age <= 24 && potGap >= 3) {
+        delta = Math.random() < 0.42 ? 1 : 0;
+      } else if (p.age <= 28 && potGap >= 1) {
+        const r = Math.random();
+        delta = r < 0.22 ? 1 : r < 0.38 ? -1 : 0;
+      } else if (p.age <= 30) {
+        delta = Math.random() < 0.40 ? -1 : 0;
+      } else if (p.age <= 32) {
+        delta = Math.random() < 0.62 ? -1 : 0;
+      } else {
+        delta = Math.random() < 0.45 ? -2 : -1;
+      }
+      p.ovr = Math.max(50, Math.min(99, p.ovr + delta));
+      if (p.pot && p.ovr > p.pot) p.ovr = p.pot;
+      const raw = Math.max(2, Math.round((p.ovr - 60) * 4 + ((p.pot || p.ovr) - p.ovr) * 3));
+      p.price = p.ovr <= 84 ? Math.min(55, raw) : raw;
+      if (p.foreign) p.price = Math.round(p.price * 1.3);
+    });
+  }
+
+  function generatePLAwards() {
+    const pool = [];
+    PL_TEAMS.forEach(team => {
+      const aliases = team[3] || [];
+      aliases.forEach(alias => {
+        const fullName = PLAYER_ALIASES[alias] || alias;
+        const mkt = G.market.find(m => m.name === fullName || m.name === alias);
+        if (mkt) pool.push(Object.assign({}, mkt, { club: team[0], teamStr: team[2] }));
+      });
+    });
+    G.squad.filter(p => !p.sold).forEach(p => {
+      pool.push({ name: p.name, pos: p.pos, role: roleOf(p), age: p.age, ovr: p.ovr, pot: p.pot,
+        club: 'Man Utd', teamStr: 85, isOurs: true,
+        simGoals: p.goals, simAssists: p.assists, apps: p.appearances,
+        avgRating: p.matchRatings.length >= 3 ? p.matchRatings.reduce((a,b)=>a+b,0)/p.matchRatings.length : null
+      });
+    });
+    pool.forEach(p => {
+      if (p.isOurs) return;
+      const baseApps = 24 + Math.floor(Math.random() * 14);
+      p.apps = baseApps;
+      const isST = p.role === 'ST';
+      const isAtk = ['LW','RW','CAM'].includes(p.role);
+      const rawGoals = isST ? (p.ovr - 68) * 0.85 + (Math.random()-0.5)*14
+                     : isAtk ? (p.ovr - 70) * 0.48 + (Math.random()-0.5)*9
+                     : (Math.random() < 0.25 ? Math.floor(Math.random()*6) : 0);
+      p.simGoals = Math.max(0, Math.round(rawGoals));
+      p.simAssists = Math.max(0, Math.round((p.ovr - 70) * 0.38 + (Math.random()-0.5)*7));
+      const base = 5.6 + (p.ovr - 70) * 0.048 + ((p.teamStr||78) - 78) * 0.008;
+      p.avgRating = Math.min(9.2, Math.max(5.0, base + (Math.random()-0.5)*1.4));
+    });
+
+    const awards = {};
+    const scored = pool.filter(p => ['ST','LW','RW','CAM','CM'].includes(p.role));
+    scored.sort((a,b)=>(b.simGoals||0)-(a.simGoals||0));
+    if (scored[0]) awards.goldenBoot = { player:scored[0].name, club:scored[0].club, goals:scored[0].simGoals, assists:scored[0].simAssists||0, isOurs:!!scored[0].isOurs };
+
+    const keepers = pool.filter(p => p.role==='GK' || p.pos==='GK');
+    keepers.forEach(k => {
+      const base = (k.ovr-68)*0.72 + ((k.teamStr||78)-68)*0.18;
+      k.simCS = Math.max(2, Math.min(24, Math.round(base + (Math.random()-0.5)*7)));
+    });
+    keepers.sort((a,b)=>(b.simCS||0)-(a.simCS||0));
+    if (keepers[0]) awards.goldenGlove = { player:keepers[0].name, club:keepers[0].club, cs:keepers[0].simCS, isOurs:!!keepers[0].isOurs };
+
+    const byRating = pool.filter(p=>p.avgRating!=null).sort((a,b)=>b.avgRating-a.avgRating);
+    if (byRating[0]) awards.pots = { player:byRating[0].name, club:byRating[0].club, rating:byRating[0].avgRating.toFixed(2), role:byRating[0].role, isOurs:!!byRating[0].isOurs };
+
+    const young = pool.filter(p=>p.age<23&&p.avgRating!=null).sort((a,b)=>b.avgRating-a.avgRating);
+    if (young[0]) awards.ypots = { player:young[0].name, club:young[0].club, age:young[0].age, role:young[0].role, rating:young[0].avgRating.toFixed(2), isOurs:!!young[0].isOurs };
+
+    const atkPool = pool.filter(p=>['ST','LW','RW','CAM'].includes(p.role)&&p.ovr>=78);
+    const goatP = atkPool[Math.floor(Math.random()*Math.min(6,atkPool.length))];
+    const goatDesc = ['A thunderbolt volley from 30 yards that screamed into the top corner','A mesmerising solo run past four defenders crowned with a clinical finish','A 94th-minute bicycle kick that sealed a dramatic comeback','A cheeky chip over the keeper after reading a wayward backpass','An audacious first-touch finish from an impossible angle at the far post','A curling effort that bent around the wall and kissed the inside of the post','A half-volley on the turn that left two defenders and the keeper motionless'];
+    if (goatP) awards.gots = { player:goatP.name, club:goatP.club, desc:goatDesc[Math.floor(Math.random()*goatDesc.length)], isOurs:!!goatP.isOurs };
+
+    const standings = leagueSorted();
+    let bestMgr = { name:'Man Utd', pos:standings.findIndex(t=>t.name==='Man Utd')+1, surprise:0 };
+    PL_TEAMS.forEach(t => {
+      const tablePos = standings.findIndex(x=>x.name===t[0])+1;
+      if (!tablePos) return;
+      const expectedPos = Math.max(1,Math.round((95-t[2])/3.2));
+      const surprise = expectedPos - tablePos;
+      if (surprise > bestMgr.surprise) bestMgr = { name:t[0], pos:tablePos, surprise };
+    });
+    const munPos = standings.findIndex(t=>t.name==='Man Utd')+1;
+    const munExpected = Math.round((95-85)/3.2);
+    const munSurprise = munExpected - munPos;
+    if (munSurprise > bestMgr.surprise) bestMgr = { name:'Man Utd', pos:munPos, surprise:munSurprise };
+    awards.managerSeason = { club:bestMgr.name, pos:bestMgr.pos, isOurs:bestMgr.name==='Man Utd' };
+
+    G.plAwards = awards;
+  }
+
   function autoPickXI() {
     G.slotMap = null;
     const avail = G.squad.filter(isAvailable).sort((a,b) => effectiveRating(b) - effectiveRating(a));
@@ -1933,7 +2035,9 @@
     G.nextCLQualified = munPos <= 4 || (munPos === 5 && plCLWinner);
     G.transferMessages.push(G.nextCLQualified ? 'Champions League qualification secured for next season.' : 'Missed Champions League qualification — finish top 4 next year to return.');
     saveSeasonHistory(munPos, trophiesBefore);
+    generatePLAwards();
     updatePlayerRatings(true);
+    updateMarketPlayerRatings();
     G.loanReturnLog = [];
     const loanInjuries = {};
     G.squad.forEach(p => {
@@ -2759,12 +2863,38 @@
 
   function renderSeasonEnd() {
     const stats = G.seasonStats;
-    return '<div style="text-align:center; padding: 1rem 0;">' +
-      '<h2 style="margin:0 0 8px;">' + (G.year-1) + '/' + G.year.toString().slice(2) + ' season complete</h2>' +
-      '<p style="color:var(--color-text-secondary); margin:0 0 1rem;">' + stats.played + ' games · ' + stats.won + 'W ' + stats.drawn + 'D ' + stats.lost + 'L · ' + stats.gf + ':' + stats.ga + '</p>' +
-      (G.trophies.length ? '<div style="margin-bottom:1rem;">' + G.trophies.map(t=>'<span class="trophy">' + t + '</span>').join('') + '</div>' : '') +
-      '<p style="color:var(--color-text-secondary); margin:0 0 1rem;">Ratings recalculated from season-long impact. Veterans regressed; new transfers shed prove-it discount.</p>' +
-      '<button class="play-btn" style="max-width:280px; margin: 0 auto; display:block;" onclick="startNextSeason()">Begin ' + G.year + '/' + (G.year+1).toString().slice(2) + ' season</button>' +
+    const aw = G.plAwards || {};
+    const seasonLbl = (G.year-1) + '/' + G.year.toString().slice(2);
+    function awardRow(icon, title, name, club, detail, isOurs) {
+      const hl = isOurs ? 'background:rgba(220,38,38,0.08); border-left:3px solid #dc2626;' : 'border-left:3px solid var(--color-border-secondary);';
+      return '<div style="display:grid; grid-template-columns:32px 1fr; gap:8px; align-items:start; padding:8px 10px; margin-bottom:4px; border-radius:6px; ' + hl + '">' +
+        '<span style="font-size:18px; line-height:1.4;">' + icon + '</span>' +
+        '<div><div style="font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:var(--color-text-tertiary); margin-bottom:2px;">' + title + '</div>' +
+        '<div style="font-size:13px; font-weight:600;">' + name + ' <span style="font-weight:400; color:var(--color-text-secondary);">· ' + club + '</span></div>' +
+        '<div style="font-size:11px; color:var(--color-text-secondary); margin-top:1px;">' + detail + '</div></div>' +
+      '</div>';
+    }
+    const awardsHtml = '<div class="pnl" style="margin-top:12px; text-align:left;">' +
+      '<div class="pnl-t">Premier League Awards · ' + seasonLbl + '</div>' +
+      (aw.pots ? awardRow('🏆', 'Player of the Season', aw.pots.player, aw.pots.club, aw.pots.role + ' · ' + aw.pots.rating + ' avg rating', aw.pots.isOurs) : '') +
+      (aw.ypots ? awardRow('⭐', 'Young Player of the Season', aw.ypots.player, aw.ypots.club, aw.ypots.age + 'yo ' + aw.ypots.role + ' · ' + aw.ypots.rating + ' avg rating', aw.ypots.isOurs) : '') +
+      (aw.goldenBoot ? awardRow('👟', 'Golden Boot', aw.goldenBoot.player, aw.goldenBoot.club, aw.goldenBoot.goals + ' goals · ' + aw.goldenBoot.assists + ' assists', aw.goldenBoot.isOurs) : '') +
+      (aw.goldenGlove ? awardRow('🧤', 'Golden Glove', aw.goldenGlove.player, aw.goldenGlove.club, aw.goldenGlove.cs + ' clean sheets', aw.goldenGlove.isOurs) : '') +
+      (aw.gots ? awardRow('💫', 'Goal of the Season', aw.gots.player, aw.gots.club, aw.gots.desc, aw.gots.isOurs) : '') +
+      (aw.managerSeason ? awardRow('📋', 'Manager of the Season', aw.managerSeason.isOurs ? 'Michael Carrick' : aw.managerSeason.club + ' manager', aw.managerSeason.club, ordinal(aw.managerSeason.pos) + ' place finish', aw.managerSeason.isOurs) : '') +
+    '</div>';
+    return '<div style="padding: 0.5rem 0;">' +
+      '<div style="text-align:center; margin-bottom:12px;">' +
+        '<h2 style="margin:0 0 6px;">' + seasonLbl + ' season complete</h2>' +
+        '<p style="color:var(--color-text-secondary); margin:0;">' + stats.played + ' games · ' + stats.won + 'W ' + stats.drawn + 'D ' + stats.lost + 'L · ' + stats.gf + ':' + stats.ga + '</p>' +
+      '</div>' +
+      (G.trophies.length ? '<div style="text-align:center; margin-bottom:10px;">' + G.trophies.map(t=>'<span class="trophy">' + t + '</span>').join('') + '</div>' : '') +
+      awardsHtml +
+      '<div class="pnl" style="margin-top:10px;">' +
+        '<div class="pnl-t">Rating updates</div>' +
+        '<p style="font-size:12px; color:var(--color-text-secondary); margin:4px 0 0;">All squad and transfer market ratings recalculated — form, age, and potential applied across the board.</p>' +
+      '</div>' +
+      '<button class="play-btn" style="max-width:280px; margin: 16px auto 0; display:block;" onclick="startNextSeason()">Begin ' + G.year + '/' + (G.year+1).toString().slice(2) + ' season</button>' +
     '</div>';
   }
 
