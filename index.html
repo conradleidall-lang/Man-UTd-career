@@ -2280,16 +2280,24 @@
     const cm = G.currentMatch, fx = cm.fx;
     const oppRoster = getClubRoster(fx.opp);
     const oppKeyPlayers = oppRoster.length ? oppRoster.slice(0,6).join(', ') : 'No tracked squad data';
-    const postMatch = cm.done && cm.matchRatings ? '<div class="pnl"><div class="pnl-t">Match ratings</div>' +
-      getXI().sort((a,b) => (cm.matchRatings[b.id]||0) - (cm.matchRatings[a.id]||0)).map(p => {
-        const mr = cm.matchRatings[p.id];
-        const col = mr >= 8 ? '#3B6D11' : mr >= 7 ? '#173404' : mr >= 6 ? '#854F0B' : '#A32D2D';
+    const postMatch = cm.done && cm.matchRatings ? (() => {
+      const xiPlayers = getXI().sort((a,b) => (cm.matchRatings[b.id]||0) - (cm.matchRatings[a.id]||0));
+      const xiIds = new Set(xiPlayers.map(p => p.id));
+      const bench = G.squad.filter(p => !p.sold && !p.onLoan && !xiIds.has(p.id)).sort((a,b) => POSITION_ORDER.indexOf(roleOf(a)) - POSITION_ORDER.indexOf(roleOf(b)) || effectiveRating(b) - effectiveRating(a));
+      const playerRow = (p, mr) => {
+        const col = mr != null ? (mr >= 8 ? '#3B6D11' : mr >= 7 ? '#173404' : mr >= 6 ? '#854F0B' : '#A32D2D') : 'var(--color-text-tertiary)';
         return '<div style="display:grid; grid-template-columns: 14px 1fr 32px 50px 60px; gap:6px; padding:3px 6px; font-size:11px; align-items:center;">' +
           '<span>' + roleBadge(p) + '</span><span>' + p.name + '</span>' +
           '<span>' + ((cm.perPlayerGoals[p.id]||0) > 0 ? '⚽' + cm.perPlayerGoals[p.id] : '') + '</span>' +
           '<span style="color:var(--color-text-secondary);">' + ((cm.perPlayerAssists[p.id]||0) > 0 ? 'assist ' + cm.perPlayerAssists[p.id] : '') + '</span>' +
-          '<span style="font-weight:500; color:' + col + ';">' + mr.toFixed(1) + '</span></div>';
-      }).join('') + '</div>' : '';
+          '<span style="font-weight:500; color:' + col + ';">' + (mr != null ? mr.toFixed(1) : '—') + '</span></div>';
+      };
+      return '<div class="pnl"><div class="pnl-t">Match ratings</div>' +
+        xiPlayers.map(p => playerRow(p, cm.matchRatings[p.id])).join('') +
+        (bench.length ? '<div style="font-size:10px; color:var(--color-text-tertiary); text-transform:uppercase; letter-spacing:0.05em; padding:6px 6px 2px; border-top:0.5px solid var(--color-border-tertiary); margin-top:4px;">Not used</div>' +
+          bench.map(p => playerRow(p, null)).join('') : '') +
+        '</div>';
+    })() : '';
     return '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">' +
       '<div><div class="cmp cmp-' + fx.comp + '" style="display:inline-block;">' + fx.comp + (fx.round?' · '+fx.round:'') + '</div>' +
       '<span style="margin-left:8px; color:var(--color-text-secondary); font-size:12px;">' + fmtDateLong(G.day) + ' · ' + (fx.home?'Home':'Away') + ' · weight ' + matchWeight(fx).toFixed(1) + 'x</span></div></div>' +
@@ -2621,7 +2629,7 @@
         '<div class="lineup-row lineup-head" style="grid-template-columns: 24px 1fr 34px 36px 36px 40px 48px; background:transparent; padding:7px 0 2px;">' +
           '<span>#</span><span>Player</span><span>Pos</span><span>G</span><span>A</span><span>G+A</span><span>Apps</span>' +
         '</div>' +
-        s.players.slice(0,12).map((p,i) => '<div class="lineup-row" style="grid-template-columns: 24px 1fr 34px 36px 36px 40px 48px; padding:4px 0;">' +
+        s.players.map((p,i) => '<div class="lineup-row" style="grid-template-columns: 24px 1fr 34px 36px 36px 40px 48px; padding:4px 0;">' +
           '<span style="color:var(--color-text-tertiary);">' + (i+1) + '</span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + p.name + '</span>' +
           '<span><span class="pos pos-' + p.role + '">' + p.role + '</span></span><span>' + p.goals + '</span><span>' + p.assists + '</span><span>' + p.ga + '</span><span style="color:var(--color-text-secondary);">' + p.apps + '</span>' +
         '</div>').join('') +
