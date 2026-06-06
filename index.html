@@ -1441,12 +1441,20 @@
       }
 
       if (delta > 0) delta = Math.min(delta, potGap);
-      const prevOvr = p.ovr;
       p.ovr = Math.max(50, Math.min(99, p.ovr + delta));
       if (p.pot && p.ovr > p.pot) p.ovr = p.pot;
 
-      const raw = Math.max(2, Math.round((p.ovr-60)*4 + ((p.pot||p.ovr)-p.ovr)*3));
-      p.price = p.ovr <= 84 ? Math.min(55, raw) : raw;
+      // Price: base OVR value + performance bonus from simulated season
+      const ovrBase = Math.max(2, Math.round((p.ovr-60)*4 + ((p.pot||p.ovr)-p.ovr)*3));
+      let perfBonus = 0;
+      if (isST || isAtk) perfBonus = Math.min(18, (p.simGoals||0)*0.65 + (p.simAssists||0)*0.35);
+      else if (isGK)     perfBonus = Math.min(8,  (p.simCS||0)*0.32);
+      else               perfBonus = Math.min(10, (p.simGoals||0)*0.55 + (p.simAssists||0)*0.40);
+      if (p.simRating >= 7.6) perfBonus += 5;
+      else if (p.simRating >= 7.1) perfBonus += 2;
+      else if (p.simRating < 6.0) perfBonus = Math.max(perfBonus - 4, 0);
+      const raw = Math.round(ovrBase + perfBonus);
+      p.price = Math.max(1, p.ovr <= 84 ? Math.min(60, raw) : raw);
       if (p.foreign) p.price = Math.round(p.price * 1.3);
 
       if (delta > 0)  risers.push({ name:p.name, club:p.club, role:p.role||p.pos, ovr:p.ovr, delta, rating:p.simRating });
@@ -1458,28 +1466,24 @@
   }
 
   function generatePLAwards() {
-    // Build pool — market players already have sim stats from updateMarketPlayerRatings()
     const pool = [];
-    PL_TEAMS.forEach(team => {
-      const aliases = team[3] || [];
-      aliases.forEach(alias => {
-        const fullName = PLAYER_ALIASES[alias] || alias;
-        const mkt = G.market.find(m => m.name === fullName || m.name === alias);
-        if (mkt && mkt.simRating != null) pool.push({ name:mkt.name, pos:mkt.pos, role:mkt.role, age:mkt.age, ovr:mkt.ovr,
-          club:team[0], teamStr:team[2], simGoals:mkt.simGoals, simAssists:mkt.simAssists,
-          simCS:mkt.simCS, avgRating:mkt.simRating, isOurs:false });
-      });
+    // Market players: use their current club (updated by AI transfers), skip Man Utd buys
+    const plClubs = new Set([...PL_TEAMS.map(t=>t[0]), 'Man Utd']);
+    G.market.filter(p => p.status !== 'signed' && p.simRating != null && plClubs.has(p.club)).forEach(p => {
+      pool.push({ name:p.name, pos:p.pos, role:p.role||p.pos, age:p.age, ovr:p.ovr,
+        club:p.club, simGoals:p.simGoals||0, simAssists:p.simAssists||0,
+        simCS:p.simCS||0, avgRating:p.simRating, isOurs:false });
     });
+    // Man Utd squad uses actual tracked stats
+    const munCleanSheets = G.results ? G.results.filter(r=>r.comp==='PL'&&r.away===0).length : 0;
     G.squad.filter(p => !p.sold).forEach(p => {
+      const isGK = roleOf(p)==='GK';
       pool.push({ name:p.name, pos:p.pos, role:roleOf(p), age:p.age, ovr:p.ovr,
-        club:'Man Utd', teamStr:85, isOurs:true,
-        simGoals:p.goals, simAssists:p.assists, simCS:null,
+        club:'Man Utd', isOurs:true,
+        simGoals:p.goals, simAssists:p.assists, simCS: isGK ? munCleanSheets : 0,
         avgRating: p.matchRatings.length >= 3 ? p.matchRatings.reduce((a,b)=>a+b,0)/p.matchRatings.length : null
       });
     });
-    // GK clean sheets for Man Utd GKs (estimate from results)
-    const wins = G.results ? G.results.filter(r=>r.comp==='PL'&&r.away===0).length : 0;
-    pool.filter(p=>p.club==='Man Utd'&&(p.role==='GK'||p.pos==='GK')).forEach(p => { p.simCS = wins; });
 
     const awards = {};
     const scored = pool.filter(p => ['ST','LW','RW','CAM','CM'].includes(p.role));
@@ -2230,12 +2234,14 @@
     if (Math.random() < chance) {
       G.budget -= target.price;
       target.status = 'signed';
-      removeFromClubRoster(target.club, target.name);
+      target.previousClub = target.club;
+      target.club = 'Man Utd';
+      removeFromClubRoster(target.previousClub, target.name);
       const newId = Math.max(...G.squad.map(p=>p.id)) + 1;
       G.squad.push({ id:newId, name:target.name, pos:target.pos, role:roleOf(target), age:target.age, ovr:target.ovr, pot:target.pot,
         mins:0, goals:0, assists:0, appearances:0, clubGoals:0, clubAssists:0, clubApps:0, matchRatings: [], bigGameRatings: [], lastUpdate: G.day,
         fitness:100, morale:75, injuryWeeks:0, newSigning: true, sold:false, onLoan:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null });
-      G.transferMessages.push('Signed ' + target.name + ' from ' + target.club + ' for £' + target.price + 'm.');
+      G.transferMessages.push('Signed ' + target.name + ' from ' + target.previousClub + ' for £' + target.price + 'm.');
       autoPickXI();
     } else {
       if (target.ovr >= 84) {
