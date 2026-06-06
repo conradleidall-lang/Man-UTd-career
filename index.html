@@ -666,7 +666,7 @@
         mins: 0, goals: 0, assists: 0, appearances: 0, clubGoals: 0, clubAssists: 0, clubApps: 0,
         matchRatings: [], bigGameRatings: [], lastUpdate: 0,
         fitness: 100, morale: 75, injuryWeeks: 0, newSigning: false,
-        sold: false, onLoan: null, suspended: 0, majorInjuries: 0, devPenalty: 0, academyTeam: null
+        sold: false, onLoan: null, suspended: 0, majorInjuries: 0, devPenalty: 0, academyTeam: null, wantsToLeave: false
       })),
       starters: [], tactic: 'balanced', formation: '4-3-3', culture: 'aristocrats',
       budget: 80, stadiumLevel: 1, records: {}, tables: {}, clStandings: {}, elStandings: {}, cupRounds: { FA: [], EFL: [] }, clKnockout: null, elKnockout: null,
@@ -933,7 +933,7 @@
       G.squad.push({ id:newId, name:p.name, pos:p.pos, role:p.role, age:p.age, ovr:p.ovr, pot:p.pot,
         devCeiling: p.devCeiling != null ? p.devCeiling : undefined,
         mins:0, goals:0, assists:0, appearances:0, clubGoals:0, clubAssists:0, clubApps:0, matchRatings:[], bigGameRatings:[], lastUpdate:G.day,
-        fitness:100, morale:70, injuryWeeks:0, newSigning:false, sold:false, onLoan:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null });
+        fitness:100, morale:70, injuryWeeks:0, newSigning:false, sold:false, onLoan:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null, wantsToLeave:false });
       G.transferMessages.push(p.name + ' promoted from U21 to the first team.');
       autoPickXI(); render();
     }
@@ -1791,6 +1791,12 @@
       p.fitness = Math.min(100, p.fitness + 22);
       p.morale = Math.max(0, p.morale - 2);
       if (p.suspended > 0) p.suspended = Math.max(0, p.suspended - 1);
+      // Transfer request: consistently benched + morale collapses
+      if (!p.wantsToLeave && p.morale < 32 && G.seasonStats.played >= 8 &&
+          (p.appearances / G.seasonStats.played) < 0.22) {
+        p.wantsToLeave = true;
+        G.transferMessages.push(p.name + ' has handed in a transfer request — unhappy with his limited role.');
+      }
     });
     fx.played = true; fx.score = cm.home + '-' + cm.away;
     G.results.push(Object.assign({}, fx, { munGoals: cm.home, oppGoals: cm.away }));
@@ -2144,6 +2150,7 @@
       const cultureMoraleBoost = (cEnd.artisanPenalty && (p.pos === 'FWD' || p.pos === 'MID') ? 3 : 0) + (cEnd.moraleEnd || 0);
       p.fitness = 100; p.morale = Math.min(100, Math.max(60, p.morale) + stadiumMoraleBoost + fanbaseMoraleBoost + cultureMoraleBoost);
       p.injuryWeeks = 0; p.onLoan = null; p.suspended = 0; p.academyTeam = null;
+      if (p.morale >= 55) p.wantsToLeave = false;
       if (p.age >= 38 && p.ovr < 65) p.sold = true;
     });
     Object.entries(loanInjuries).forEach(([id, wks]) => {
@@ -2294,7 +2301,7 @@
       const newId = Math.max(...G.squad.map(p=>p.id)) + 1;
       G.squad.push({ id:newId, name:target.name, pos:target.pos, role:roleOf(target), age:target.age, ovr:target.ovr, pot:target.pot,
         mins:0, goals:0, assists:0, appearances:0, clubGoals:0, clubAssists:0, clubApps:0, matchRatings: [], bigGameRatings: [], lastUpdate: G.day,
-        fitness:100, morale:75, injuryWeeks:0, newSigning: true, sold:false, onLoan:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null });
+        fitness:100, morale:75, injuryWeeks:0, newSigning: true, sold:false, onLoan:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null, wantsToLeave:false });
       G.transferMessages.push('Signed ' + target.name + ' from ' + target.previousClub + ' for £' + target.price + 'm.');
       autoPickXI();
     } else {
@@ -2425,6 +2432,17 @@
     G.statsFilter[key] = val;
     render();
   }
+  function appeasePlayer(id) {
+    const p = G.squad.find(x => x.id === id);
+    if (!p) return;
+    const cost = 2;
+    if (G.budget < cost) { alert('Not enough budget to pay a loyalty bonus.'); return; }
+    G.budget -= cost;
+    p.morale = Math.min(100, p.morale + 22);
+    p.wantsToLeave = false;
+    G.transferMessages.push('Paid ' + p.name + ' a £' + cost + 'm loyalty bonus. He has withdrawn his transfer request.');
+    render();
+  }
 
   function scoutRecommendations() {
     const byPos = { GK:[], DEF:[], MID:[], FWD:[] };
@@ -2472,7 +2490,8 @@
       '<div class="hs"><div class="hsl">Trophies</div><div class="hsv">' + G.trophies.length + '</div></div>' +
       '<div class="hs"><div class="hsl">Next</div><div class="hsv">' + (next ? next.oppShort : '—') + '</div></div>' +
     '</div>';
-    const tabList = [['dash','Dashboard'],['squad','Squad'],['academy','Academy'],['stats','Stats'],['transfers','Transfers'],['scouting','Scouting'],['tables','Tables'],['training','Training'],['culture','Culture']];
+    const unhappyCount = G.squad.filter(p => !p.sold && p.wantsToLeave).length;
+    const tabList = [['dash','Dashboard'],['squad','Squad'],['academy','Academy'],['stats','Stats'],['transfers','Transfers'],['scouting','Scouting'],['tables','Tables'],['training','Training'],['culture','Culture' + (unhappyCount ? ' <span style="background:#dc2626;color:#fff;border-radius:9px;font-size:9px;padding:1px 5px;vertical-align:middle;">' + unhappyCount + '</span>' : '')]];
     const tabs = tabList.map(t => '<button class="tab ' + (G.view===t[0]?'active':'') + '" onclick="setView(\'' + t[0] + '\')">' + t[1] + '</button>').join('');
     const tabBar = G.view === 'match' || G.view === 'season-end' || G.view === 'offseason' ? '' : '<div class="tabs">' + tabs + '</div>';
     let body = '';
@@ -2722,6 +2741,7 @@
         (p.suspended ? '<span class="badge inj">SUS</span>' : '') +
         (p.onLoan ? '<span class="badge new">LOAN</span>' : '') +
         (p.newSigning ? '<span class="badge new">NEW</span>' : '') +
+        (p.wantsToLeave ? '<span class="badge inj">WANTS OUT</span>' : '') +
         '<span style="display:block; font-size:10px; color:var(--color-text-tertiary); margin-top:1px;">' + (recentChips || '<span style="opacity:0.5;">no matches yet</span>') + '</span>' +
       '</span>' +
       '<span>' + roleBadge(p) + '</span>' +
@@ -2903,7 +2923,50 @@
       }).join('') +
       '</div></div>';
 
-    return cultureHtml + stadiumHtml;
+    // ── Squad Morale panel ──────────────────────────────────────────────────
+    function moodLabel(m) {
+      return m >= 90 ? 'Elated' : m >= 75 ? 'Happy' : m >= 55 ? 'Content' : m >= 40 ? 'Unsettled' : m >= 28 ? 'Unhappy' : 'Miserable';
+    }
+    function moodColor(m) {
+      return m >= 75 ? '#97C459' : m >= 55 ? '#FAC775' : m >= 38 ? '#F0BC45' : '#F09595';
+    }
+    const squadByMorale = G.squad.filter(p => !p.sold).sort((a,b) => a.morale - b.morale);
+    const avgMorale = Math.round(squadByMorale.reduce((s,p)=>s+p.morale,0) / (squadByMorale.length||1));
+    const requesters = squadByMorale.filter(p => p.wantsToLeave);
+
+    const requestPanel = requesters.length
+      ? '<div class="pnl" style="border-left:3px solid #dc2626; padding:10px 12px; margin-bottom:0;">' +
+        '<div class="pnl-t" style="color:#dc2626;">Transfer Requests · ' + requesters.length + ' player' + (requesters.length>1?'s':'') + '</div>' +
+        requesters.map(p =>
+          '<div style="display:grid; grid-template-columns:1fr 56px 56px 90px 90px; gap:8px; align-items:center; padding:7px 0; border-bottom:0.5px solid var(--color-border-tertiary); font-size:12px;">' +
+          '<span><strong>' + p.name + '</strong> <span style="color:var(--color-text-secondary); font-size:11px;">' + (p.role||p.pos) + ' · ' + p.age + 'yo · ' + p.appearances + ' apps</span></span>' +
+          '<span><span class="mor-bar" style="width:54px;"><span class="mor-fill" style="width:' + p.morale + '%; background:' + moodColor(p.morale) + ';"></span></span></span>' +
+          '<span style="font-size:11px; color:' + moodColor(p.morale) + ';">' + moodLabel(p.morale) + '</span>' +
+          '<button class="btn sm" onclick="appeasePlayer(' + p.id + ')">Loyalty bonus £2m</button>' +
+          '<button class="btn sm" style="color:#dc2626;" onclick="sellPlayer(' + p.id + ')">List for transfer</button>' +
+          '</div>'
+        ).join('') +
+        '</div>'
+      : '';
+
+    const moralePanel =
+      '<div class="pnl" style="padding:8px 10px;">' +
+      '<div class="pnl-t">Squad Morale · avg ' + avgMorale + '/100</div>' +
+      '<div style="display:grid; grid-template-columns:1fr 56px 72px 44px; gap:8px; padding:3px 0 6px; font-size:10px; text-transform:uppercase; letter-spacing:0.05em; color:var(--color-text-tertiary); border-bottom:0.5px solid var(--color-border-tertiary);">' +
+        '<span>Player</span><span>Morale</span><span>Mood</span><span>Apps</span>' +
+      '</div>' +
+      squadByMorale.map(p => {
+        const mc = moodColor(p.morale);
+        return '<div style="display:grid; grid-template-columns:1fr 56px 72px 44px; gap:8px; align-items:center; padding:5px 0; border-bottom:0.5px solid var(--color-border-tertiary); font-size:11px;' + (p.wantsToLeave?' background:rgba(220,38,38,0.05);':'') + '">' +
+          '<span>' + (p.wantsToLeave?'<span style="color:#dc2626; font-size:10px; margin-right:4px;">↑</span>':'') + p.name + ' <span style="color:var(--color-text-tertiary);">' + roleBadge(p) + '</span></span>' +
+          '<span><span class="mor-bar" style="width:54px;"><span class="mor-fill" style="width:' + p.morale + '%; background:' + mc + ';"></span></span></span>' +
+          '<span style="font-size:11px; font-weight:500; color:' + mc + ';">' + moodLabel(p.morale) + '</span>' +
+          '<span style="color:var(--color-text-secondary);">' + p.appearances + '</span>' +
+          '</div>';
+      }).join('') +
+      '</div>';
+
+    return requestPanel + moralePanel + cultureHtml + stadiumHtml;
   }
 
   function renderAcademy() {
