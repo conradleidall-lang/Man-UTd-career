@@ -199,6 +199,9 @@
   function getCultureMods() { const c = CULTURES.find(x => x.id === G.culture); return c ? c.mods : {}; }
   function setCulture(id) { G.culture = id; render(); }
 
+  const ACADEMY_GRADS = new Set(['Heaven', 'Fredricson', 'Shaw', 'Mainoo', 'Amad', 'Chido', 'Wheatley']);
+  function isAcadGrad(p) { return !!(p.academyGrad || ACADEMY_GRADS.has(p.name)); }
+
   const DUO_DEFS = [
     // ── Midfield ─────────────────────────────────────────────────────────
     { id:'theatre',     name:'The Theatre Directors',     icon:'🎭',
@@ -298,7 +301,7 @@
       vibe:'Telepathic chemistry from playing together since the U-9s',
       atkBonus:1.5, defBonus:1.5,
       qualify(p1, p2, wd) {
-        if (!p1.homegrown||!p2.homegrown) return false;
+        if (!isAcadGrad(p1)||!isAcadGrad(p2)) return false;
         const gc3 = wd.last3.reduce((s,m)=>s+(m.goalContribs||0),0);
         const cs3 = wd.last3.filter(m=>m.cleanSheet).length;
         return wd.last3.length>=3 && (gc3>=3||cs3>=2);
@@ -784,7 +787,7 @@
         mins: 0, goals: 0, assists: 0, appearances: 0, clubGoals: 0, clubAssists: 0, clubApps: 0,
         matchRatings: [], bigGameRatings: [], lastUpdate: 0,
         fitness: 100, morale: 75, injuryWeeks: 0, newSigning: false,
-        sold: false, onLoan: null, suspended: 0, majorInjuries: 0, devPenalty: 0, academyTeam: null, wantsToLeave: false, homegrown: true, chemPenalty: 0
+        sold: false, onLoan: null, suspended: 0, majorInjuries: 0, devPenalty: 0, academyTeam: null, wantsToLeave: false, homegrown: true, academyGrad: ACADEMY_GRADS.has(p[0]), chemPenalty: 0
       })),
       starters: [], tactic: 'balanced', formation: '4-3-3', culture: 'aristocrats',
       budget: 80, stadiumLevel: 1, records: {}, tables: {}, clStandings: {}, elStandings: {}, cupRounds: { FA: [], EFL: [] }, clKnockout: null, elKnockout: null,
@@ -1051,7 +1054,7 @@
       G.squad.push({ id:newId, name:p.name, pos:p.pos, role:p.role, age:p.age, ovr:p.ovr, pot:p.pot,
         devCeiling: p.devCeiling != null ? p.devCeiling : undefined,
         mins:0, goals:0, assists:0, appearances:0, clubGoals:0, clubAssists:0, clubApps:0, matchRatings:[], bigGameRatings:[], lastUpdate:G.day,
-        fitness:100, morale:70, injuryWeeks:0, newSigning:false, sold:false, onLoan:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null, wantsToLeave:false, homegrown:true, chemPenalty:0 });
+        fitness:100, morale:70, injuryWeeks:0, newSigning:false, sold:false, onLoan:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null, wantsToLeave:false, homegrown:true, academyGrad:true, chemPenalty:0 });
       G.transferMessages.push(p.name + ' promoted from U21 to the first team.');
       autoPickXI(); render();
     }
@@ -1961,7 +1964,7 @@
     for (let i=0; i<xi.length; i++) {
       for (let j=i+1; j<xi.length; j++) {
         const p1=xi[i], p2=xi[j];
-        if (!pairCouldBeDuo(roleOf(p1),roleOf(p2),p1.homegrown,p2.homegrown)) continue;
+        if (!pairCouldBeDuo(roleOf(p1),roleOf(p2),isAcadGrad(p1),isAcadGrad(p2))) continue;
         const key = pairKey(p1.id,p2.id);
         if (!G.pairStats[key]) G.pairStats[key]={goalAssists:0,cleanSheets:0,lastAtkActive:0,lastDefActive:0,recentMatches:[]};
         const s1=cm.playerStats[p1.id]||{}, s2=cm.playerStats[p2.id]||{};
