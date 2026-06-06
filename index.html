@@ -682,7 +682,7 @@
         const price = foreign ? Math.round(p[6] * 1.3) : p[6];
         return { id: i, name: p[0], pos: p[1], role: p[7] || inferRole(p[0], p[1]), age: p[2], ovr: p[3], pot: p[4], club: p[5], price, foreign, status: 'available' };
       }),
-      shortlist: [], windowOpen: true, finished: false
+      shortlist: [], windowOpen: true, finished: false, marketFilter: {pos:'', maxPrice:0}
     };
     generateAcademy(); refreshTransferWindow(); initTables(); buildFixtures(); autoPickXI(); render();
   }
@@ -2416,6 +2416,10 @@
     if (i >= 0) G.shortlist.splice(i, 1); else G.shortlist.push(id);
     render();
   }
+  function setMarketFilter(key, val) {
+    G.marketFilter[key] = val;
+    render();
+  }
 
   function scoutRecommendations() {
     const byPos = { GK:[], DEF:[], MID:[], FWD:[] };
@@ -2729,21 +2733,45 @@
   }
 
   function renderTransfers() {
-    const available = G.market.filter(p => p.status === 'available').sort((a,b) => {
+    const mf = G.marketFilter || {pos:'', maxPrice:0};
+    const fPos = mf.pos || '';
+    const fMax = mf.maxPrice || 0;
+    const allAvailable = G.market.filter(p => p.status === 'available');
+    const available = allAvailable.filter(p => {
+      if (fPos && roleOf(p) !== fPos) return false;
+      if (fMax > 0 && p.price > fMax) return false;
+      return true;
+    }).sort((a,b) => {
       const aS = G.shortlist.includes(a.id) ? 1 : 0;
       const bS = G.shortlist.includes(b.id) ? 1 : 0;
       return bS - aS || POSITION_ORDER.indexOf(roleOf(a)) - POSITION_ORDER.indexOf(roleOf(b)) || b.ovr - a.ovr;
     });
+    const POSITIONS = ['GK','CB','RB','LB','CDM','CM','CAM','LW','RW','ST'];
+    const filterBar = '<div class="pnl" style="padding:8px 10px;">' +
+      '<div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">' +
+      '<span style="font-size:11px; color:var(--color-text-secondary); margin-right:2px;">Pos</span>' +
+      '<button class="btn sm' + (!fPos?' pri':'') + '" onclick="setMarketFilter(\'pos\',\'\')">All</button>' +
+      POSITIONS.map(pos => '<button class="btn sm' + (fPos===pos?' pri':'') + '" onclick="setMarketFilter(\'pos\',\'' + pos + '\')">' + pos + '</button>').join('') +
+      '<span style="margin-left:10px; font-size:11px; color:var(--color-text-secondary);">Max</span>' +
+      '<span style="font-size:11px; color:var(--color-text-secondary);">£</span>' +
+      '<input type="number" value="' + (fMax || '') + '" min="0" max="300" placeholder="—" ' +
+      'style="width:52px; background:var(--color-surface-secondary); color:var(--color-text-primary); border:1px solid var(--color-border); border-radius:4px; padding:2px 5px; font-size:11px;" ' +
+      'oninput="setMarketFilter(\'maxPrice\', this.value ? +this.value : 0)" />' +
+      '<span style="font-size:11px; color:var(--color-text-secondary);">m</span>' +
+      (fPos || fMax > 0 ? '<button class="btn sm" style="margin-left:6px;" onclick="G.marketFilter={pos:\'\',maxPrice:0};render()">✕ Clear</button>' : '') +
+      '</div></div>';
     const aiMoves = G.aiTransferLog.slice(-5).reverse();
+    const countLabel = available.length + (available.length !== allAvailable.length ? '/' + allAvailable.length : '') + ' players';
     return (!G.windowOpen ? '<div class="toast">Transfer window closed.</div>' : '') +
       (G.shortlist.length ? '<div class="toast">Shortlist: ' + G.shortlist.length + ' player' + (G.shortlist.length>1?'s':'') + ' tracked.</div>' : '') +
       (aiMoves.length ? '<div class="pnl"><div class="pnl-t">Other clubs · recent market moves</div>' +
         aiMoves.map(m => '<div style="display:grid; grid-template-columns: 62px 1fr 58px; gap:8px; align-items:center; padding:5px 0; font-size:11px; border-bottom:0.5px solid var(--color-border-tertiary);">' +
           '<span class="fix-date">' + fmtDate(m.day) + '</span><span><strong>' + m.club + '</strong> signed ' + m.player + ' from ' + m.from + '</span><span style="text-align:right;">£' + m.price + 'm</span></div>').join('') +
         '<div style="font-size:10px; color:var(--color-text-tertiary); margin-top:6px;">AI clubs are capped at 3 transfer-market signings each season.</div></div>' : '') +
-      '<div class="pnl"><div class="pnl-t">Available targets · Budget £' + G.budget + 'm · ' + available.length + ' players</div>' +
+      filterBar +
+      '<div class="pnl"><div class="pnl-t">Available targets · Budget £' + G.budget + 'm · ' + countLabel + '</div>' +
         '<div class="market-row head"><span>Player</span><span>Club</span><span>Age</span><span>Pos</span><span>OVR · POT</span><span>Price</span><span></span></div>' +
-        available.map(p => '<div class="market-row" style="' + (G.shortlist.includes(p.id)?'background: rgba(251,225,34,0.08);':'') + '">' +
+        (available.length ? available.map(p => '<div class="market-row" style="' + (G.shortlist.includes(p.id)?'background: rgba(251,225,34,0.08);':'') + '">' +
           '<span>' + (G.shortlist.includes(p.id)?'<span style="color:#BA7517;">★</span> ':'') + p.name + '</span>' +
           '<span style="color:var(--color-text-secondary);">' + p.club + '</span><span>' + p.age + '</span>' +
           '<span>' + roleBadge(p) + '</span>' +
@@ -2752,7 +2780,8 @@
           '<span style="display:flex; gap:3px;">' +
             '<button class="btn sm" onclick="toggleShortlist(' + p.id + ')">' + (G.shortlist.includes(p.id)?'★':'☆') + '</button>' +
             '<button class="btn sm ' + (G.budget>=p.price?'pri':'') + '" onclick="bidForPlayer(' + p.id + ')" ' + (!G.windowOpen?'disabled':'') + '>Bid</button>' +
-          '</span></div>').join('') +
+          '</span></div>').join('') :
+          '<div style="padding:12px 6px; color:var(--color-text-secondary); font-size:12px;">No players match these filters.</div>') +
       '</div>';
   }
 
