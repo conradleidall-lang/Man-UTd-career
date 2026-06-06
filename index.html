@@ -198,6 +198,91 @@
   ];
   function getCultureMods() { const c = CULTURES.find(x => x.id === G.culture); return c ? c.mods : {}; }
   function setCulture(id) { G.culture = id; render(); }
+
+  const DUO_DEFS = [
+    // ── Midfield ─────────────────────────────────────────────────────────
+    { id:'theatre',     name:'The Theatre Directors',     icon:'🎭',
+      vibe:'Two maestros dictating tempo and pulling every string',
+      atkBonus:2.5, defBonus:0,
+      qualify(p1, p2, stats, played) {
+        const r1 = roleOf(p1), r2 = roleOf(p2);
+        const isPM = r => r==='CDM'||r==='CM';
+        return ((isPM(r1)&&r2==='CAM')||(r1==='CAM'&&isPM(r2))) && stats.goalAssists>=5 && (played-stats.lastAtkActive)<=10;
+      }
+    },
+    { id:'engine',      name:"The Red Devils' Engine",    icon:'⚙️',
+      vibe:'Infinite stamina, relentless pressing — the opposition cannot breathe',
+      atkBonus:1.5, defBonus:1.0,
+      qualify(p1, p2, stats, played) {
+        return roleOf(p1)==='CM' && roleOf(p2)==='CM' && stats.goalAssists>=4 && (played-stats.lastAtkActive)<=10;
+      }
+    },
+    // ── Attack ───────────────────────────────────────────────────────────
+    { id:'snipers',     name:'The Stretford End Snipers', icon:'🎯',
+      vibe:'Give them an inch in the box and it is in the back of the net',
+      atkBonus:3.0, defBonus:0,
+      qualify(p1, p2, stats, played) {
+        const fwd = r => r==='ST'||r==='LW'||r==='RW';
+        return fwd(roleOf(p1)) && fwd(roleOf(p2)) && stats.goalAssists>=7 && (played-stats.lastAtkActive)<=8;
+      }
+    },
+    { id:'counter',     name:'The Counter-Culture',       icon:'⚡',
+      vibe:'Blistering pace on the transition — the classic Man United counter',
+      atkBonus:2.5, defBonus:0,
+      qualify(p1, p2, stats, played) {
+        const r1=roleOf(p1), r2=roleOf(p2);
+        const wing = r => r==='LW'||r==='RW';
+        return ((wing(r1)&&r2==='ST')||(r1==='ST'&&wing(r2))) && p1.age<29 && p2.age<29 && stats.goalAssists>=4 && (played-stats.lastAtkActive)<=10;
+      }
+    },
+    { id:'towers',      name:'The Twin Towers',           icon:'🏰',
+      vibe:'Aerial dominance — physically bullying opposition center-backs',
+      atkBonus:2.0, defBonus:0,
+      qualify(p1, p2, stats, played) {
+        return roleOf(p1)==='ST' && roleOf(p2)==='ST' && stats.goalAssists>=4 && (played-stats.lastAtkActive)<=10;
+      }
+    },
+    // ── Defense ──────────────────────────────────────────────────────────
+    { id:'iron',        name:'The Iron Curtain',          icon:'🛡️',
+      vibe:'Complete lockdown — no one passes, no one wins a header',
+      atkBonus:0, defBonus:3.0,
+      qualify(p1, p2, stats, played) {
+        return roleOf(p1)==='CB' && roleOf(p2)==='CB' && stats.cleanSheets>=10 && (played-stats.lastDefActive)<=12;
+      }
+    },
+    { id:'highwaymen',  name:'The Highwaymen',            icon:'🛣️',
+      vibe:'Hijacking an entire flank — devastating going both ways',
+      atkBonus:1.5, defBonus:1.5,
+      qualify(p1, p2, stats, played) {
+        const r1=roleOf(p1), r2=roleOf(p2);
+        return ((r1==='RB'&&r2==='RW')||(r1==='RW'&&r2==='RB')||(r1==='LB'&&r2==='LW')||(r1==='LW'&&r2==='LB')) && stats.goalAssists>=4 && (played-stats.lastAtkActive)<=10;
+      }
+    },
+    { id:'lastline',    name:'The Last Line',             icon:'🧱',
+      vibe:'GK and CB completely in sync — desperate blocks and world-class saves',
+      atkBonus:0, defBonus:2.5,
+      qualify(p1, p2, stats, played) {
+        const r1=roleOf(p1), r2=roleOf(p2);
+        return ((r1==='GK'&&r2==='CB')||(r1==='CB'&&r2==='GK')) && stats.cleanSheets>=8 && (played-stats.lastDefActive)<=12;
+      }
+    },
+    // ── Special / Legacy ─────────────────────────────────────────────────
+    { id:'carrington',  name:"Carrington's Finest",       icon:'🏟️',
+      vibe:'Telepathic chemistry from playing together since the U-9s',
+      atkBonus:1.5, defBonus:1.5,
+      qualify(p1, p2, stats, played) {
+        return p1.homegrown && p2.homegrown && (stats.goalAssists>=3||stats.cleanSheets>=6) && ((played-stats.lastAtkActive)<=12||(played-stats.lastDefActive)<=12);
+      }
+    },
+    { id:'fergie',      name:'The Fergie Time Fanatics',  icon:'⏱️',
+      vibe:'Late drama merchants — massive clutch boosts when drawing or losing',
+      atkBonus:3.5, defBonus:0,
+      qualify(p1, p2, stats, played) {
+        const fwd = r => ['ST','LW','RW','CAM'].includes(r);
+        return fwd(roleOf(p1)) && fwd(roleOf(p2)) && p1.age>=26 && p2.age>=26 && stats.goalAssists>=4 && (played-stats.lastAtkActive)<=10;
+      }
+    },
+  ];
   const SIMILAR_ROLES = {
     GK:  ['GK'],
     RB:  ['RB','CB','LB'],
@@ -666,12 +751,12 @@
         mins: 0, goals: 0, assists: 0, appearances: 0, clubGoals: 0, clubAssists: 0, clubApps: 0,
         matchRatings: [], bigGameRatings: [], lastUpdate: 0,
         fitness: 100, morale: 75, injuryWeeks: 0, newSigning: false,
-        sold: false, onLoan: null, suspended: 0, majorInjuries: 0, devPenalty: 0, academyTeam: null, wantsToLeave: false
+        sold: false, onLoan: null, suspended: 0, majorInjuries: 0, devPenalty: 0, academyTeam: null, wantsToLeave: false, homegrown: true
       })),
       starters: [], tactic: 'balanced', formation: '4-3-3', culture: 'aristocrats',
       budget: 80, stadiumLevel: 1, records: {}, tables: {}, clStandings: {}, elStandings: {}, cupRounds: { FA: [], EFL: [] }, clKnockout: null, elKnockout: null,
       fixtures: [], results: [], trophies: [], seasonHistory: [], currentMatch: null, loanReturnLog: [],
-      pairStats: {}, activeDuos: [],
+      pairStats: {}, activeDuos: [], activeTrio: null,
       seasonStats: { played:0, won:0, drawn:0, lost:0, gf:0, ga:0 },
       transferMessages: [], injuryHistory: [], incomingBids: [], nextBidId: 1, aiTransfers: {}, aiTransferLog: [], clubRosters: {},
       trashTalks: [], lastTrashTalkDay: 0,
@@ -933,7 +1018,7 @@
       G.squad.push({ id:newId, name:p.name, pos:p.pos, role:p.role, age:p.age, ovr:p.ovr, pot:p.pot,
         devCeiling: p.devCeiling != null ? p.devCeiling : undefined,
         mins:0, goals:0, assists:0, appearances:0, clubGoals:0, clubAssists:0, clubApps:0, matchRatings:[], bigGameRatings:[], lastUpdate:G.day,
-        fitness:100, morale:70, injuryWeeks:0, newSigning:false, sold:false, onLoan:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null, wantsToLeave:false });
+        fitness:100, morale:70, injuryWeeks:0, newSigning:false, sold:false, onLoan:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null, wantsToLeave:false, homegrown:true });
       G.transferMessages.push(p.name + ' promoted from U21 to the first team.');
       autoPickXI(); render();
     }
@@ -1097,13 +1182,22 @@
   }
   function trackDefPairCleanSheet(xi) {
     const cbs = xi.filter(p => roleOf(p) === 'CB');
+    const gk  = xi.find(p => roleOf(p) === 'GK');
     for (let i = 0; i < cbs.length; i++) {
       for (let j = i + 1; j < cbs.length; j++) {
         const key = pairKey(cbs[i].id, cbs[j].id);
-        if (!G.pairStats[key]) G.pairStats[key] = { goalAssists: 0, cleanSheets: 0, lastAtkActive: 0, lastDefActive: 0 };
+        if (!G.pairStats[key]) G.pairStats[key] = { goalAssists:0, cleanSheets:0, lastAtkActive:0, lastDefActive:0 };
         G.pairStats[key].cleanSheets++;
         G.pairStats[key].lastDefActive = G.seasonStats.played;
       }
+    }
+    if (gk) {
+      cbs.forEach(cb => {
+        const key = pairKey(gk.id, cb.id);
+        if (!G.pairStats[key]) G.pairStats[key] = { goalAssists:0, cleanSheets:0, lastAtkActive:0, lastDefActive:0 };
+        G.pairStats[key].cleanSheets++;
+        G.pairStats[key].lastDefActive = G.seasonStats.played;
+      });
     }
   }
   function updateActiveDuos() {
@@ -1114,17 +1208,17 @@
       const p1 = G.squad.find(p => p.id === id1 && !p.sold);
       const p2 = G.squad.find(p => p.id === id2 && !p.sold);
       if (!p1 || !p2) return;
-      const atk = (pl) => pl.pos === 'FWD' || pl.pos === 'MID';
-      const atkFresh = stats.lastAtkActive && (played - stats.lastAtkActive) <= 10;
-      const defFresh = stats.lastDefActive && (played - stats.lastDefActive) <= 12;
-      if (stats.goalAssists >= 5 && atkFresh && atk(p1) && atk(p2)) {
-        candidates.push({ p1Id: id1, p2Id: id2, type: 'attack', count: stats.goalAssists });
-      } else if (stats.cleanSheets >= 12 && defFresh && roleOf(p1) === 'CB' && roleOf(p2) === 'CB') {
-        candidates.push({ p1Id: id1, p2Id: id2, type: 'defense', count: stats.cleanSheets });
+      for (const def of DUO_DEFS) {
+        if (def.qualify(p1, p2, stats, played)) {
+          const score = (stats.goalAssists || 0) + (stats.cleanSheets || 0);
+          candidates.push({ p1Id:id1, p2Id:id2, defId:def.id, name:def.name, icon:def.icon,
+            vibe:def.vibe, atkBonus:def.atkBonus, defBonus:def.defBonus, score });
+          break; // first matching def wins for this pair
+        }
       }
     });
-    // Strongest duo first; each player can only belong to one duo
-    candidates.sort((a, b) => b.count - a.count);
+    // Best-scoring duo first; each player belongs to only one duo
+    candidates.sort((a, b) => b.score - a.score);
     const claimed = new Set();
     G.activeDuos = [];
     for (const d of candidates) {
@@ -1132,6 +1226,26 @@
       G.activeDuos.push(d);
       claimed.add(d.p1Id);
       claimed.add(d.p2Id);
+    }
+    // ── Holy Trinity: three FWD/MID players all connected to each other ──
+    G.activeTrio = null;
+    const fwdMid = id => {
+      const p = G.squad.find(x => x.id === id && !x.sold);
+      return p && (p.pos === 'FWD' || p.pos === 'MID');
+    };
+    const pairExists = (a, b) => !!G.pairStats[pairKey(a, b)];
+    const allIds = [...claimed].filter(fwdMid);
+    outer: for (let i = 0; i < allIds.length; i++) {
+      for (let j = i + 1; j < allIds.length; j++) {
+        for (let k = j + 1; k < allIds.length; k++) {
+          const [a, b, c] = [allIds[i], allIds[j], allIds[k]];
+          if (pairExists(a,b) && pairExists(b,c) && pairExists(a,c)) {
+            G.activeTrio = { p1Id:a, p2Id:b, p3Id:c, name:'The Holy Trinity', icon:'✨',
+              vibe:'Elite unplayable flair — evoking Best, Law, and Charlton', atkBonus:4.0 };
+            break outer;
+          }
+        }
+      }
     }
   }
   function resolveLoanReturn(p) {
@@ -1656,8 +1770,10 @@
     const cmods = getCultureMods();
     const hAdv = fx.home ? 1 + G.stadiumLevel * 0.25 + (cmods.homeBonus || 0) : -1;
     const xiIds = new Set(xi.map(p => p.id));
-    const atkDuoBonus = (G.activeDuos || []).filter(d => d.type === 'attack' && xiIds.has(d.p1Id) && xiIds.has(d.p2Id)).length * 1.8;
-    const defDuoBonus = (G.activeDuos || []).filter(d => d.type === 'defense' && xiIds.has(d.p1Id) && xiIds.has(d.p2Id)).length * 1.8;
+    const activeDuoPairs = (G.activeDuos || []).filter(d => xiIds.has(d.p1Id) && xiIds.has(d.p2Id));
+    const atkDuoBonus = activeDuoPairs.reduce((s,d) => s + (d.atkBonus||0), 0) +
+      (G.activeTrio && xiIds.has(G.activeTrio.p1Id) && xiIds.has(G.activeTrio.p2Id) && xiIds.has(G.activeTrio.p3Id) ? G.activeTrio.atkBonus : 0);
+    const defDuoBonus = activeDuoPairs.reduce((s,d) => s + (d.defBonus||0), 0);
     const maverickChaos = cmods.maverickMode ? (Math.random() < 0.15 ? (Math.random() < 0.5 ? 4 : -3) : 0) : 0;
     const maverickBig  = cmods.maverickMode && fx.oppStr >= 84 ? 2 : 0;
     const munAtk = munStr + tAtk + hAdv + coachEdge + atkDuoBonus + (cmods.atkBonus || 0) + maverickBig + maverickChaos;
@@ -2197,7 +2313,7 @@
     const fanLabel = fanbaseLabel(G.fanbase);
     G.transferMessages.push('Stadium (Level ' + G.stadiumLevel + ') generated £' + stadiumRevenue + 'm. Fanbase (' + fanLabel + ') added £' + fanbaseRevenue + 'm.');
     G.transferMessages.push('Premier League prize money · ' + ordinal(munPos) + ' place · £' + plPrizeMoney + 'm added to budget.');
-    G.pairStats = {}; G.activeDuos = [];
+    G.pairStats = {}; G.activeDuos = []; G.activeTrio = null;
     G.windowOpen = true; G.incomingBids = []; G.aiTransfers = {}; G.aiTransferLog = [];
     G.view = 'season-end';
     refreshTransferWindow(); initTables(); buildFixtures(); autoPickXI(); render();
@@ -2683,24 +2799,39 @@
       '<div class="toast">Best XI now fills the specific formation positions first, then uses compatible players if a natural fit is unavailable.</div>' +
       (() => {
         const duos = G.activeDuos || [];
-        if (!duos.length) return '';
-        return '<div class="pnl"><div class="pnl-t">⚡ Dynamic Duos</div>' +
-          duos.map(d => {
-            const p1 = G.squad.find(p => p.id === d.p1Id);
-            const p2 = G.squad.find(p => p.id === d.p2Id);
-            if (!p1 || !p2) return '';
-            const both = G.starters.includes(d.p1Id) && G.starters.includes(d.p2Id);
-            const icon = d.type === 'attack' ? '⚡' : '🛡';
-            const label = d.type === 'attack' ? d.count + ' goal connections' : d.count + ' clean sheets together';
-            const bonus = both ? ' <span style="color:var(--color-text-success); font-size:10px;">ACTIVE +ATK</span>' : '';
-            const defBonus = d.type === 'defense' && both ? ' <span style="color:var(--color-text-success); font-size:10px;">ACTIVE +DEF</span>' : '';
-            return '<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--color-border-tertiary); font-size:12px;">' +
-              '<span>' + icon + ' <strong>' + p1.name.split(' ').pop() + ' & ' + p2.name.split(' ').pop() + '</strong>' +
-                (d.type === 'attack' ? bonus : defBonus) + '</span>' +
-              '<span style="color:var(--color-text-secondary);">' + label + '</span>' +
-            '</div>';
-          }).join('') +
-        '</div>';
+        const trio = G.activeTrio;
+        if (!duos.length && !trio) return '';
+        const duoCard = (d, names, active) => {
+          const bonusChips = [];
+          if (d.atkBonus > 0) bonusChips.push('<span style="font-size:10px; background:rgba(220,38,38,0.12); color:#dc2626; border-radius:4px; padding:1px 5px;">+' + d.atkBonus + ' ATK</span>');
+          if (d.defBonus > 0) bonusChips.push('<span style="font-size:10px; background:rgba(59,130,246,0.12); color:#3b82f6; border-radius:4px; padding:1px 5px;">+' + d.defBonus + ' DEF</span>');
+          return '<div style="padding:8px 10px; border-bottom:0.5px solid var(--color-border-tertiary); background:' + (active?'rgba(218,41,28,0.04)':'transparent') + ';">' +
+            '<div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">' +
+              '<span style="font-size:18px;">' + d.icon + '</span>' +
+              '<div style="flex:1;">' +
+                '<div style="font-size:13px; font-weight:600;">' + d.name +
+                  (active ? ' <span style="font-size:10px; background:var(--color-primary); color:#fff; border-radius:4px; padding:1px 5px; vertical-align:middle;">ACTIVE</span>' : '') +
+                '</div>' +
+                '<div style="font-size:11px; color:var(--color-text-secondary); margin-top:1px; font-style:italic;">' + d.vibe + '</div>' +
+              '</div>' +
+              '<div style="display:flex; gap:4px;">' + bonusChips.join('') + '</div>' +
+            '</div>' +
+            '<div style="font-size:12px; color:var(--color-text-secondary);">' + names + '</div>' +
+          '</div>';
+        };
+        const cards = duos.map(d => {
+          const p1 = G.squad.find(p => p.id === d.p1Id);
+          const p2 = G.squad.find(p => p.id === d.p2Id);
+          if (!p1 || !p2) return '';
+          const active = G.starters.includes(d.p1Id) && G.starters.includes(d.p2Id);
+          return duoCard(d, p1.name + ' & ' + p2.name, active);
+        });
+        if (trio) {
+          const tp = [trio.p1Id,trio.p2Id,trio.p3Id].map(id=>G.squad.find(p=>p.id===id)).filter(Boolean);
+          const active = tp.every(p => G.starters.includes(p.id));
+          cards.unshift(duoCard(trio, tp.map(p=>p.name).join(' · '), active));
+        }
+        return '<div class="pnl"><div class="pnl-t">⚡ Dynamic Duos</div>' + cards.join('') + '</div>';
       })() +
       POSITION_ORDER.map(pos => {
         const players = G.squad.filter(p => !p.sold && !p.academyTeam && roleOf(p) === pos).sort((a,b) => effectiveRating(b) - effectiveRating(a));
