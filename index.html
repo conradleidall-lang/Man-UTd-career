@@ -1319,73 +1319,116 @@
     return Math.max(4.0, Math.min(10.0, r));
   }
 
+  // Converts a continuous growth/decay value to a discrete integer via probabilistic rounding.
+  // e.g. 1.7 → 1 with 30% chance, 2 with 70% chance
+  function probRound(val) {
+    const sign = Math.sign(val);
+    const abs = Math.abs(val);
+    return sign * (Math.floor(abs) + (Math.random() < (abs - Math.floor(abs)) ? 1 : 0));
+  }
+
   function updatePlayerRatings(seasonEnd) {
-    const progress = G.seasonStats.played / 38;
-    const early = progress < 0.35;
-    const evals = G.squad.filter(p => !p.sold && p.matchRatings.length >= 3).map(p => {
-      const recent = p.matchRatings.slice(-10);
-      const weights = recent.map((_, i) => i + 1);
-      const sumW = weights.reduce((a,b)=>a+b,0);
-      const weighted = recent.reduce((a, r, i) => a + r * weights[i], 0) / sumW;
-      const bigGames = p.bigGameRatings.slice(-6);
-      const bigAvg = bigGames.length > 0 ? bigGames.reduce((a,b)=>a+b,0)/bigGames.length : weighted;
-      const composite = weighted * 0.6 + bigAvg * 0.4;
-      return { p, composite, weighted, bigAvg, bigCount: bigGames.length };
-    });
-    evals.forEach(e => {
-      const c = e.composite;
-      if (c >= 8.0) e.target = 93;
-      else if (c >= 7.7) e.target = 90;
-      else if (c >= 7.5) e.target = 88;
-      else if (c >= 7.25) e.target = 85;
-      else if (c >= 7.0) e.target = 83;
-      else if (c >= 6.7) e.target = 80;
-      else if (c >= 6.4) e.target = 77;
-      else e.target = 73;
-    });
-    evals.sort((a,b) => b.composite - a.composite);
-    evals.forEach(e => {
-      const p = e.p;
-      const role = getSquadRole(p);
-      const diff = e.target - p.ovr;
-      let maxMove = early ? 2 : 1;
-      if ((p.devPenalty || 0) > 0 && diff > 0) maxMove = Math.max(0, maxMove - Math.ceil(p.devPenalty / 2));
-      if (role === 'Bench' || role === 'Prove-it') maxMove = Math.min(maxMove, 1);
-      if (role === 'Rotation' && diff > 0 && e.composite < 7.3) maxMove = Math.min(maxMove, 1);
-      let delta = Math.sign(diff) * Math.min(Math.abs(diff), maxMove);
-      if (delta >= 1 && e.weighted < 7.0) delta = 0;
-      if (delta >= 2 && (e.bigCount < 2 || e.composite < 7.8)) delta = 1;
-      if (delta <= -1 && e.weighted > 6.6) delta = 0;
-      if (delta <= -2 && e.weighted > 5.8) delta = -1;
-      if (delta > 0) {
-        const newOvr = p.ovr + delta;
-        const newTier = tierOf(newOvr);
-        if (newTier === 'super') {
-          const samePosSuper = G.squad.filter(x => !x.sold && x.id !== p.id && x.pos === p.pos && tierOf(x.ovr) === 'super');
-          if (samePosSuper.length >= 1 && e.composite < 8.1) delta = Math.min(delta, 91 - p.ovr);
-        }
-        if (newTier === 'star') {
-          const samePosStar = G.squad.filter(x => !x.sold && x.id !== p.id && x.pos === p.pos && tierOf(x.ovr) === 'star').length;
-          if (samePosStar >= 2 && e.composite < 7.6) delta = Math.min(delta, 87 - p.ovr);
+    const K = 0.15;  // growth dampening constant
+    const C = 0.10;  // decay constant for veterans
+
+    if (!seasonEnd) {
+      // In-season update (every 4 games): light form reaction only
+      G.squad.filter(p => !p.sold && p.matchRatings.length >= 4).forEach(p => {
+        const recent = p.matchRatings.slice(-4);
+        const avg = recent.reduce((a,b)=>a+b,0) / 4;
+        const potGap = Math.max(0, (p.pot || p.ovr) - p.ovr);
+        if (avg >= 7.9 && p.age <= 24 && potGap >= 4 && Math.random() < 0.15)
+          p.ovr = Math.min(p.pot || 99, p.ovr + 1);
+        if (avg < 5.5 && p.ovr > 60 && Math.random() < 0.10)
+          p.ovr = Math.max(55, p.ovr - 1);
+        p.lastUpdate = G.day;
+      });
+      G.squad.forEach(p => { if (p.newSigning && p.appearances >= 5) p.newSigning = false; });
+      return;
+    }
+
+    // === Season-end: full logarithmic development formula ===
+    G.squad.filter(p => !p.sold).forEach(p => {
+      const totalApps = p.appearances || 0;
+      const allRatings = p.matchRatings;
+      const avgRating = allRatings.length >= 3
+        ? allRatings.reduce((a,b)=>a+b,0) / allRatings.length
+        : (allRatings.length > 0 ? allRatings.reduce((a,b)=>a+b,0) / allRatings.length : 6.0);
+
+      // M = minutes_factor × rating_modifier
+      const minsFactor = Math.min(1.15, (p.mins || 0) / 3420);
+      const ratingMod = avgRating >= 8.0 ? 1.60
+                      : avgRating >= 7.5 ? 1.20
+                      : avgRating >= 7.0 ? 1.00
+                      : avgRating >= 6.5 ? 0.60
+                      : avgRating >= 6.0 ? 0.25
+                      : 0.05;
+      const M = minsFactor * ratingMod;
+
+      let delta = 0;
+
+      if (p.age >= 33) {
+        // Exponential decay: ΔR_decay = -C × (age − 32)²
+        const rawDecay = C * Math.pow(p.age - 32, 2);
+        delta = -probRound(Math.min(rawDecay, 4.0));
+        if (avgRating >= 7.8 && Math.random() < 0.30) delta = Math.min(delta + 1, 0);
+
+      } else if (p.age >= 29) {
+        // Stabilization phase: very dampened growth
+        const potGap = Math.max(0, (p.pot || p.ovr) - p.ovr);
+        delta = probRound(K * 0.20 * potGap * M);
+        if (avgRating < 6.5 && p.age >= 31) delta = Math.min(delta, probRound(-0.40));
+
+      } else {
+        // Growth phase: ΔR = k_age × (P − R) × M
+        const ageK = p.age <= 21 ? K * 1.35
+                   : p.age <= 24 ? K * 1.10
+                   : K;
+        const effPot = p.devCeiling != null ? Math.min(p.devCeiling, p.pot) : (p.pot || p.ovr);
+        const potGap = Math.max(0, effPot - p.ovr);
+        delta = probRound(ageK * potGap * M);
+
+        // Major injury: lose a point and scar the potential ceiling
+        if ((p.majorInjuries || 0) > 0) {
+          delta = Math.min(delta, 0) - 1;
+          p.pot = Math.max(p.ovr + 1, p.pot - 2);
+          p.majorInjuries = 0;
         }
       }
+
+      // devPenalty: slow growth for new signings still settling in
+      if ((p.devPenalty || 0) > 0 && delta > 0) {
+        delta = Math.max(0, delta - Math.ceil(p.devPenalty / 2));
+        p.devPenalty = Math.max(0, p.devPenalty - 0.5);
+      }
+
+      // Cap growth at potential ceiling + optional stadium bonus
       if (delta > 0) {
-        const effPot = p.devCeiling != null ? Math.min(p.devCeiling, p.pot) : p.pot;
+        const effPot = p.devCeiling != null ? Math.min(p.devCeiling, p.pot) : (p.pot || p.ovr);
         delta = Math.min(delta, effPot - p.ovr);
-        if (Math.random() < (G.stadiumLevel - 1) * 0.15) delta = Math.min(p.pot - p.ovr, delta + 1);
+        if (delta > 0 && Math.random() < (G.stadiumLevel - 1) * 0.13)
+          delta = Math.min(effPot - p.ovr, delta + 1);
       }
-      if (seasonEnd) {
-        if (p.age >= 31) {
-          let loss = 0;
-          if (p.age >= 33) loss += 1; if (p.age >= 35) loss += 1; if (p.age >= 37) loss += 1;
-          delta = Math.min(delta - loss, delta);
-        }
-        if (p.ovr >= 88 && p.age < 31) delta = Math.min(delta, 0);
-        if ((p.devPenalty || 0) > 0) p.devPenalty = Math.max(0, p.devPenalty - 0.5);
-      }
+
       p.ovr = Math.max(50, Math.min(99, p.ovr + delta));
       p.lastUpdate = G.day;
+
+      // Dynamic potential shifts (ages ≤ 26 only)
+      if (p.age <= 26) {
+        const playFrac = totalApps / 38;
+        if (playFrac >= 0.79 && avgRating >= 7.5) {
+          // Breakout season → potential ceiling rises
+          p.pot = Math.min(99, p.pot + (Math.random() < 0.55 ? 2 : 1));
+        } else if (totalApps < 10 && avgRating < 6.0 && p.pot > p.ovr + 2) {
+          // Stagnation → ceiling drops
+          p.pot = Math.max(p.ovr + 1, p.pot - (Math.random() < 0.45 ? 3 : 2));
+        } else if (totalApps < 18 && p.age <= 22 && p.pot > p.ovr + 3) {
+          // Young talent not getting minutes
+          p.pot = Math.max(p.ovr + 2, p.pot - 1);
+        }
+      }
     });
+
     G.squad.forEach(p => { if (p.newSigning && p.appearances >= 5) p.newSigning = false; });
   }
 
@@ -1416,28 +1459,39 @@
       p.simAssists = Math.max(0, Math.round(!isGK ? (p.ovr-72)*0.33 + (Math.random()-0.5)*7 : 0));
       if (isGK) p.simCS = Math.max(2, Math.min(24, Math.round((p.ovr-68)*0.72 + (str-68)*0.18 + (Math.random()-0.5)*7)));
 
-      // Determine OVR delta from season performance
-      const r = p.simRating;
+      // Logarithmic development: ΔR = k_age × (P − R) × M  (mirrors Man Utd squad formula)
+      const mK = 0.15, mC = 0.10;
+      const simMinsFrac = Math.min(1.05, p.simApps / 34);
+      const simRatingMod = p.simRating >= 8.0 ? 1.60
+                         : p.simRating >= 7.5 ? 1.20
+                         : p.simRating >= 7.0 ? 1.00
+                         : p.simRating >= 6.5 ? 0.60
+                         : p.simRating >= 6.0 ? 0.25
+                         : 0.05;
+      const mM = simMinsFrac * simRatingMod;
       let delta = 0;
-      if (r >= 7.7) {
-        if      (p.age <= 22 && potGap >= 4) delta = Math.random()<0.70 ? 2 : 1;
-        else if (p.age <= 26 && potGap >= 2) delta = Math.random()<0.55 ? 2 : 1;
-        else if (p.age <= 30)                delta = 1;
-        else                                 delta = Math.random()<0.40 ? 1 : 0;
-      } else if (r >= 7.2) {
-        if      (p.age <= 23 && potGap >= 3) delta = Math.random()<0.52 ? 1 : 0;
-        else if (p.age <= 28 && potGap >= 1) delta = Math.random()<0.32 ? 1 : 0;
-        else if (p.age >= 32)                delta = Math.random()<0.38 ? -1 : 0;
-        else                                 delta = 0;
-      } else if (r >= 6.5) {
-        if      (p.age <= 21 && potGap >= 5) delta = Math.random()<0.28 ? 1 : 0;
-        else if (p.age >= 33)                delta = Math.random()<0.55 ? -1 : 0;
-        else if (p.age >= 30)                delta = Math.random()<0.30 ? -1 : 0;
-        else                                 delta = 0;
-      } else if (r >= 6.0) {
-        delta = p.age >= 29 ? (Math.random()<0.60 ? -1 : 0) : (Math.random()<0.28 ? -1 : 0);
+
+      if (p.age >= 33) {
+        const rawDecay = mC * Math.pow(p.age - 32, 2);
+        delta = -probRound(Math.min(rawDecay, 4.0));
+        if (p.simRating >= 7.8 && Math.random() < 0.25) delta = Math.min(delta + 1, 0);
+      } else if (p.age >= 29) {
+        delta = probRound(mK * 0.20 * potGap * mM);
+        if (p.simRating < 6.5 && p.age >= 31) delta = Math.min(delta, probRound(-0.40));
       } else {
-        delta = p.age >= 28 ? (Math.random()<0.55 ? -2 : -1) : -1;
+        const mAgeK = p.age <= 21 ? mK * 1.35 : p.age <= 24 ? mK * 1.10 : mK;
+        delta = probRound(mAgeK * potGap * mM);
+      }
+
+      // Dynamic potential shifts for young market players
+      if (p.age <= 26) {
+        if (p.simApps >= 30 && p.simRating >= 7.5) {
+          p.pot = Math.min(99, p.pot + (Math.random() < 0.50 ? 2 : 1));
+        } else if (p.simApps < 14 && p.simRating < 6.0 && p.pot > p.ovr + 2) {
+          p.pot = Math.max(p.ovr + 1, p.pot - (Math.random() < 0.40 ? 3 : 2));
+        } else if (p.simApps < 20 && p.age <= 22 && p.pot > p.ovr + 3) {
+          p.pot = Math.max(p.ovr + 2, p.pot - 1);
+        }
       }
 
       if (delta > 0) delta = Math.min(delta, potGap);
