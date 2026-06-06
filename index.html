@@ -1988,86 +1988,88 @@
   }
 
   function finishMatch() {
-    const cm = G.currentMatch, fx = cm.fx;
+    const cm = G.currentMatch;
+    if (!cm) return;
+    const fx = cm.fx;
     cm.playing = false; cm.done = true;
-    cm.comm.push({m:'FT', text:'Full time. Man Utd ' + cm.home + ' - ' + cm.away + ' ' + fx.opp + '.', t:'ft'});
-    const xi = getXI();
-    const result = cm.home > cm.away ? 'W' : cm.home === cm.away ? 'D' : 'L';
-    const cleanSheet = cm.away === 0;
-    cm.matchRatings = {};
-    xi.forEach(p => {
-      p.mins += 90; p.appearances++; p.clubApps = (p.clubApps || 0) + 1;
-      p.fitness = Math.max(15, p.fitness - (fx.comp === 'FR' || fx.comp === 'CS' ? 10 : 18) - Math.random()*10);
-      const perf = { goals: cm.perPlayerGoals[p.id] || 0, assists: cm.perPlayerAssists[p.id] || 0, result, cleanSheet, goalsConceded: cm.away };
-      const mr = computeMatchRating(p, fx, perf);
-      if (cm.sentOff.includes(p.id)) p.suspended = 1;
-      cm.matchRatings[p.id] = mr;
-      cm.playerStats[p.id] = genPlayerMatchStats(p, mr);
-      p.matchRatings.push(mr);
-      if (isBigGame(fx)) p.bigGameRatings.push(mr);
-      if (result === 'W') p.morale = Math.min(100, p.morale + 5);
-      else if (result === 'D') p.morale = Math.min(100, p.morale + 1);
-      else p.morale = Math.max(0, p.morale - 4 - (getCultureMods().moraleLoss || 0));
-      if (perf.goals > 0) p.morale = Math.min(100, p.morale + 5);
-    });
-    updateManagerReputation(result, fx);
-    G.squad.forEach(p => {
-      if (p.sold || G.starters.includes(p.id) || p.injuryWeeks > 0) return;
-      p.fitness = Math.min(100, p.fitness + 22);
-      p.morale = Math.max(0, p.morale - 2);
-      if (p.suspended > 0) p.suspended = Math.max(0, p.suspended - 1);
-      // Transfer request: consistently benched + morale collapses
-      if (!p.wantsToLeave && p.morale < 32 && G.seasonStats.played >= 8 &&
-          (p.appearances / G.seasonStats.played) < 0.22) {
-        p.wantsToLeave = true;
-        G.transferMessages.push(p.name + ' has handed in a transfer request — unhappy with his limited role.');
+    try {
+      cm.comm.push({m:'FT', text:'Full time. Man Utd ' + cm.home + ' - ' + cm.away + ' ' + fx.opp + '.', t:'ft'});
+      const xi = getXI();
+      const result = cm.home > cm.away ? 'W' : cm.home === cm.away ? 'D' : 'L';
+      const cleanSheet = cm.away === 0;
+      cm.matchRatings = {};
+      xi.forEach(p => {
+        p.mins += 90; p.appearances++; p.clubApps = (p.clubApps || 0) + 1;
+        p.fitness = Math.max(15, p.fitness - (fx.comp === 'FR' || fx.comp === 'CS' ? 10 : 18) - Math.random()*10);
+        const perf = { goals: cm.perPlayerGoals[p.id] || 0, assists: cm.perPlayerAssists[p.id] || 0, result, cleanSheet, goalsConceded: cm.away };
+        const mr = computeMatchRating(p, fx, perf);
+        if (cm.sentOff.includes(p.id)) p.suspended = 1;
+        cm.matchRatings[p.id] = mr;
+        cm.playerStats[p.id] = genPlayerMatchStats(p, mr);
+        p.matchRatings.push(mr);
+        if (isBigGame(fx)) p.bigGameRatings.push(mr);
+        if (result === 'W') p.morale = Math.min(100, p.morale + 5);
+        else if (result === 'D') p.morale = Math.min(100, p.morale + 1);
+        else p.morale = Math.max(0, p.morale - 4 - (getCultureMods().moraleLoss || 0));
+        if (perf.goals > 0) p.morale = Math.min(100, p.morale + 5);
+      });
+      updateManagerReputation(result, fx);
+      G.squad.forEach(p => {
+        if (p.sold || G.starters.includes(p.id) || p.injuryWeeks > 0) return;
+        p.fitness = Math.min(100, p.fitness + 22);
+        p.morale = Math.max(0, p.morale - 2);
+        if (p.suspended > 0) p.suspended = Math.max(0, p.suspended - 1);
+        if (!p.wantsToLeave && p.morale < 32 && G.seasonStats.played >= 8 &&
+            (p.appearances / G.seasonStats.played) < 0.22) {
+          p.wantsToLeave = true;
+          G.transferMessages.push(p.name + ' has handed in a transfer request — unhappy with his limited role.');
+        }
+      });
+      fx.played = true; fx.score = cm.home + '-' + cm.away;
+      G.results.push(Object.assign({}, fx, { munGoals: cm.home, oppGoals: cm.away }));
+      if (fx.comp !== 'FR' && fx.comp !== 'CS') {
+        G.seasonStats.played++; G.seasonStats.gf += cm.home; G.seasonStats.ga += cm.away;
+        if (result === 'W') G.seasonStats.won++;
+        else if (result === 'L') G.seasonStats.lost++;
+        else G.seasonStats.drawn++;
       }
-    });
-    fx.played = true; fx.score = cm.home + '-' + cm.away;
-    G.results.push(Object.assign({}, fx, { munGoals: cm.home, oppGoals: cm.away }));
-    if (fx.comp !== 'FR' && fx.comp !== 'CS') {
-      G.seasonStats.played++; G.seasonStats.gf += cm.home; G.seasonStats.ga += cm.away;
-      if (result === 'W') G.seasonStats.won++;
-      else if (result === 'L') G.seasonStats.lost++;
-      else G.seasonStats.drawn++;
-    }
-    if (fx.comp === 'PL') { updatePLTable(fx, cm.home, cm.away); simOtherPLWeek(fx); }
-    if (fx.comp === 'CL' && fx.round === 'League') { updateCLTable(fx, cm.home, cm.away); simOtherCLWeek(fx); if (!G.fixtures.some(f => f.comp === 'CL' && f.round === 'League' && !f.played)) scheduleCLKnockouts(); }
-    if (fx.comp === 'CL' && fx.round !== 'League') handleCLKnockout(fx, cm.home, cm.away);
-    if (fx.comp === 'FA' || fx.comp === 'EFL') handleCupRound(fx, cm.home, cm.away);
-    if (cm.redemptionPlayerId) {
-      const rp = xi.find(p => p.id === cm.redemptionPlayerId);
-      if (rp && cm.matchRatings[rp.id] != null) {
-        if (cm.redemptionElite) {
-          cm.matchRatings[rp.id] = Math.min(10, cm.matchRatings[rp.id] + 2.5);
-          rp.matchRatings[rp.matchRatings.length - 1] = cm.matchRatings[rp.id];
-          cm.comm.push({m:'FT', text:'⭐ REDEMPTION DELIVERED — ' + rp.name + ' put in an elite performance and backed up every word. ' + fx.opp + ' have no answer.', t:'gm'});
-        } else {
-          cm.matchRatings[rp.id] = Math.max(4, cm.matchRatings[rp.id] - 2.5);
-          rp.matchRatings[rp.matchRatings.length - 1] = cm.matchRatings[rp.id];
-          cm.comm.push({m:'FT', text:'💀 TALK IS CHEAP — ' + rp.name + ' bottled it when it mattered most. ' + fx.opp + ' will be loving this.', t:'go'});
+      if (fx.comp === 'PL') { updatePLTable(fx, cm.home, cm.away); simOtherPLWeek(fx); }
+      if (fx.comp === 'CL' && fx.round === 'League') { updateCLTable(fx, cm.home, cm.away); simOtherCLWeek(fx); if (!G.fixtures.some(f => f.comp === 'CL' && f.round === 'League' && !f.played)) scheduleCLKnockouts(); }
+      if (fx.comp === 'CL' && fx.round !== 'League') handleCLKnockout(fx, cm.home, cm.away);
+      if (fx.comp === 'FA' || fx.comp === 'EFL') handleCupRound(fx, cm.home, cm.away);
+      if (cm.redemptionPlayerId) {
+        const rp = xi.find(p => p.id === cm.redemptionPlayerId);
+        if (rp && cm.matchRatings[rp.id] != null) {
+          if (cm.redemptionElite) {
+            cm.matchRatings[rp.id] = Math.min(10, cm.matchRatings[rp.id] + 2.5);
+            rp.matchRatings[rp.matchRatings.length - 1] = cm.matchRatings[rp.id];
+            cm.comm.push({m:'FT', text:'⭐ REDEMPTION DELIVERED — ' + rp.name + ' put in an elite performance and backed up every word. ' + fx.opp + ' have no answer.', t:'gm'});
+          } else {
+            cm.matchRatings[rp.id] = Math.max(4, cm.matchRatings[rp.id] - 2.5);
+            rp.matchRatings[rp.matchRatings.length - 1] = cm.matchRatings[rp.id];
+            cm.comm.push({m:'FT', text:'💀 TALK IS CHEAP — ' + rp.name + ' bottled it when it mattered most. ' + fx.opp + ' will be loving this.', t:'go'});
+          }
         }
       }
+      const xiIdSet = new Set(xi.map(p=>p.id));
+      (G.activeDuos || []).forEach(d => {
+        const p1=G.squad.find(p=>p.id===d.p1Id), p2=G.squad.find(p=>p.id===d.p2Id);
+        if (!p1||!p2) return;
+        const p1Active = xiIdSet.has(p1.id)&&!cm.injured.includes(p1.id);
+        const p2Active = xiIdSet.has(p2.id)&&!cm.injured.includes(p2.id);
+        if (p1Active && !p2Active) { p1.morale=Math.max(0,p1.morale-6); p1.chemPenalty=2; }
+        if (p2Active && !p1Active) { p2.morale=Math.max(0,p2.morale-6); p2.chemPenalty=2; }
+      });
+      G.squad.filter(p=>!p.sold&&(p.chemPenalty||0)>0).forEach(p=>{
+        if (!xiIdSet.has(p.id)) p.chemPenalty=Math.max(0,(p.chemPenalty||0)-1);
+      });
+      if (cleanSheet) trackDefPairCleanSheet(xi);
+      recordPairMatchStats(xi, cleanSheet, fx);
+      updateActiveDuos();
+      if (G.seasonStats.played % 4 === 0) updatePlayerRatings(false);
+    } catch(e) {
+      console.error('[finishMatch]', e);
     }
-    // Chemistry penalty: if an active duo had one player absent, partner suffers
-    const xiIdSet = new Set(xi.map(p=>p.id));
-    G.activeDuos.forEach(d => {
-      const p1=G.squad.find(p=>p.id===d.p1Id), p2=G.squad.find(p=>p.id===d.p2Id);
-      if (!p1||!p2) return;
-      const p1Active = xiIdSet.has(p1.id)&&!cm.injured.includes(p1.id);
-      const p2Active = xiIdSet.has(p2.id)&&!cm.injured.includes(p2.id);
-      if (p1Active && !p2Active) { p1.morale=Math.max(0,p1.morale-6); p1.chemPenalty=2; }
-      if (p2Active && !p1Active) { p2.morale=Math.max(0,p2.morale-6); p2.chemPenalty=2; }
-    });
-    // Decrement lingering chemistry penalties for players not in XI
-    G.squad.filter(p=>!p.sold&&(p.chemPenalty||0)>0).forEach(p=>{
-      if (!xiIdSet.has(p.id)) p.chemPenalty=Math.max(0,p.chemPenalty-1);
-    });
-    if (cleanSheet) trackDefPairCleanSheet(xi);
-    recordPairMatchStats(xi, cleanSheet, fx);
-    updateActiveDuos();
-    if (G.seasonStats.played % 4 === 0) updatePlayerRatings(false);
-    G.currentMatch = cm;
     render();
   }
 
@@ -2841,24 +2843,27 @@
     const cm = G.currentMatch, fx = cm.fx;
     const oppRoster = getClubRoster(fx.opp);
     const oppKeyPlayers = oppRoster.length ? oppRoster.slice(0,6).join(', ') : 'No tracked squad data';
-    const postMatch = cm.done && cm.matchRatings ? (() => {
-      const xiPlayers = getXI().sort((a,b) => (cm.matchRatings[b.id]||0) - (cm.matchRatings[a.id]||0));
-      const xiIds = new Set(xiPlayers.map(p => p.id));
-      const bench = G.squad.filter(p => !p.sold && !p.onLoan && !xiIds.has(p.id)).sort((a,b) => POSITION_ORDER.indexOf(roleOf(a)) - POSITION_ORDER.indexOf(roleOf(b)) || effectiveRating(b) - effectiveRating(a));
-      const playerRow = (p, mr) => {
-        const col = mr != null ? (mr >= 8 ? '#3B6D11' : mr >= 7 ? '#173404' : mr >= 6 ? '#854F0B' : '#A32D2D') : 'var(--color-text-tertiary)';
-        return '<div style="display:grid; grid-template-columns: 14px 1fr 32px 50px 60px; gap:6px; padding:3px 6px; font-size:11px; align-items:center;">' +
-          '<span>' + roleBadge(p) + '</span><span>' + p.name + '</span>' +
-          '<span>' + ((cm.perPlayerGoals[p.id]||0) > 0 ? '⚽' + cm.perPlayerGoals[p.id] : '') + '</span>' +
-          '<span style="color:var(--color-text-secondary);">' + ((cm.perPlayerAssists[p.id]||0) > 0 ? 'assist ' + cm.perPlayerAssists[p.id] : '') + '</span>' +
-          '<span style="font-weight:500; color:' + col + ';">' + (mr != null ? mr.toFixed(1) : '—') + '</span></div>';
-      };
-      return '<div class="pnl"><div class="pnl-t">Match ratings</div>' +
-        xiPlayers.map(p => playerRow(p, cm.matchRatings[p.id])).join('') +
-        (bench.length ? '<div style="font-size:10px; color:var(--color-text-tertiary); text-transform:uppercase; letter-spacing:0.05em; padding:6px 6px 2px; border-top:0.5px solid var(--color-border-tertiary); margin-top:4px;">Not used</div>' +
-          bench.map(p => playerRow(p, null)).join('') : '') +
-        '</div>';
-    })() : '';
+    let postMatch = '';
+    if (cm.done && cm.matchRatings) {
+      try {
+        const xiPlayers = getXI().sort((a,b) => (cm.matchRatings[b.id]||0) - (cm.matchRatings[a.id]||0));
+        const xiIds = new Set(xiPlayers.map(p => p.id));
+        const bench = G.squad.filter(p => !p.sold && !p.onLoan && !xiIds.has(p.id)).sort((a,b) => POSITION_ORDER.indexOf(roleOf(a)) - POSITION_ORDER.indexOf(roleOf(b)) || effectiveRating(b) - effectiveRating(a));
+        const playerRow = (p, mr) => {
+          const col = mr != null ? (mr >= 8 ? '#3B6D11' : mr >= 7 ? '#173404' : mr >= 6 ? '#854F0B' : '#A32D2D') : 'var(--color-text-tertiary)';
+          return '<div style="display:grid; grid-template-columns: 14px 1fr 32px 50px 60px; gap:6px; padding:3px 6px; font-size:11px; align-items:center;">' +
+            '<span>' + roleBadge(p) + '</span><span>' + p.name + '</span>' +
+            '<span>' + ((cm.perPlayerGoals[p.id]||0) > 0 ? '⚽' + cm.perPlayerGoals[p.id] : '') + '</span>' +
+            '<span style="color:var(--color-text-secondary);">' + ((cm.perPlayerAssists[p.id]||0) > 0 ? 'assist ' + cm.perPlayerAssists[p.id] : '') + '</span>' +
+            '<span style="font-weight:500; color:' + col + ';">' + (mr != null ? mr.toFixed(1) : '—') + '</span></div>';
+        };
+        postMatch = '<div class="pnl"><div class="pnl-t">Match ratings</div>' +
+          xiPlayers.map(p => playerRow(p, cm.matchRatings[p.id])).join('') +
+          (bench.length ? '<div style="font-size:10px; color:var(--color-text-tertiary); text-transform:uppercase; letter-spacing:0.05em; padding:6px 6px 2px; border-top:0.5px solid var(--color-border-tertiary); margin-top:4px;">Not used</div>' +
+            bench.map(p => playerRow(p, null)).join('') : '') +
+          '</div>';
+      } catch(e) { console.error('[renderMatch postMatch]', e); }
+    }
     return '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">' +
       '<div><div class="cmp cmp-' + fx.comp + '" style="display:inline-block;">' + fx.comp + (fx.round?' · '+fx.round:'') + '</div>' +
       '<span style="margin-left:8px; color:var(--color-text-secondary); font-size:12px;">' + fmtDateLong(G.day) + ' · ' + (fx.home?'Home':'Away') + ' · weight ' + matchWeight(fx).toFixed(1) + 'x</span></div></div>' +
