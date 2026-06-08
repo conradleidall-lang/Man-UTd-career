@@ -1419,7 +1419,7 @@
     return Math.round(base * oopMult);
   }
   function slotScore(slot, p, fresh, bench) {
-    if (bench) return slotCompatibility(slot, p) * 100 - (p.mins || 0);
+    if (bench) return slotCompatibility(slot, p) * 1000000 - (p.mins || 0);
     return effectiveRating(p) + slotCompatibility(slot, p) * 3 + (fresh ? p.fitness / 5 : 0);
   }
   function pickForSlot(pool, slot, fresh, bench) {
