@@ -1824,8 +1824,16 @@
     const defDuoBonus = activeDuoPairs.reduce((s,d) => s + (d.defBonus||0), 0);
     const maverickChaos = cmods.maverickMode ? (Math.random() < 0.15 ? (Math.random() < 0.5 ? 4 : -3) : 0) : 0;
     const maverickBig  = cmods.maverickMode && fx.oppStr >= 84 ? 2 : 0;
-    const munAtk = munStr + tAtk + hAdv + coachEdge + atkDuoBonus + (cmods.atkBonus || 0) + maverickBig + maverickChaos;
-    const munDef = munStr + tDef + hAdv + coachEdge * 0.65 + defDuoBonus + (cmods.defBonus || 0);
+    const oopPenalty = xi.reduce((sum, p) => {
+      const a = fmAssignments.find(x => x.player && x.player.id === p.id);
+      if (!a || roleOf(p) === a.slot) return sum;
+      const pg = p.pos, sg = slotGroup(a.slot);
+      if (pg === 'GK' || sg === 'GK') return sum + 12;
+      if (pg !== sg) { const adj = { DEF:['MID'], MID:['DEF','FWD'], FWD:['MID'] }; return sum + ((adj[pg]||[]).includes(sg) ? 5 : 8); }
+      return sum + 2;
+    }, 0) * (cmods.oopMult || 1);
+    const munAtk = munStr + tAtk + hAdv + coachEdge + atkDuoBonus + (cmods.atkBonus || 0) + maverickBig + maverickChaos - oopPenalty;
+    const munDef = munStr + tDef + hAdv + coachEdge * 0.65 + defDuoBonus + (cmods.defBonus || 0) - oopPenalty;
     const oppAtk = fx.oppStr, oppDef = fx.oppStr;
     const attackers = xi.filter(p => p.pos==='FWD' || p.pos==='MID');
     const oppRoster = getClubRoster(fx.opp);
