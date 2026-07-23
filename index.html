@@ -794,7 +794,7 @@
         const price = foreign ? Math.round(p[6] * 1.3) : p[6];
         return { id: i, name: p[0], pos: p[1], role: p[7] || inferRole(p[0], p[1]), age: p[2], ovr: p[3], pot: p[4], club: p[5], price, foreign, status: 'available' };
       }),
-      shortlist: [], windowOpen: true, finished: false, marketFilter: {pos:'', maxPrice:0}, statsFilter: {sort:'ga', leagueTab:'scorers'}
+      shortlist: [], windowOpen: true, finished: false, marketFilter: {pos:'', maxPrice:0}, statsFilter: {sort:'ga', leagueTab:'scorers'}, roleNegotiation: null
     };
     generateAcademy(); refreshTransferWindow(); initTables(); buildFixtures(); autoPickXI(); render();
   }
@@ -1045,7 +1045,7 @@
       G.squad.push({ id:newId, name:p.name, pos:p.pos, role:p.role, age:p.age, ovr:p.ovr, pot:p.pot,
         devCeiling: p.devCeiling != null ? p.devCeiling : undefined,
         mins:0, goals:0, assists:0, appearances:0, clubGoals:0, clubAssists:0, clubApps:0, matchRatings:[], bigGameRatings:[], lastUpdate:G.day,
-        fitness:100, morale:70, injuryWeeks:0, newSigning:false, sold:false, onLoan:null, loanEndsDay:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null, wantsToLeave:false, homegrown:true, academyGrad:true, chemPenalty:0 });
+        fitness:100, morale:70, injuryWeeks:0, newSigning:false, sold:false, onLoan:null, loanEndsDay:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null, wantsToLeave:false, homegrown:true, academyGrad:true, chemPenalty:0, promisedRole:'Youth' });
       G.transferMessages.push(p.name + ' promoted from U21 to the first team.');
       autoPickXI(); render();
     }
@@ -2026,12 +2026,16 @@
       G.squad.forEach(p => {
         if (p.sold || p.onLoan || G.starters.includes(p.id) || p.injuryWeeks > 0) return;
         p.fitness = Math.min(100, p.fitness + 22);
-        p.morale = Math.max(0, p.morale - 2);
+        const roleDecayMult = { Crucial:2.2, Important:1.4, Rotation:1, Youth:0.35 }[p.promisedRole] || 1;
+        p.morale = Math.max(0, p.morale - 2 * roleDecayMult);
         if (p.suspended > 0) p.suspended = Math.max(0, p.suspended - 1);
-        if (!p.wantsToLeave && p.morale < 32 && G.seasonStats.played >= 8 &&
-            (p.appearances / G.seasonStats.played) < 0.22) {
+        const appRatioThreshold = { Crucial:0.55, Important:0.4, Rotation:0.22, Youth:0.05 }[p.promisedRole] || 0.22;
+        const moraleThreshold = { Crucial:45, Important:38, Rotation:32, Youth:22 }[p.promisedRole] || 32;
+        if (!p.wantsToLeave && p.morale < moraleThreshold && G.seasonStats.played >= 8 &&
+            (p.appearances / G.seasonStats.played) < appRatioThreshold) {
           p.wantsToLeave = true;
-          G.transferMessages.push(p.name + ' has handed in a transfer request — unhappy with his limited role.');
+          const roleMsg = p.promisedRole ? ' — promised a ' + p.promisedRole + ' role and isn\'t getting it' : ' — unhappy with his limited role';
+          G.transferMessages.push(p.name + ' has handed in a transfer request' + roleMsg + '.');
         }
       });
       fx.played = true; fx.score = cm.home + '-' + cm.away;
@@ -2531,10 +2535,23 @@
       .sort((a,b) => b.Pts - a.Pts || b.GD - a.GD || b.GF - a.GF);
   }
 
+  const SQUAD_ROLES = ['Crucial','Important','Rotation','Youth'];
+  function squadRoleIndex(role) { const i = SQUAD_ROLES.indexOf(role); return i < 0 ? 2 : i; }
+  function expectedSquadRoleIndex(target) {
+    let score = 0;
+    score += target.ovr >= 88 ? 0 : target.ovr >= 84 ? 1 : target.ovr >= 79 ? 2 : 3;
+    if (target.price >= 60) score -= 1;
+    else if (target.price <= 15) score += 1;
+    if (target.age <= 21 && target.pot - target.ovr >= 6) score += 1;
+    if (target.age >= 30) score -= 0.5;
+    return Math.min(3, Math.max(0, Math.round(score)));
+  }
+  function expectedSquadRole(target) { return SQUAD_ROLES[expectedSquadRoleIndex(target)]; }
   function bidForPlayer(id) {
     refreshTransferWindow();
     const target = G.market.find(p => p.id === id);
     if (!target || target.status !== 'available') return;
+    if (G.roleNegotiation) { G.transferMessages.push('Finish agreeing terms with your current target before making another move.'); render(); return; }
     if (!G.windowOpen) { G.transferMessages.push('Transfer window closed — you can only buy in June, July, August, or January.'); render(); return; }
     if (G.budget < target.price) { G.transferMessages.push('Bid for ' + target.name + ' rejected — over budget.'); render(); return; }
     const reputationBoost = Math.min(0.18, Math.max(0, (G.reputation - 78) * 0.014) + (G.stadiumLevel - 1) * 0.03);
@@ -2543,17 +2560,8 @@
     const foreignTax = target.foreign ? (-0.22 + (cSignMod.foreignPenalty || 0)) : 0;
     const chance = Math.min(0.95, (target.ovr >= 88 ? 0.45 : target.ovr >= 85 ? 0.65 : 0.85) + reputationBoost + eliteTax + foreignTax + (cSignMod.signingMod || 0));
     if (Math.random() < chance) {
-      G.budget -= target.price;
-      target.status = 'signed';
-      target.previousClub = target.club;
-      target.club = 'Man Utd';
-      removeFromClubRoster(target.previousClub, target.name);
-      const newId = Math.max(...G.squad.map(p=>p.id)) + 1;
-      G.squad.push({ id:newId, name:target.name, pos:target.pos, role:roleOf(target), age:target.age, ovr:target.ovr, pot:target.pot,
-        mins:0, goals:0, assists:0, appearances:0, clubGoals:0, clubAssists:0, clubApps:0, matchRatings: [], bigGameRatings: [], lastUpdate: G.day,
-        fitness:100, morale:75, injuryWeeks:0, newSigning: true, sold:false, onLoan:null, loanEndsDay:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null, wantsToLeave:false, chemPenalty:0 });
-      G.transferMessages.push('Signed ' + target.name + ' from ' + target.previousClub + ' for £' + target.price + 'm.');
-      autoPickXI();
+      G.roleNegotiation = { playerId: id, tries: 0 };
+      G.transferMessages.push(target.club + ' have accepted a fee for ' + target.name + '. Now agree his squad role before the deal is done.');
     } else {
       if (target.ovr >= 84) {
         const counter = Math.round(target.price * 1.2);
@@ -2563,6 +2571,42 @@
         G.transferMessages.push(target.club + ' rejected our bid for ' + target.name + '.');
       }
     }
+    render();
+  }
+  function offerSquadRole(role) {
+    const neg = G.roleNegotiation;
+    if (!neg) return;
+    const target = G.market.find(p => p.id === neg.playerId);
+    if (!target || target.status !== 'available') { G.roleNegotiation = null; render(); return; }
+    neg.tries++;
+    const offeredIdx = squadRoleIndex(role);
+    const expectedIdx = expectedSquadRoleIndex(target);
+    const dist = Math.abs(offeredIdx - expectedIdx);
+    const agreeChance = dist === 0 ? 1 : dist === 1 ? 0.5 : 0.05;
+    if (Math.random() < agreeChance) {
+      G.budget -= target.price;
+      target.status = 'signed';
+      target.previousClub = target.club;
+      target.club = 'Man Utd';
+      removeFromClubRoster(target.previousClub, target.name);
+      const newId = Math.max(...G.squad.map(p=>p.id)) + 1;
+      G.squad.push({ id:newId, name:target.name, pos:target.pos, role:roleOf(target), age:target.age, ovr:target.ovr, pot:target.pot,
+        mins:0, goals:0, assists:0, appearances:0, clubGoals:0, clubAssists:0, clubApps:0, matchRatings: [], bigGameRatings: [], lastUpdate: G.day,
+        fitness:100, morale:75, injuryWeeks:0, newSigning: true, sold:false, onLoan:null, loanEndsDay:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null, wantsToLeave:false, chemPenalty:0,
+        promisedRole: role });
+      G.transferMessages.push('Signed ' + target.name + ' from ' + target.previousClub + ' for £' + target.price + 'm — promised a ' + role + ' role.');
+      G.roleNegotiation = null;
+      autoPickXI();
+    } else if (neg.tries >= 2) {
+      G.transferMessages.push(target.name + ' has rejected our offer — he doesn\'t see eye to eye with the club on his role and the move is off.');
+      G.roleNegotiation = null;
+    } else {
+      G.transferMessages.push(target.name + '\'s camp weren\'t convinced by the ' + role + ' role we offered. One more attempt to find common ground.');
+    }
+    render();
+  }
+  function cancelRoleNegotiation() {
+    G.roleNegotiation = null;
     render();
   }
   function aiBuyerClubs() {
@@ -3076,6 +3120,7 @@
         (p.suspended ? '<span class="badge inj">SUS</span>' : '') +
         (p.newSigning ? '<span class="badge new">NEW</span>' : '') +
         (p.wantsToLeave ? '<span class="badge inj">WANTS OUT</span>' : '') +
+        (p.promisedRole ? '<span class="role-tag" title="Promised squad role">' + p.promisedRole + '</span>' : '') +
         '<span style="display:block; font-size:10px; color:var(--color-text-tertiary); margin-top:1px;">' + (recentChips || '<span style="opacity:0.5;">no matches yet</span>') + '</span>' +
       '</span>' +
       '<span>' + roleBadge(p) + '</span>' +
@@ -3091,6 +3136,25 @@
     '</div>';
   }
 
+  function renderRoleNegotiation() {
+    const neg = G.roleNegotiation;
+    if (!neg) return '';
+    const target = G.market.find(p => p.id === neg.playerId);
+    if (!target) { G.roleNegotiation = null; return ''; }
+    const roleDesc = {
+      Crucial: 'Expects to start almost every week — the spine of the team.',
+      Important: 'Expects regular starts and a clear role in the squad.',
+      Rotation: 'Accepts a squad-rotation role with a fair share of minutes.',
+      Youth: 'Happy developing with minimal first-team minutes.'
+    };
+    return '<div class="pnl" style="border:1.5px solid var(--color-red);">' +
+      '<div class="pnl-t" style="color:var(--color-red);">Agree squad role · ' + target.name + ' (attempt ' + (neg.tries + 1) + ' of 2)</div>' +
+      '<div style="font-size:12px; color:var(--color-text-secondary); margin-bottom:8px;">' + target.name + ' wants clarity on his role before signing. Offer a squad role — if we can\'t agree within two tries, the deal collapses.</div>' +
+      '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
+        SQUAD_ROLES.map(role => '<button class="btn sm" onclick="offerSquadRole(\'' + role + '\')" title="' + roleDesc[role] + '">' + role + '</button>').join('') +
+        '<button class="btn sm" onclick="cancelRoleNegotiation()">✕ Walk away</button>' +
+      '</div></div>';
+  }
   function renderTransfers() {
     const mf = G.marketFilter || {pos:'', maxPrice:0};
     const fPos = mf.pos || '';
@@ -3121,7 +3185,8 @@
       '</div></div>';
     const aiMoves = G.aiTransferLog.slice(-5).reverse();
     const countLabel = available.length + (available.length !== allAvailable.length ? '/' + allAvailable.length : '') + ' players';
-    return (!G.windowOpen ? '<div class="toast">Transfer window closed.</div>' : '') +
+    return renderRoleNegotiation() +
+      (!G.windowOpen ? '<div class="toast">Transfer window closed.</div>' : '') +
       (G.shortlist.length ? '<div class="toast">Shortlist: ' + G.shortlist.length + ' player' + (G.shortlist.length>1?'s':'') + ' tracked.</div>' : '') +
       (aiMoves.length ? '<div class="pnl"><div class="pnl-t">Other clubs · recent market moves</div>' +
         aiMoves.map(m => '<div style="display:grid; grid-template-columns: 62px 1fr 58px; gap:8px; align-items:center; padding:5px 0; font-size:11px; border-bottom:0.5px solid var(--color-border-tertiary);">' +
@@ -3138,7 +3203,7 @@
           '<span>£' + p.price + 'm' + (p.foreign ? ' <span style="font-size:9px; color:var(--color-text-secondary); background:rgba(255,255,255,0.07); border-radius:3px; padding:1px 3px;">INTL</span>' : '') + '</span>' +
           '<span style="display:flex; gap:3px;">' +
             '<button class="btn sm" onclick="toggleShortlist(' + p.id + ')">' + (G.shortlist.includes(p.id)?'★':'☆') + '</button>' +
-            '<button class="btn sm ' + (G.budget>=p.price?'pri':'') + '" onclick="bidForPlayer(' + p.id + ')" ' + (!G.windowOpen?'disabled':'') + '>Bid</button>' +
+            '<button class="btn sm ' + (G.budget>=p.price?'pri':'') + '" onclick="bidForPlayer(' + p.id + ')" ' + (!G.windowOpen||G.roleNegotiation?'disabled':'') + '>Bid</button>' +
           '</span></div>').join('') :
           '<div style="padding:12px 6px; color:var(--color-text-secondary); font-size:12px;">No players match these filters.</div>') +
       '</div>';
@@ -3146,7 +3211,8 @@
 
   function renderScouting() {
     const recs = scoutRecommendations();
-    return '<div class="pnl"><div class="pnl-t">Chief scout\'s report</div>' +
+    return renderRoleNegotiation() +
+      '<div class="pnl"><div class="pnl-t">Chief scout\'s report</div>' +
       '<p style="font-size:12px; color:var(--color-text-secondary); margin: 0 0 8px;">Targets identified for our positions of need.</p></div>' +
       recs.map(p => '<div class="scout-card"><div class="scout-row">' +
         '<div><div style="font-weight:500; font-size:13px;">' + p.name + ' <span style="margin-left:6px;">' + roleBadge(p) + '</span> <span style="color:var(--color-text-secondary); font-size:11px; margin-left:6px;">' + p.club + ' · ' + p.age + 'yo</span></div>' +
@@ -3155,7 +3221,7 @@
         '<div style="font-size:11px; margin-top:3px;">£' + p.price + 'm</div></div></div>' +
         '<div style="display:flex; gap:6px; margin-top:8px;">' +
           '<button class="btn sm" onclick="toggleShortlist(' + p.id + ')">' + (G.shortlist.includes(p.id)?'★ Shortlisted':'☆ Shortlist') + '</button>' +
-          '<button class="btn sm ' + (G.budget>=p.price && G.windowOpen?'pri':'') + '" onclick="bidForPlayer(' + p.id + ')" ' + ((!G.windowOpen||G.budget<p.price)?'disabled':'') + '>Bid £' + p.price + 'm</button>' +
+          '<button class="btn sm ' + (G.budget>=p.price && G.windowOpen?'pri':'') + '" onclick="bidForPlayer(' + p.id + ')" ' + ((!G.windowOpen||G.budget<p.price||G.roleNegotiation)?'disabled':'') + '>Bid £' + p.price + 'm</button>' +
         '</div></div>').join('');
   }
 
