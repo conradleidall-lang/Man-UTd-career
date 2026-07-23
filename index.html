@@ -778,7 +778,8 @@
         mins: 0, goals: 0, assists: 0, appearances: 0, clubGoals: 0, clubAssists: 0, clubApps: 0,
         matchRatings: [], bigGameRatings: [], lastUpdate: 0,
         fitness: 100, morale: 75, injuryWeeks: 0, newSigning: false,
-        sold: false, onLoan: null, loanEndsDay: null, suspended: 0, majorInjuries: 0, devPenalty: 0, academyTeam: null, wantsToLeave: false, homegrown: true, academyGrad: ACADEMY_GRADS.has(p[0]), chemPenalty: 0
+        sold: false, onLoan: null, loanEndsDay: null, suspended: 0, majorInjuries: 0, devPenalty: 0, academyTeam: null, wantsToLeave: false, homegrown: true, academyGrad: ACADEMY_GRADS.has(p[0]), chemPenalty: 0,
+        weeklyWage: expectedWeeklyWage({ ovr: p[3], pot: p[4], age: p[2] }), signingBonus: 0
       })),
       starters: [], tactic: 'balanced', formation: '4-3-3', culture: 'aristocrats', loanPickerId: null,
       budget: 80, stadiumLevel: 1, records: {}, tables: {}, clStandings: {}, elStandings: {}, cupRounds: { FA: [], EFL: [] }, clKnockout: null, elKnockout: null,
@@ -1045,7 +1046,8 @@
       G.squad.push({ id:newId, name:p.name, pos:p.pos, role:p.role, age:p.age, ovr:p.ovr, pot:p.pot,
         devCeiling: p.devCeiling != null ? p.devCeiling : undefined,
         mins:0, goals:0, assists:0, appearances:0, clubGoals:0, clubAssists:0, clubApps:0, matchRatings:[], bigGameRatings:[], lastUpdate:G.day,
-        fitness:100, morale:70, injuryWeeks:0, newSigning:false, sold:false, onLoan:null, loanEndsDay:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null, wantsToLeave:false, homegrown:true, academyGrad:true, chemPenalty:0, promisedRole:'Youth' });
+        fitness:100, morale:70, injuryWeeks:0, newSigning:false, sold:false, onLoan:null, loanEndsDay:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null, wantsToLeave:false, homegrown:true, academyGrad:true, chemPenalty:0, promisedRole:'Youth',
+        weeklyWage: expectedWeeklyWage({ ovr:p.ovr, pot:p.pot, age:p.age }) * 0.5, signingBonus: 0 });
       G.transferMessages.push(p.name + ' promoted from U21 to the first team.');
       autoPickXI(); render();
     }
@@ -2447,10 +2449,12 @@
     const stadiumRevenue = 15 + G.stadiumLevel * 6;
     const fanbaseRevenue = Math.floor(Math.max(0, G.fanbase - 70) * 0.9 * (endMods.fanbaseMult || 1));
     const plPrizeMoney = Math.max(5, Math.round(45 - (munPos - 1) * 2.1));
-    G.budget += stadiumRevenue + fanbaseRevenue + plPrizeMoney;
+    const annualWageBill = Math.round(G.squad.filter(p => !p.sold).reduce((s,p) => s + (p.weeklyWage || 0), 0) * 52 / 1000 * 10) / 10;
+    G.budget += stadiumRevenue + fanbaseRevenue + plPrizeMoney - annualWageBill;
     const fanLabel = fanbaseLabel(G.fanbase);
     G.transferMessages.push('Stadium (Level ' + G.stadiumLevel + ') generated £' + stadiumRevenue + 'm. Fanbase (' + fanLabel + ') added £' + fanbaseRevenue + 'm.');
     G.transferMessages.push('Premier League prize money · ' + ordinal(munPos) + ' place · £' + plPrizeMoney + 'm added to budget.');
+    G.transferMessages.push('Annual wage bill · £' + annualWageBill + 'm deducted from budget.');
     G.pairStats = {}; G.activeDuos = []; G.activeTrio = null;
     G.windowOpen = true; G.incomingBids = []; G.aiTransfers = {}; G.aiTransferLog = [];
     G.view = 'season-end';
@@ -2547,6 +2551,19 @@
     return Math.min(3, Math.max(0, Math.round(score)));
   }
   function expectedSquadRole(target) { return SQUAD_ROLES[expectedSquadRoleIndex(target)]; }
+  function expectedWeeklyWage(target) {
+    const ovrPart = Math.pow(Math.max(0, target.ovr - 60) / 10, 2.1) * 8;
+    const potPart = Math.max(0, target.pot - target.ovr) * 1.6;
+    const agePart = target.age <= 23 ? 1.08 : target.age >= 32 ? 0.85 : 1;
+    return Math.max(15, Math.round((ovrPart + potPart) * agePart));
+  }
+  function expectedSigningBonus(target) { return Math.round(expectedWeeklyWage(target) * 12); }
+  const WAGE_OFFERS = [
+    { key:'low', label:'Lowball', wageMult:0.75, bonusMult:0.6 },
+    { key:'fair', label:'Fair', wageMult:1.0, bonusMult:1.0 },
+    { key:'gen', label:'Generous', wageMult:1.2, bonusMult:1.3 },
+    { key:'over', label:'Overpay', wageMult:1.45, bonusMult:1.7 }
+  ];
   function bidForPlayer(id) {
     refreshTransferWindow();
     const target = G.market.find(p => p.id === id);
@@ -2560,7 +2577,7 @@
     const foreignTax = target.foreign ? (-0.22 + (cSignMod.foreignPenalty || 0)) : 0;
     const chance = Math.min(0.95, (target.ovr >= 88 ? 0.45 : target.ovr >= 85 ? 0.65 : 0.85) + reputationBoost + eliteTax + foreignTax + (cSignMod.signingMod || 0));
     if (Math.random() < chance) {
-      G.roleNegotiation = { playerId: id, tries: 0 };
+      G.roleNegotiation = { playerId: id, stage: 'role', tries: 0 };
       G.transferMessages.push(target.club + ' have accepted a fee for ' + target.name + '. Now agree his squad role before the deal is done.');
     } else {
       if (target.ovr >= 84) {
@@ -2575,7 +2592,7 @@
   }
   function offerSquadRole(role) {
     const neg = G.roleNegotiation;
-    if (!neg) return;
+    if (!neg || neg.stage !== 'role') return;
     const target = G.market.find(p => p.id === neg.playerId);
     if (!target || target.status !== 'available') { G.roleNegotiation = null; render(); return; }
     neg.tries++;
@@ -2584,7 +2601,34 @@
     const dist = Math.abs(offeredIdx - expectedIdx);
     const agreeChance = dist === 0 ? 1 : dist === 1 ? 0.5 : 0.05;
     if (Math.random() < agreeChance) {
+      G.roleNegotiation = { playerId: neg.playerId, stage: 'wage', tries: 0, role };
+      G.transferMessages.push(target.name + ' has agreed to a ' + role + ' role. Now agree personal terms — weekly wage and signing bonus.');
+    } else if (neg.tries >= 2) {
+      G.transferMessages.push(target.name + ' has rejected our offer — he doesn\'t see eye to eye with the club on his role and the move is off.');
+      G.roleNegotiation = null;
+    } else {
+      G.transferMessages.push(target.name + '\'s camp weren\'t convinced by the ' + role + ' role we offered. One more attempt to find common ground.');
+    }
+    render();
+  }
+  function offerWageTerms(offerKey) {
+    const neg = G.roleNegotiation;
+    if (!neg || neg.stage !== 'wage') return;
+    const target = G.market.find(p => p.id === neg.playerId);
+    if (!target || target.status !== 'available') { G.roleNegotiation = null; render(); return; }
+    const offer = WAGE_OFFERS.find(o => o.key === offerKey) || WAGE_OFFERS[1];
+    const wage = Math.round(expectedWeeklyWage(target) * offer.wageMult);
+    const bonus = Math.round(expectedSigningBonus(target) * offer.bonusMult);
+    neg.tries++;
+    const wageRatio = wage / expectedWeeklyWage(target);
+    const bonusRatio = bonus / expectedSigningBonus(target);
+    const combinedRatio = wageRatio * 0.7 + bonusRatio * 0.3;
+    const agreeChance = combinedRatio >= 1.05 ? 1 : combinedRatio >= 0.9 ? 0.75 : combinedRatio >= 0.75 ? 0.35 : 0.05;
+    if (Math.random() < agreeChance) {
+      const bonusM = Math.round(bonus / 1000 * 10) / 10;
+      if (G.budget < target.price + bonusM) { G.transferMessages.push('Not enough budget to cover the fee and signing bonus for ' + target.name + '.'); G.roleNegotiation = null; render(); return; }
       G.budget -= target.price;
+      G.budget -= bonusM;
       target.status = 'signed';
       target.previousClub = target.club;
       target.club = 'Man Utd';
@@ -2593,15 +2637,15 @@
       G.squad.push({ id:newId, name:target.name, pos:target.pos, role:roleOf(target), age:target.age, ovr:target.ovr, pot:target.pot,
         mins:0, goals:0, assists:0, appearances:0, clubGoals:0, clubAssists:0, clubApps:0, matchRatings: [], bigGameRatings: [], lastUpdate: G.day,
         fitness:100, morale:75, injuryWeeks:0, newSigning: true, sold:false, onLoan:null, loanEndsDay:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null, wantsToLeave:false, chemPenalty:0,
-        promisedRole: role });
-      G.transferMessages.push('Signed ' + target.name + ' from ' + target.previousClub + ' for £' + target.price + 'm — promised a ' + role + ' role.');
+        promisedRole: neg.role, weeklyWage: wage, signingBonus: bonus });
+      G.transferMessages.push('Signed ' + target.name + ' from ' + target.previousClub + ' for £' + target.price + 'm — ' + neg.role + ' role, £' + wage.toLocaleString() + '/wk wages, £' + bonus.toLocaleString() + ' signing bonus.');
       G.roleNegotiation = null;
       autoPickXI();
     } else if (neg.tries >= 2) {
-      G.transferMessages.push(target.name + ' has rejected our offer — he doesn\'t see eye to eye with the club on his role and the move is off.');
+      G.transferMessages.push(target.name + '\'s camp have walked away — personal terms couldn\'t be agreed and the move is off.');
       G.roleNegotiation = null;
     } else {
-      G.transferMessages.push(target.name + '\'s camp weren\'t convinced by the ' + role + ' role we offered. One more attempt to find common ground.');
+      G.transferMessages.push(target.name + '\'s camp feel the package on the table is short of expectations. One more attempt to agree terms.');
     }
     render();
   }
@@ -2997,7 +3041,10 @@
     }).join('');
     const shape = getFormationShape(G.formation).flat();
     const shapeSummary = POSITION_ORDER.filter(r => shape.includes(r)).map(r => r + ' x' + shape.filter(s => s===r).length).join(' · ');
-    return '<div class="pnl">' +
+    const weeklyWageBill = G.squad.filter(p => !p.sold).reduce((s,p) => s + (p.weeklyWage || 0), 0);
+    const annualWageBillEst = Math.round(weeklyWageBill * 52 / 1000 * 10) / 10;
+    const wageToast = '<div class="toast">Wage bill · £' + weeklyWageBill.toLocaleString() + 'k/wk · roughly £' + annualWageBillEst + 'm/yr, deducted from budget at season end.</div>';
+    return wageToast + '<div class="pnl">' +
       '<div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">' +
         '<span style="font-size:10px; color:var(--color-text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Formation</span>' +
         ['4-3-3','4-2-3-1','4-4-2','3-5-2','5-3-2'].map(f => '<button class="btn ' + (G.formation===f?'pri':'') + '" onclick="setFormation(\'' + f + '\')">' + f + '</button>').join('') +
@@ -3120,7 +3167,7 @@
         (p.suspended ? '<span class="badge inj">SUS</span>' : '') +
         (p.newSigning ? '<span class="badge new">NEW</span>' : '') +
         (p.wantsToLeave ? '<span class="badge inj">WANTS OUT</span>' : '') +
-        (p.promisedRole ? '<span class="role-tag" title="Promised squad role">' + p.promisedRole + '</span>' : '') +
+        (p.promisedRole ? '<span class="role-tag" title="Promised squad role · £' + (p.weeklyWage||0).toLocaleString() + 'k/wk">' + p.promisedRole + '</span>' : '') +
         '<span style="display:block; font-size:10px; color:var(--color-text-tertiary); margin-top:1px;">' + (recentChips || '<span style="opacity:0.5;">no matches yet</span>') + '</span>' +
       '</span>' +
       '<span>' + roleBadge(p) + '</span>' +
@@ -3141,6 +3188,17 @@
     if (!neg) return '';
     const target = G.market.find(p => p.id === neg.playerId);
     if (!target) { G.roleNegotiation = null; return ''; }
+    if (neg.stage === 'wage') {
+      const wage = expectedWeeklyWage(target);
+      const bonus = expectedSigningBonus(target);
+      return '<div class="pnl" style="border:1.5px solid var(--color-red);">' +
+        '<div class="pnl-t" style="color:var(--color-red);">Agree personal terms · ' + target.name + ' (attempt ' + (neg.tries + 1) + ' of 2)</div>' +
+        '<div style="font-size:12px; color:var(--color-text-secondary); margin-bottom:8px;">' + target.name + ' is looking for around <strong>£' + wage.toLocaleString() + 'k/wk</strong> and a <strong>£' + bonus.toLocaleString() + 'k</strong> signing bonus, based on his ability and potential. Choose a package to offer.</div>' +
+        '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
+          WAGE_OFFERS.map(o => '<button class="btn sm" onclick="offerWageTerms(\'' + o.key + '\')" title="£' + Math.round(wage*o.wageMult).toLocaleString() + 'k/wk + £' + Math.round(bonus*o.bonusMult).toLocaleString() + 'k bonus">' + o.label + '</button>').join('') +
+          '<button class="btn sm" onclick="cancelRoleNegotiation()">✕ Walk away</button>' +
+        '</div></div>';
+    }
     const roleDesc = {
       Crucial: 'Expects to start almost every week — the spine of the team.',
       Important: 'Expects regular starts and a clear role in the squad.',
