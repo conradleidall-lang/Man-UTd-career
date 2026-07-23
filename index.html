@@ -787,9 +787,9 @@
         mins: 0, goals: 0, assists: 0, appearances: 0, clubGoals: 0, clubAssists: 0, clubApps: 0,
         matchRatings: [], bigGameRatings: [], lastUpdate: 0,
         fitness: 100, morale: 75, injuryWeeks: 0, newSigning: false,
-        sold: false, onLoan: null, suspended: 0, majorInjuries: 0, devPenalty: 0, academyTeam: null, wantsToLeave: false, homegrown: true, academyGrad: ACADEMY_GRADS.has(p[0]), chemPenalty: 0
+        sold: false, onLoan: null, loanEndsDay: null, suspended: 0, majorInjuries: 0, devPenalty: 0, academyTeam: null, wantsToLeave: false, homegrown: true, academyGrad: ACADEMY_GRADS.has(p[0]), chemPenalty: 0
       })),
-      starters: [], tactic: 'balanced', formation: '4-3-3', culture: 'aristocrats',
+      starters: [], tactic: 'balanced', formation: '4-3-3', culture: 'aristocrats', loanPickerId: null,
       budget: 80, stadiumLevel: 1, records: {}, tables: {}, clStandings: {}, elStandings: {}, cupRounds: { FA: [], EFL: [] }, clKnockout: null, elKnockout: null,
       fixtures: [], results: [], trophies: [], seasonHistory: [], currentMatch: null, loanReturnLog: [],
       pairStats: {}, activeDuos: [], activeTrio: null,
@@ -1054,14 +1054,14 @@
       G.squad.push({ id:newId, name:p.name, pos:p.pos, role:p.role, age:p.age, ovr:p.ovr, pot:p.pot,
         devCeiling: p.devCeiling != null ? p.devCeiling : undefined,
         mins:0, goals:0, assists:0, appearances:0, clubGoals:0, clubAssists:0, clubApps:0, matchRatings:[], bigGameRatings:[], lastUpdate:G.day,
-        fitness:100, morale:70, injuryWeeks:0, newSigning:false, sold:false, onLoan:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null, wantsToLeave:false, homegrown:true, academyGrad:true, chemPenalty:0 });
+        fitness:100, morale:70, injuryWeeks:0, newSigning:false, sold:false, onLoan:null, loanEndsDay:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null, wantsToLeave:false, homegrown:true, academyGrad:true, chemPenalty:0 });
       G.transferMessages.push(p.name + ' promoted from U21 to the first team.');
       autoPickXI(); render();
     }
   }
   function sendSeniorToU21(id) {
     const p = G.squad.find(x => x.id === id);
-    if (!p || p.sold || p.injuryWeeks > 0 || G.starters.includes(id)) return;
+    if (!p || p.sold || p.onLoan || p.injuryWeeks > 0 || G.starters.includes(id)) return;
     p.academyTeam = 'U21';
     G.starters = G.starters.filter(sid => sid !== id);
     G.transferMessages.push(p.name + ' moved to U21 games for match sharpness.');
@@ -1418,27 +1418,28 @@
     const base = pg === sg ? -4 : ((adjacent[pg] || []).includes(sg) ? -7 : -10);
     return Math.round(base * oopMult);
   }
-  function slotScore(slot, p, fresh, bench) {
+  function slotScore(slot, p, fresh, bench, youngest) {
     if (bench) return slotCompatibility(slot, p) * 1000000 - (p.mins || 0);
+    if (youngest) return slotCompatibility(slot, p) * 1000000 - (p.age || 0);
     return effectiveRating(p) + slotCompatibility(slot, p) * 3 + (fresh ? p.fitness / 5 : 0);
   }
-  function pickForSlot(pool, slot, fresh, bench) {
+  function pickForSlot(pool, slot, fresh, bench, youngest) {
     const sg = slotGroup(slot);
     const isGK = sg === 'GK';
     const inGroup   = pool.filter(p => isGK ? roleOf(p) === 'GK' : (p.pos === sg && roleOf(p) !== 'GK'));
     const crossGroup = pool.filter(p => !isGK && roleOf(p) !== 'GK' && p.pos !== sg);
-    const sorted = (arr) => arr.sort((a,b) => slotScore(slot,b,fresh,bench) - slotScore(slot,a,fresh,bench));
+    const sorted = (arr) => arr.sort((a,b) => slotScore(slot,b,fresh,bench,youngest) - slotScore(slot,a,fresh,bench,youngest));
     return sorted(inGroup)[0] || sorted(crossGroup)[0] || null;
   }
-  function assignFormationPlayers(f, pool, fresh, bench) {
+  function assignFormationPlayers(f, pool, fresh, bench, youngest) {
     const selected = [];
     getFormationShape(f).flat().forEach(slot => {
       const remaining = pool.filter(p => !selected.includes(p.id));
-      const pick = pickForSlot(remaining, slot, fresh, bench);
+      const pick = pickForSlot(remaining, slot, fresh, bench, youngest);
       if (pick) selected.push(pick.id);
     });
     if (selected.length < 11) {
-      pool.filter(p => !selected.includes(p.id)).sort((a,b) => bench ? (a.mins||0) - (b.mins||0) : fresh ? b.fitness - a.fitness : effectiveRating(b) - effectiveRating(a)).slice(0, 11 - selected.length).forEach(p => selected.push(p.id));
+      pool.filter(p => !selected.includes(p.id)).sort((a,b) => bench ? (a.mins||0) - (b.mins||0) : youngest ? (a.age||0) - (b.age||0) : fresh ? b.fitness - a.fitness : effectiveRating(b) - effectiveRating(a)).slice(0, 11 - selected.length).forEach(p => selected.push(p.id));
     }
     return selected.slice(0,11);
   }
@@ -1756,11 +1757,17 @@
     G.starters = assignFormationPlayers(G.formation, avail, false, true);
     render();
   }
+  function setYoungestXI() {
+    G.slotMap = null;
+    const avail = G.squad.filter(isAvailable);
+    G.starters = assignFormationPlayers(G.formation, avail, false, false, true);
+    render();
+  }
   function getXI() { return G.starters.map(id => G.squad.find(p => p.id === id)).filter(Boolean); }
 
   function startPlayer(id) {
     const p = G.squad.find(x => x.id === id);
-    if (!p || p.sold || p.injuryWeeks > 0 || G.starters.includes(id)) return;
+    if (!p || p.sold || p.onLoan || p.injuryWeeks > 0 || G.starters.includes(id)) return;
     const assignments = getFormationAssignments().flat().filter(a => a.player && slotGroup(a.slot) === p.pos);
     const swapOption = assignments.sort((a,b) => {
       const aGain = slotScore(a.slot, p, false) - slotScore(a.slot, a.player, false);
@@ -1781,7 +1788,7 @@
   function benchPlayer(id) {
     if (!G.starters.includes(id)) return;
     const p = G.squad.find(x => x.id === id);
-    const candidates = G.squad.filter(x => !x.sold && x.injuryWeeks === 0 && !G.starters.includes(x.id) && x.pos === p.pos)
+    const candidates = G.squad.filter(x => !x.sold && !x.onLoan && !x.academyTeam && x.injuryWeeks === 0 && !G.starters.includes(x.id) && x.pos === p.pos)
       .sort((a,b) => slotCompatibility(roleOf(p), b) - slotCompatibility(roleOf(p), a) || effectiveRating(b) - effectiveRating(a));
     if (candidates.length > 0) {
       G.starters = G.starters.map(sid => sid === id ? candidates[0].id : sid);
@@ -2026,7 +2033,7 @@
       });
       updateManagerReputation(result, fx);
       G.squad.forEach(p => {
-        if (p.sold || G.starters.includes(p.id) || p.injuryWeeks > 0) return;
+        if (p.sold || p.onLoan || G.starters.includes(p.id) || p.injuryWeeks > 0) return;
         p.fitness = Math.min(100, p.fitness + 22);
         p.morale = Math.max(0, p.morale - 2);
         if (p.suspended > 0) p.suspended = Math.max(0, p.suspended - 1);
@@ -2361,6 +2368,7 @@
     G.day = cm ? cm.fx.day + 1 : G.day + 1;
     G.currentMatch = null;
     refreshTransferWindow();
+    checkLoanReturns();
     maybeGenerateIncomingBid();
     maybeRunAITransfers();
     if (G.day > 510 + (G.season-1)*365 && !G.fixtures.some(f => !f.played)) endSeason();
@@ -2384,17 +2392,15 @@
     generatePLAwards();
     updatePlayerRatings(true);
     G.loanReturnLog = [];
+    checkLoanReturns();
     const loanInjuries = {};
     G.squad.forEach(p => {
       if (p.sold) return;
-      if (p.onLoan) {
-        const entry = resolveLoanReturn(p);
-        if (entry) {
-          G.loanReturnLog.push(entry);
-          if (entry.injuryWeeks) loanInjuries[p.id] = entry.injuryWeeks;
-        }
-      }
       p.age++;
+      if (p.onLoan) {
+        // Still away on loan — untouched by club-side season reset besides ageing.
+        return;
+      }
       p.mins = 0; p.goals = 0; p.assists = 0; p.appearances = 0;
       p.matchRatings = []; p.bigGameRatings = [];
       const stadiumMoraleBoost = (G.stadiumLevel - 1) * 2;
@@ -2402,7 +2408,7 @@
       const cEnd = getCultureMods();
       const cultureMoraleBoost = (cEnd.artisanPenalty && (p.pos === 'FWD' || p.pos === 'MID') ? 3 : 0) + (cEnd.moraleEnd || 0);
       p.fitness = 100; p.morale = Math.min(100, Math.max(60, p.morale) + stadiumMoraleBoost + fanbaseMoraleBoost + cultureMoraleBoost);
-      p.injuryWeeks = 0; p.onLoan = null; p.suspended = 0; p.academyTeam = null;
+      p.injuryWeeks = 0; p.suspended = 0; p.academyTeam = null;
       if (p.morale >= 55) p.wantsToLeave = false;
       if (p.age >= 38 && p.ovr < 65) p.sold = true;
     });
@@ -2554,7 +2560,7 @@
       const newId = Math.max(...G.squad.map(p=>p.id)) + 1;
       G.squad.push({ id:newId, name:target.name, pos:target.pos, role:roleOf(target), age:target.age, ovr:target.ovr, pot:target.pot,
         mins:0, goals:0, assists:0, appearances:0, clubGoals:0, clubAssists:0, clubApps:0, matchRatings: [], bigGameRatings: [], lastUpdate: G.day,
-        fitness:100, morale:75, injuryWeeks:0, newSigning: true, sold:false, onLoan:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null, wantsToLeave:false, chemPenalty:0 });
+        fitness:100, morale:75, injuryWeeks:0, newSigning: true, sold:false, onLoan:null, loanEndsDay:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null, wantsToLeave:false, chemPenalty:0 });
       G.transferMessages.push('Signed ' + target.name + ' from ' + target.previousClub + ' for £' + target.price + 'm.');
       autoPickXI();
     } else {
@@ -2655,21 +2661,58 @@
     G.transferMessages.push('Sold ' + p.name + ' for £' + price + 'm. £' + kept + 'm added to the budget.');
     autoPickXI(); render();
   }
-  function loanOutPlayer(id) {
+  const LOAN_DURATIONS = { '6m': { label: '6 months', days: 180 }, '1y': { label: '1 year', days: 365 }, '2y': { label: '2 years', days: 730 } };
+  function openLoanPicker(id) {
     refreshTransferWindow();
     const p = G.squad.find(x=>x.id===id);
     if (!p || p.sold || p.onLoan || G.starters.includes(id) || p.injuryWeeks > 0) return;
     if (!G.windowOpen) { G.transferMessages.push('Transfer window closed — loans can only be arranged in June, July, August, or January.'); render(); return; }
+    G.loanPickerId = id;
+    render();
+  }
+  function cancelLoanPicker() {
+    G.loanPickerId = null;
+    render();
+  }
+  function loanOutPlayer(id, duration) {
+    refreshTransferWindow();
+    const p = G.squad.find(x=>x.id===id);
+    G.loanPickerId = null;
+    if (!p || p.sold || p.onLoan || G.starters.includes(id) || p.injuryWeeks > 0) return;
+    if (!G.windowOpen) { G.transferMessages.push('Transfer window closed — loans can only be arranged in June, July, August, or January.'); render(); return; }
+    const term = LOAN_DURATIONS[duration] || LOAN_DURATIONS['1y'];
     const smallerClubs = [...PL_TEAMS.filter(t => t[2] <= 78).map(t => t[0]), ...EUROPA_TEAMS.map(t => t[0])].filter(c => c !== 'Man Utd');
     const allClubs = [...PL_TEAMS.map(t => t[0]), ...EUROPA_TEAMS.map(t => t[0])].filter(c => c !== 'Man Utd');
     const useSmaller = p.age < 24 || p.morale < 55;
     const loanClub = PICK(useSmaller ? smallerClubs : allClubs);
     p.onLoan = loanClub;
+    p.loanEndsDay = G.day + term.days;
     p.fitness = 100;
     p.morale = Math.min(100, p.morale + 5);
     G.starters = G.starters.filter(sid => sid !== id);
-    G.transferMessages.push('Loaned ' + p.name + ' to ' + loanClub + ' for the season. They will return at the end of the year.');
+    G.transferMessages.push('Loaned ' + p.name + ' to ' + loanClub + ' for ' + term.label + '. They will return on ' + fmtDateLong(p.loanEndsDay) + '.');
     autoPickXI(); render();
+  }
+  function checkLoanReturns() {
+    if (!G.squad.some(p => p.onLoan && p.loanEndsDay != null && G.day >= p.loanEndsDay)) return;
+    G.loanReturnLog = G.loanReturnLog || [];
+    const loanInjuries = {};
+    G.squad.forEach(p => {
+      if (p.sold || !p.onLoan || p.loanEndsDay == null || G.day < p.loanEndsDay) return;
+      const entry = resolveLoanReturn(p);
+      if (entry) {
+        G.loanReturnLog.push(entry);
+        if (entry.injuryWeeks) loanInjuries[p.id] = entry.injuryWeeks;
+      }
+      p.onLoan = null;
+      p.loanEndsDay = null;
+      p.fitness = 100;
+      G.transferMessages.push(p.name + ' has returned from his loan spell.');
+    });
+    Object.entries(loanInjuries).forEach(([id, wks]) => {
+      const p = G.squad.find(x => x.id === +id);
+      if (p) p.injuryWeeks = wks;
+    });
   }
   function toggleShortlist(id) {
     const i = G.shortlist.indexOf(id);
@@ -2928,6 +2971,7 @@
         '<button class="btn pri" onclick="autoPickXIAndRender()">Best XI</button>' +
         '<button class="btn" onclick="setFreshestXI()">Freshest XI</button>' +
         '<button class="btn" onclick="setBenchXI()">Bench XI</button>' +
+        '<button class="btn" onclick="setYoungestXI()">Youngest XI</button>' +
       '</div><div style="font-size:11px; color:var(--color-text-secondary); margin-top:8px;">Shape: ' + shapeSummary + '</div></div>' +
       '<div class="formation-board">' +
         '<div class="pnl" style="padding: 6px;"><div class="pnl-t">' + G.formation + ' tactical board · drag tiles to swap positions</div><div class="pitch">' + slotRows + '</div>' +
@@ -2989,14 +3033,35 @@
 
   function renderLineupRow(p) {
     const isStarter = G.starters.includes(p.id);
+    const injured = p.injuryWeeks > 0;
+    const dot = isStarter ? '<span style="color:#DA291C; font-size:14px;">●</span>' : '<span style="color:var(--color-border-tertiary); font-size:14px;">○</span>';
+
+    if (p.onLoan) {
+      const backStr = p.loanEndsDay != null ? fmtDateLong(p.loanEndsDay) : 'end of season';
+      return '<div class="lineup-row">' +
+        '<span>' + dot + '</span>' +
+        '<span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' +
+          p.name + ' <span style="color:var(--color-text-tertiary); font-size:10px;">' + p.age + '</span>' +
+          '<span class="badge new">LOAN</span>' +
+          '<span style="display:block; font-size:10px; color:var(--color-text-tertiary); margin-top:1px;">No club data while away on loan</span>' +
+        '</span>' +
+        '<span>' + roleBadge(p) + '</span>' +
+        '<span style="color:var(--color-text-tertiary); font-size:11px;">—</span>' +
+        '<span style="color:var(--color-text-tertiary); font-size:11px;">—</span>' +
+        '<span style="color:var(--color-text-tertiary); font-size:11px;">—</span>' +
+        '<span style="color:var(--color-text-tertiary); font-size:11px;">—</span>' +
+        '<span style="color:var(--color-text-tertiary); font-size:11px;">—</span>' +
+        '<span style="font-size:10px; color:var(--color-text-tertiary);">At ' + p.onLoan + ' · back ' + backStr + '</span>' +
+        '<span></span>' +
+      '</div>';
+    }
+
     const eff = ROUND(effectiveRating(p));
     const bonus = formBonus(p);
     const moraleCol = p.morale >= 75 ? '#97C459' : p.morale >= 50 ? '#FAC775' : '#F09595';
     const fitCol = p.fitness >= 75 ? '#97C459' : p.fitness >= 50 ? '#FAC775' : '#F09595';
-    const injured = p.injuryWeeks > 0;
     const form = getFormStatus(p);
     const role = getSquadRole(p);
-    const dot = isStarter ? '<span style="color:#DA291C; font-size:14px;">●</span>' : '<span style="color:var(--color-border-tertiary); font-size:14px;">○</span>';
     const tier = tierOf(p.ovr);
     const recent = p.matchRatings.slice(-3);
     const recentChips = recent.map(r => {
@@ -3004,13 +3069,18 @@
       const txt = r >= 6.5 ? '#173404' : '#501313';
       return '<span class="rating-chip" style="background:' + col + '; color:' + txt + ';">' + r.toFixed(1) + '</span>';
     }).join('');
+    const loanPicker = G.loanPickerId === p.id
+      ? '<span style="display:flex; gap:3px;">' +
+          Object.entries(LOAN_DURATIONS).map(([key, term]) => '<button class="btn sm" onclick="loanOutPlayer(' + p.id + ',\'' + key + '\')" title="' + term.label + ' loan">' + key + '</button>').join('') +
+          '<button class="btn sm" onclick="cancelLoanPicker()" title="Cancel">✕</button>' +
+        '</span>'
+      : '<button class="btn sm" onclick="openLoanPicker(' + p.id + ')" title="Loan out" ' + (isStarter || injured ? 'disabled' : '') + '>L</button>';
     return '<div class="lineup-row ' + (isStarter ? 'is-starter' : '') + '">' +
       '<span>' + dot + '</span>' +
       '<span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' +
         p.name + ' <span style="color:var(--color-text-tertiary); font-size:10px;">' + p.age + '</span>' +
         (injured ? '<span class="badge inj">INJ ' + Math.ceil(p.injuryWeeks) + 'w</span>' : '') +
         (p.suspended ? '<span class="badge inj">SUS</span>' : '') +
-        (p.onLoan ? '<span class="badge new">LOAN</span>' : '') +
         (p.newSigning ? '<span class="badge new">NEW</span>' : '') +
         (p.wantsToLeave ? '<span class="badge inj">WANTS OUT</span>' : '') +
         '<span style="display:block; font-size:10px; color:var(--color-text-tertiary); margin-top:1px;">' + (recentChips || '<span style="opacity:0.5;">no matches yet</span>') + '</span>' +
@@ -3021,10 +3091,10 @@
       '<span>' + roleSelect(p) + '</span>' +
       '<span><span class="mor-bar"><span class="mor-fill" style="width:' + p.fitness + '%; background:' + fitCol + ';"></span></span></span>' +
       '<span><span class="mor-bar"><span class="mor-fill" style="width:' + p.morale + '%; background:' + moraleCol + ';"></span></span></span>' +
-      '<span>' + (injured || p.suspended || p.onLoan ? '<span style="font-size:10px; color:var(--color-text-tertiary);">' + (p.onLoan ? 'At ' + p.onLoan : 'Unavailable') + '</span>'
+      '<span>' + (injured || p.suspended ? '<span style="font-size:10px; color:var(--color-text-tertiary);">Unavailable</span>'
         : isStarter ? '<button class="btn sm" onclick="benchPlayer(' + p.id + ')" style="width: 70px;">Bench →</button>'
         : '<button class="btn sm pri" onclick="startPlayer(' + p.id + ')" style="width: 70px;">→ Start</button>') + '</span>' +
-      '<span style="display:flex; gap:3px;"><button class="btn sm" onclick="loanOutPlayer(' + p.id + ')" title="Loan out" ' + (isStarter || injured || p.onLoan ? 'disabled' : '') + '>L</button><button class="btn sm" onclick="sellPlayer(' + p.id + ')" title="Transfer list">£</button></span>' +
+      '<span style="display:flex; gap:3px;">' + loanPicker + '<button class="btn sm" onclick="sellPlayer(' + p.id + ')" title="Transfer list">£</button></span>' +
     '</div>';
   }
 
@@ -3201,7 +3271,7 @@
     function moodColor(m) {
       return m >= 75 ? '#97C459' : m >= 55 ? '#FAC775' : m >= 38 ? '#F0BC45' : '#F09595';
     }
-    const squadByMorale = G.squad.filter(p => !p.sold).sort((a,b) => a.morale - b.morale);
+    const squadByMorale = G.squad.filter(p => !p.sold && !p.onLoan).sort((a,b) => a.morale - b.morale);
     const avgMorale = Math.round(squadByMorale.reduce((s,p)=>s+p.morale,0) / (squadByMorale.length||1));
     const requesters = squadByMorale.filter(p => p.wantsToLeave);
 
@@ -3253,7 +3323,7 @@
       academyPlayers(team).map(p => academyRow(p, team)).join('') +
     '</div>';
     const u21Seniors = G.squad.filter(p => !p.sold && p.academyTeam === 'U21');
-    const seniorOptions = G.squad.filter(p => !p.sold && !p.academyTeam && !G.starters.includes(p.id) && p.age <= 24).sort((a,b) => a.age - b.age || a.ovr - b.ovr).slice(0,10);
+    const seniorOptions = G.squad.filter(p => !p.sold && !p.onLoan && !p.academyTeam && !G.starters.includes(p.id) && p.age <= 24).sort((a,b) => a.age - b.age || a.ovr - b.ovr).slice(0,10);
     return '<div class="toast">Pathway: U18 → U21 → First Team. Players must step through each level — no skipping straight from U18 to the senior squad.</div>' +
       '<div class="grid2">' + teamPanel('u21','U21 squad') + teamPanel('u18','U18 squad') + '</div>' +
       '<div class="pnl" style="padding:6px 8px;"><div class="pnl-t">Senior players in U21 games</div>' +
