@@ -779,9 +779,9 @@
         matchRatings: [], bigGameRatings: [], lastUpdate: 0,
         fitness: 100, morale: 75, injuryWeeks: 0, newSigning: false,
         sold: false, onLoan: null, loanEndsDay: null, suspended: 0, majorInjuries: 0, devPenalty: 0, academyTeam: null, wantsToLeave: false, homegrown: true, academyGrad: ACADEMY_GRADS.has(p[0]), chemPenalty: 0,
-        weeklyWage: expectedWeeklyWage({ ovr: p[3], pot: p[4], age: p[2] }), signingBonus: 0
+        weeklyWage: expectedWeeklyWage({ ovr: p[3], pot: p[4], age: p[2] }), signingBonus: 0, secondaryRoles: [], positionTraining: null
       })),
-      starters: [], tactic: 'balanced', formation: '4-3-3', culture: 'aristocrats', loanPickerId: null,
+      starters: [], tactic: 'balanced', formation: '4-3-3', culture: 'aristocrats', loanPickerId: null, positionTrainingPickId: null,
       budget: 80, stadiumLevel: 1, records: {}, tables: {}, clStandings: {}, elStandings: {}, cupRounds: { FA: [], EFL: [] }, clKnockout: null, elKnockout: null,
       fixtures: [], results: [], trophies: [], seasonHistory: [], currentMatch: null, loanReturnLog: [],
       pairStats: {}, activeDuos: [], activeTrio: null,
@@ -963,8 +963,65 @@
     if (!similarRolesFor(p).includes(newRole)) return;
     p.role = newRole;
     p.pos = slotGroup(newRole);
+    if (p.secondaryRoles) p.secondaryRoles = p.secondaryRoles.filter(r => r !== newRole);
     G.transferMessages.push(p.name + ' retrained from ' + oldRole + ' to ' + newRole + '.');
     render();
+  }
+  const POSITION_ADJACENCY = {
+    RB:['CB','RM','LB'], CB:['LB','RB','CDM'], LB:['CB','LM','RB'],
+    CDM:['CM','CB','CAM'], CM:['CDM','CAM','RM','LM'], CAM:['CM','ST','RW','LW'],
+    RM:['RW','CM','RB','LM'], LM:['LW','CM','LB','RM'],
+    RW:['RM','LW','ST','CAM'], LW:['LM','RW','ST','CAM'], ST:['LW','RW','CAM'],
+    GK:[]
+  };
+  function positionDistance(fromRole, toRole) {
+    if (fromRole === toRole) return 0;
+    if ((POSITION_ADJACENCY[fromRole] || []).includes(toRole)) return 1;
+    if (fromRole === 'GK' || toRole === 'GK') return 4;
+    if (slotGroup(fromRole) === slotGroup(toRole)) return 2;
+    return 3;
+  }
+  function playerPositions(p) { return [roleOf(p), ...(p.secondaryRoles || [])]; }
+  function canPlaySlot(p, slot) { return playerPositions(p).includes(slot); }
+  function trainingWeeksFor(fromRole, toRole) {
+    const dist = positionDistance(fromRole, toRole);
+    return { 1: 3, 2: 6, 3: 11 }[dist] || null;
+  }
+  function secondaryPositionOptions(p) {
+    const primary = roleOf(p);
+    return POSITION_ORDER.filter(r => r !== primary && r !== 'GK' && primary !== 'GK' && !(p.secondaryRoles||[]).includes(r))
+      .map(r => ({ role: r, dist: positionDistance(primary, r), weeks: trainingWeeksFor(primary, r) }))
+      .filter(o => o.weeks != null)
+      .sort((a,b) => a.dist - b.dist || POSITION_ORDER.indexOf(a.role) - POSITION_ORDER.indexOf(b.role));
+  }
+  function startPositionTraining(id, targetRole) {
+    const p = G.squad.find(x => x.id === id);
+    if (!p || p.sold) return;
+    const primary = roleOf(p);
+    if (targetRole === primary || (p.secondaryRoles||[]).includes(targetRole)) return;
+    const weeks = trainingWeeksFor(primary, targetRole);
+    if (weeks == null) { G.transferMessages.push(p.name + ' can\'t realistically retrain for ' + targetRole + ' — too far from his natural game.'); render(); return; }
+    p.positionTraining = { role: targetRole, startDay: G.day, totalDays: weeks * 7 };
+    G.transferMessages.push(p.name + ' has started training to add ' + targetRole + ' as a secondary position (~' + weeks + ' weeks).');
+    render();
+  }
+  function cancelPositionTraining(id) {
+    const p = G.squad.find(x => x.id === id);
+    if (!p) return;
+    p.positionTraining = null;
+    render();
+  }
+  function checkPositionTraining() {
+    G.squad.forEach(p => {
+      if (p.sold || !p.positionTraining) return;
+      const t = p.positionTraining;
+      if (G.day - t.startDay >= t.totalDays) {
+        p.secondaryRoles = p.secondaryRoles || [];
+        if (!p.secondaryRoles.includes(t.role)) p.secondaryRoles.push(t.role);
+        G.transferMessages.push(p.name + ' has unlocked ' + t.role + ' as a secondary position.');
+        p.positionTraining = null;
+      }
+    });
   }
   function weightedPick(items, weightFn) {
     if (!items.length) return null;
@@ -1047,7 +1104,7 @@
         devCeiling: p.devCeiling != null ? p.devCeiling : undefined,
         mins:0, goals:0, assists:0, appearances:0, clubGoals:0, clubAssists:0, clubApps:0, matchRatings:[], bigGameRatings:[], lastUpdate:G.day,
         fitness:100, morale:70, injuryWeeks:0, newSigning:false, sold:false, onLoan:null, loanEndsDay:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null, wantsToLeave:false, homegrown:true, academyGrad:true, chemPenalty:0, promisedRole:'Youth',
-        weeklyWage: expectedWeeklyWage({ ovr:p.ovr, pot:p.pot, age:p.age }) * 0.5, signingBonus: 0 });
+        weeklyWage: expectedWeeklyWage({ ovr:p.ovr, pot:p.pot, age:p.age }) * 0.5, signingBonus: 0, secondaryRoles: [], positionTraining: null });
       G.transferMessages.push(p.name + ' promoted from U21 to the first team.');
       autoPickXI(); render();
     }
@@ -1416,24 +1473,28 @@
     if (youngest) return slotCompatibility(slot, p) * 1000000 - (p.age || 0);
     return effectiveRating(p) + slotCompatibility(slot, p) * 3 + (fresh ? p.fitness / 5 : 0);
   }
-  function pickForSlot(pool, slot, fresh, bench, youngest) {
+  function pickForSlot(pool, slot, fresh, bench, youngest, strict) {
     const sg = slotGroup(slot);
     const isGK = sg === 'GK';
+    const sorted = (arr) => arr.sort((a,b) => slotScore(slot,b,fresh,bench,youngest) - slotScore(slot,a,fresh,bench,youngest));
+    if (strict) return sorted(pool.filter(p => canPlaySlot(p, slot)))[0] || null;
     const inGroup   = pool.filter(p => isGK ? roleOf(p) === 'GK' : (p.pos === sg && roleOf(p) !== 'GK'));
     const crossGroup = pool.filter(p => !isGK && roleOf(p) !== 'GK' && p.pos !== sg);
-    const sorted = (arr) => arr.sort((a,b) => slotScore(slot,b,fresh,bench,youngest) - slotScore(slot,a,fresh,bench,youngest));
     return sorted(inGroup)[0] || sorted(crossGroup)[0] || null;
   }
-  function assignFormationPlayers(f, pool, fresh, bench, youngest) {
+  function assignFormationPlayers(f, pool, fresh, bench, youngest, strict) {
     const selected = [];
+    const slotMap = [];
     getFormationShape(f).flat().forEach(slot => {
       const remaining = pool.filter(p => !selected.includes(p.id));
-      const pick = pickForSlot(remaining, slot, fresh, bench, youngest);
-      if (pick) selected.push(pick.id);
+      const pick = pickForSlot(remaining, slot, fresh, bench, youngest, strict);
+      if (pick) { selected.push(pick.id); slotMap.push(pick.id); }
+      else slotMap.push(null);
     });
-    if (selected.length < 11) {
+    if (!strict && selected.length < 11) {
       pool.filter(p => !selected.includes(p.id)).sort((a,b) => bench ? (a.mins||0) - (b.mins||0) : youngest ? (a.age||0) - (b.age||0) : fresh ? b.fitness - a.fitness : effectiveRating(b) - effectiveRating(a)).slice(0, 11 - selected.length).forEach(p => selected.push(p.id));
     }
+    if (strict) G.slotMap = slotMap;
     return selected.slice(0,11);
   }
   function getFormationAssignments() {
@@ -1738,22 +1799,27 @@
     const avail = G.squad.filter(isAvailable).sort((a,b) => effectiveRating(b) - effectiveRating(a));
     G.starters = assignFormationPlayers(G.formation, avail, false);
   }
+  function pickBestXIStrict() {
+    G.slotMap = null;
+    const avail = G.squad.filter(isAvailable).sort((a,b) => effectiveRating(b) - effectiveRating(a));
+    G.starters = assignFormationPlayers(G.formation, avail, false, false, false, true);
+  }
   function setFreshestXI() {
     G.slotMap = null;
     const avail = G.squad.filter(isAvailable);
-    G.starters = assignFormationPlayers(G.formation, avail, true);
+    G.starters = assignFormationPlayers(G.formation, avail, true, false, false, true);
     render();
   }
   function setBenchXI() {
     G.slotMap = null;
     const avail = G.squad.filter(isAvailable);
-    G.starters = assignFormationPlayers(G.formation, avail, false, true);
+    G.starters = assignFormationPlayers(G.formation, avail, false, true, false, true);
     render();
   }
   function setYoungestXI() {
     G.slotMap = null;
     const avail = G.squad.filter(isAvailable);
-    G.starters = assignFormationPlayers(G.formation, avail, false, false, true);
+    G.starters = assignFormationPlayers(G.formation, avail, false, false, true, true);
     render();
   }
   function getXI() { return G.starters.map(id => G.squad.find(p => p.id === id)).filter(Boolean); }
@@ -2366,6 +2432,7 @@
     G.currentMatch = null;
     refreshTransferWindow();
     checkLoanReturns();
+    checkPositionTraining();
     maybeGenerateIncomingBid();
     maybeRunAITransfers();
     if (G.day > 510 + (G.season-1)*365 && !G.fixtures.some(f => !f.played)) endSeason();
@@ -2390,6 +2457,7 @@
     updatePlayerRatings(true);
     G.loanReturnLog = [];
     checkLoanReturns();
+    checkPositionTraining();
     const loanInjuries = {};
     G.squad.forEach(p => {
       if (p.sold) return;
@@ -2637,7 +2705,7 @@
       G.squad.push({ id:newId, name:target.name, pos:target.pos, role:roleOf(target), age:target.age, ovr:target.ovr, pot:target.pot,
         mins:0, goals:0, assists:0, appearances:0, clubGoals:0, clubAssists:0, clubApps:0, matchRatings: [], bigGameRatings: [], lastUpdate: G.day,
         fitness:100, morale:75, injuryWeeks:0, newSigning: true, sold:false, onLoan:null, loanEndsDay:null, suspended:0, majorInjuries:0, devPenalty:0, academyTeam:null, wantsToLeave:false, chemPenalty:0,
-        promisedRole: neg.role, weeklyWage: wage, signingBonus: bonus });
+        promisedRole: neg.role, weeklyWage: wage, signingBonus: bonus, secondaryRoles: [], positionTraining: null });
       G.transferMessages.push('Signed ' + target.name + ' from ' + target.previousClub + ' for £' + target.price + 'm — ' + neg.role + ' role, £' + wage.toLocaleString() + '/wk wages, £' + bonus.toLocaleString() + ' signing bonus.');
       G.roleNegotiation = null;
       autoPickXI();
@@ -3170,7 +3238,7 @@
         (p.promisedRole ? '<span class="role-tag" title="Promised squad role · £' + (p.weeklyWage||0).toLocaleString() + 'k/wk">' + p.promisedRole + '</span>' : '') +
         '<span style="display:block; font-size:10px; color:var(--color-text-tertiary); margin-top:1px;">' + (recentChips || '<span style="opacity:0.5;">no matches yet</span>') + '</span>' +
       '</span>' +
-      '<span>' + roleBadge(p) + '</span>' +
+      '<span>' + roleBadge(p) + (p.secondaryRoles && p.secondaryRoles.length ? '<span style="display:block; font-size:8px; color:var(--color-text-tertiary); margin-top:1px;" title="Secondary positions">' + p.secondaryRoles.join('/') + '</span>' : '') + '</span>' +
       '<span><span class="ovr ' + tier + '">' + eff + '</span>' + (bonus!==0?' <span style="font-size:9px; color:' + (bonus>0?'#3B6D11':'#A32D2D') + ';">' + (bonus>0?'+':'') + bonus + '</span>':'') + '</span>' +
       '<span><span class="form-tag form-' + form + '">' + form + '</span></span>' +
       '<span>' + roleSelect(p) + '</span>' +
@@ -3326,8 +3394,44 @@
       '</div></div>';
   }
 
+  function renderPositionTraining() {
+    const inProgress = G.squad.filter(p => !p.sold && p.positionTraining);
+    const eligible = G.squad.filter(p => !p.sold && !p.onLoan && !p.academyTeam && roleOf(p) !== 'GK' && !p.positionTraining)
+      .sort((a,b) => a.name.localeCompare(b.name));
+    const pid = G.positionTrainingPickId;
+    const picked = pid != null ? eligible.find(p => p.id === pid) : null;
+    const progressRow = (p) => {
+      const t = p.positionTraining;
+      const elapsed = Math.max(0, G.day - t.startDay);
+      const pct = Math.min(100, Math.round(elapsed / t.totalDays * 100));
+      const daysLeft = Math.max(0, t.totalDays - elapsed);
+      return '<div style="display:grid; grid-template-columns: 1fr 60px 140px 60px; gap:8px; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--color-border-tertiary); font-size:11px;">' +
+        '<span>' + p.name + ' <span style="color:var(--color-text-tertiary); font-size:10px;">' + roleOf(p) + ' → ' + t.role + '</span></span>' +
+        '<span style="color:var(--color-text-secondary);">' + Math.ceil(daysLeft/7) + 'w left</span>' +
+        '<span class="mor-bar" style="width:140px;"><span class="mor-fill" style="width:' + pct + '%; background:#4FA8E8;"></span></span>' +
+        '<span><button class="btn sm" onclick="cancelPositionTraining(' + p.id + ')">✕ Stop</button></span>' +
+      '</div>';
+    };
+    const playerPicker = '<div style="display:flex; gap:5px; flex-wrap:wrap; margin-bottom:8px;">' +
+      eligible.map(p => '<button class="btn sm' + (pid===p.id?' pri':'') + '" onclick="G.positionTrainingPickId=' + p.id + ';render()">' + p.name + '</button>').join('') +
+    '</div>';
+    const optionsPanel = picked ? (() => {
+      const opts = secondaryPositionOptions(picked);
+      if (!opts.length) return '<div style="font-size:12px; color:var(--color-text-secondary);">' + picked.name + ' already covers every reachable position.</div>';
+      return '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
+        opts.map(o => '<button class="btn sm" onclick="startPositionTraining(' + picked.id + ',\'' + o.role + '\')" title="~' + o.weeks + ' weeks">' + o.role + ' · ~' + o.weeks + 'w</button>').join('') +
+      '</div>';
+    })() : '<div style="font-size:12px; color:var(--color-text-secondary);">Pick a player above to see which secondary positions they could learn.</div>';
+    return '<div class="pnl">' +
+      '<div class="pnl-t">Position training</div>' +
+      '<div class="toast">Train a player in a new position so they can legally fill it in Best/Freshest/Bench/Youngest XI. Closer positions (e.g. CB → LB) unlock in a few weeks; distant ones (e.g. CB → ST) take much longer or aren\'t possible.</div>' +
+      (inProgress.length ? inProgress.map(progressRow).join('') : '') +
+      '<div style="margin-top:8px;">' + playerPicker + optionsPanel + '</div>' +
+    '</div>';
+  }
   function renderTraining() {
-    return '<div class="pnl"><div class="pnl-t">Top performers · current season</div>' +
+    return renderPositionTraining() +
+      '<div class="pnl"><div class="pnl-t">Top performers · current season</div>' +
       G.squad.filter(p => !p.sold && p.matchRatings.length > 0).sort((a,b) => {
         const aA = a.matchRatings.reduce((s,r)=>s+r,0)/a.matchRatings.length;
         const bA = b.matchRatings.reduce((s,r)=>s+r,0)/b.matchRatings.length;
@@ -3770,7 +3874,7 @@
   function setView(v) { G.view = v; render(); }
   function setTactic(t) { G.tactic = t; render(); }
   function setFormation(f) { G.formation = f; G.slotMap = null; autoPickXI(); render(); }
-  function autoPickXIAndRender() { autoPickXI(); render(); }
+  function autoPickXIAndRender() { pickBestXIStrict(); render(); }
 
   let _dragSlot = null;
   function initSlotMap() {
