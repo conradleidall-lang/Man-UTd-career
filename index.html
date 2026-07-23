@@ -7,67 +7,58 @@
 <style>
   :root {
     --color-background-primary: #ffffff;
-    --color-background-secondary: #f5f4ef;
-    --color-background-tertiary: #ecebe4;
-    --color-background-info: #e6f1fb;
+    --color-background-secondary: #fdf7f2;
+    --color-background-tertiary: #fbeaea;
+    --color-background-info: #fffbea;
     --color-background-danger: #fcebeb;
     --color-background-success: #eaf3de;
-    --color-background-warning: #faeeda;
+    --color-background-warning: #fff6d9;
     --color-text-primary: #1a1a1a;
     --color-text-secondary: #5f5e5a;
     --color-text-tertiary: #888780;
-    --color-text-info: #0c447c;
+    --color-text-info: #7a5b00;
     --color-text-danger: #a32d2d;
     --color-text-success: #3b6d11;
     --color-text-warning: #854f0b;
     --color-border-tertiary: rgba(0,0,0,0.12);
     --color-border-secondary: rgba(0,0,0,0.22);
     --color-border-primary: rgba(0,0,0,0.32);
-    --color-border-info: #378add;
+    --color-border-info: #fbc02d;
+    --color-red: #DA291C;
+    --color-red-dark: #B81E12;
+    --color-black: #1a1a1a;
+    --color-yellow: #FBE122;
+    --color-yellow-dark: #b89b00;
     --border-radius-md: 8px;
     --border-radius-lg: 12px;
     --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --color-background-primary: #1a1a1a;
-      --color-background-secondary: #25241f;
-      --color-background-tertiary: #2c2c28;
-      --color-background-info: #042c53;
-      --color-background-danger: #501313;
-      --color-background-success: #173404;
-      --color-background-warning: #412402;
-      --color-text-primary: #f1efe8;
-      --color-text-secondary: #b4b2a9;
-      --color-text-tertiary: #888780;
-      --color-text-info: #b5d4f4;
-      --color-text-danger: #f7c1c1;
-      --color-text-success: #c0dd97;
-      --color-text-warning: #fac775;
-      --color-border-tertiary: rgba(255,255,255,0.12);
-      --color-border-secondary: rgba(255,255,255,0.22);
-      --color-border-primary: rgba(255,255,255,0.32);
-    }
-  }
   * { box-sizing: border-box; }
-  body { margin: 0; padding: 0; background: var(--color-background-tertiary); color: var(--color-text-primary); font-family: var(--font-sans); }
+  body { margin: 0; padding: 0; background: #ffffff; color: var(--color-text-primary); font-family: var(--font-sans); }
   .wrap { max-width: 720px; margin: 0 auto; padding: 16px; background: var(--color-background-primary); min-height: 100vh; }
   .gr { font-family: var(--font-sans); font-size: 13px; padding: 0.5rem 0; }
-  .hdr { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; padding: 10px 12px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); margin-bottom: 10px; }
+  .hdr { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; padding: 10px 12px; background: var(--color-black); border-radius: var(--border-radius-md); margin-bottom: 10px; }
+  .hdr .hsl { color: #cfcfcf; }
+  .hdr .hsv { color: #ffffff; }
   .hs { text-align: center; }
   .hsl { font-size: 10px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; }
   .hsv { font-size: 14px; font-weight: 500; margin-top: 2px; }
-  .tabs { display: flex; gap: 2px; margin-bottom: 10px; border-bottom: 0.5px solid var(--color-border-tertiary); flex-wrap: wrap; }
-  .tab { padding: 7px 11px; background: transparent; border: none; cursor: pointer; font-size: 12px; color: var(--color-text-secondary); font-family: var(--font-sans); border-bottom: 2px solid transparent; }
-  .tab.active { color: var(--color-text-primary); border-bottom-color: #DA291C; font-weight: 500; }
-  .play-btn { padding: 11px 18px; background: #DA291C; color: #fff; border: none; border-radius: var(--border-radius-md); font-size: 14px; font-weight: 500; cursor: pointer; font-family: var(--font-sans); width: 100%; }
-  .play-btn:hover { background: #B81E12; }
+  .tabs { display: flex; gap: 2px; margin-bottom: 10px; border-bottom: 2px solid var(--color-black); flex-wrap: wrap; }
+  .tab { padding: 7px 11px; background: transparent; border: none; cursor: pointer; font-size: 12px; color: var(--color-text-secondary); font-family: var(--font-sans); border-bottom: 3px solid transparent; margin-bottom: -2px; }
+  .tab.active { color: var(--color-black); border-bottom-color: var(--color-red); font-weight: 700; }
+  .wrap.cl-mode .hdr { background: #041E42; }
+  .wrap.cl-mode .hdr .hsl { color: #9fc9f7; }
+  .wrap.cl-mode .hdr .hsv { color: #ffffff; }
+  .wrap.cl-mode .tabs { border-bottom: 2px solid #041E42; }
+  .wrap.cl-mode .tab.active { color: #041E42; border-bottom-color: #4FA8E8; }
+  .play-btn { padding: 11px 18px; background: var(--color-red); color: #fff; border: none; border-radius: var(--border-radius-md); font-size: 14px; font-weight: 500; cursor: pointer; font-family: var(--font-sans); width: 100%; }
+  .play-btn:hover { background: var(--color-red-dark); }
   .play-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-  .btn { padding: 5px 10px; background: transparent; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); cursor: pointer; font-size: 11px; color: var(--color-text-primary); font-family: var(--font-sans); }
-  .btn:hover { background: var(--color-background-secondary); }
+  .btn { padding: 5px 10px; background: #fff; border: 1.5px solid var(--color-black); border-radius: var(--border-radius-md); cursor: pointer; font-size: 11px; color: var(--color-black); font-family: var(--font-sans); font-weight: 500; }
+  .btn:hover { background: var(--color-black); color: #fff; }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn.pri { background: #DA291C; color: #fff; border: none; }
-  .btn.pri:hover { background: #B81E12; }
+  .btn.pri { background: var(--color-red); color: #fff; border: 1.5px solid var(--color-red); }
+  .btn.pri:hover { background: var(--color-red-dark); border-color: var(--color-red-dark); }
   .btn.sm { padding: 3px 7px; font-size: 10px; }
   .fix { display: grid; grid-template-columns: 70px 36px 1fr 70px; gap: 10px; align-items: center; padding: 7px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 12px; }
   .fix:last-child { border: none; }
@@ -2778,6 +2769,8 @@
     if (!root) return;
     const munPos = leagueSorted().findIndex(t => t.name==='Man Utd') + 1;
     const next = nextFixture();
+    const wrapEl = root.parentElement;
+    if (wrapEl) wrapEl.classList.toggle('cl-mode', !!(next && next.comp === 'CL'));
     const header = '<div class="hdr">' +
       '<div class="hs"><div class="hsl">Season</div><div class="hsv">' + G.year + '/' + (G.year+1).toString().slice(2) + '</div></div>' +
       '<div class="hs"><div class="hsl">Date</div><div class="hsv">' + fmtDate(G.day) + '</div></div>' +
